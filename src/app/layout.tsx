@@ -1,17 +1,27 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Be_Vietnam_Pro, JetBrains_Mono } from "next/font/google";
+import { I18nProvider } from "@/lib/i18n";
 import "./globals.css";
 
 const fontSans = Plus_Jakarta_Sans({
   subsets: ["latin", "vietnamese"],
   variable: "--font-sans",
   display: "swap",
+  weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+const fontDisplay = Be_Vietnam_Pro({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-display",
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800", "900"],
 });
 
 const fontMono = JetBrains_Mono({
-  subsets: ["latin"],
+  subsets: ["latin", "vietnamese"],
   variable: "--font-mono",
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -26,9 +36,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${fontSans.variable} ${fontMono.variable} dark`}>
+    <html
+      lang="vi"
+      className={`${fontSans.variable} ${fontDisplay.variable} ${fontMono.variable} dark`}
+    >
       <body className="min-h-screen bg-[#07090e] font-sans text-slate-100 antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
-        {children}
+        <I18nProvider>{children}</I18nProvider>
       </body>
     </html>
   );

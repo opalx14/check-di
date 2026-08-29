@@ -1,0 +1,247 @@
+{
+  "meta": {
+    "title": "Check-Di · Multi-stage Supply Chain Traceability",
+    "description": "Check-Di tracks the product journey from origin to retail using timelines, QR codes, AI document cross-checking, and hash-based integrity proofs."
+  },
+  "nav": {
+    "journey": "Journey",
+    "demo": "Traceability Demo",
+    "participants": "For Stakeholders",
+    "technology": "Technology",
+    "safety": "Data Integrity",
+    "tryScan": "Try Product Scan",
+    "openMenu": "Open menu"
+  },
+  "hero": {
+    "badge": "UniHackFest 2026 Project",
+    "titleLine1": "From farm origin",
+    "titleLine2": "to the consumer's hands.",
+    "description": "Check-Di records each stage of a product batch. Buyers simply scan a QR code to see where the product has traveled, who verified it, and verify that the data remains intact.",
+    "mobileTitle": "Scan QR. Know the origin.",
+    "mobileDescription": "AI checks it. The map shows the journey.",
+    "tags": ["Multi-stage Tracking", "AI Document Checks", "Consumer QR Verification"],
+    "scanCta": "Try Scanning a Batch",
+    "mobileScanTitle": "Scan QR to check",
+    "mobileScanHint": "AI cross-checks the batch right after the scan.",
+    "journeyCta": "Explore the Journey Flow",
+    "sampleBatch": "Sample Batch",
+    "productName": "Ri6 Durian · DUR-260830-01",
+    "routeSummary": "Journey from Dak Lak to Ho Chi Minh City",
+    "sampleDataBadge": "Simulated Data",
+    "latestStageLabel": "Latest Stage",
+    "latestStageValue": "Received at Retail Store",
+    "latestStageTime": "HCMC · Sep 03, 2026",
+    "qrActionLabel": "When scanning QR",
+    "qrActionValue": "View Full Journey Timeline",
+    "qrActionDetail": "Location · Documents · Hash · Verifier",
+    "journeyStages": {
+      "farm": { "label": "Farm Origin", "place": "Dak Lak" },
+      "packing": { "label": "Packaging", "place": "Buon Ma Thuot" },
+      "inspection": { "label": "Inspection", "place": "QC Station" },
+      "logistics": { "label": "Transit", "place": "Dak Lak → HCMC" },
+      "retail": { "label": "Retail", "place": "Ho Chi Minh City" }
+    }
+  },
+  "coreFlow": {
+    "badge": "One Batch · One Verified Journey",
+    "title": "Like parcel tracking, but for product authenticity.",
+    "description": "Each stage leaves an independently verifiable trace instead of a single static QR label linking to unverified claims.",
+    "steps": [
+      {
+        "title": "Each party records their stage",
+        "text": "Growers, packaging facilities, inspection hubs, logistics carriers, and retailers update batch data at handoff points."
+      },
+      {
+        "title": "AI cross-checks documents",
+        "text": "AI parses inspection sheets, packing lists, invoices and flags discrepancies in dates, weights, or batch IDs."
+      },
+      {
+        "title": "Data is hashed for integrity",
+        "text": "Once the stakeholder confirms, the stage payload is canonicalized and hashed to ensure tamper-evident records."
+      },
+      {
+        "title": "Consumers scan the QR code",
+        "text": "The verification page displays the full timeline, geo-locations, certifying parties, and integrity status."
+      }
+    ]
+  },
+  "sandbox": {
+    "simulatedDataBadge": "Simulated Demo Data",
+    "title": "Track a batch just like an active delivery.",
+    "description": "The map pinpoints where the batch is currently located; click any checkpoint to inspect the organization, timestamp, attached documents, AI check results, and cryptographic hash.",
+    "pause": "Pause",
+    "playJourney": "Play Journey",
+    "backToMap": "Back to Map",
+    "simulateQrScan": "Simulate QR Scan",
+    "mapTitle": "TRANSIT CORRIDOR & TRACEABILITY",
+    "mapSubtitle": "Dak Lak → Ho Chi Minh City · Ri6 Durian",
+    "stageCounter": "Stage",
+    "originLabel": "DAK LAK (500M)",
+    "destinationLabel": "HCMC (10M)",
+    "progressLabel": "Progress",
+    "stagesCount": "5 STAGES",
+    "journeyTitle": "Batch DUR-260830-01 Timeline",
+    "viewingStage": "CURRENT CHECKPOINT",
+    "recordedStatus": "Recorded",
+    "orgLabel": "Organization",
+    "locationLabel": "Location",
+    "timeLabel": "Timestamp",
+    "batchCodeLabel": "Batch ID",
+    "stageDataLabel": "Stage Payload",
+    "aiCheckTitle": "AI Document Cross-Check",
+    "aiCheckEmpty": "No additional document cross-check required for this checkpoint in sample data.",
+    "documentsTitle": "Linked Documents",
+    "documentsValue": "Sample certificates and delivery notes attached to this stage.",
+    "dataHashTitle": "Integrity Hash",
+    "hashNote": "Truncated hash format for demonstration.",
+    "consumerVerifiedAllStages": "Verified across all 5 stages",
+    "consumerQrTitle": "Public Batch QR",
+    "consumerNotice": "This is a demonstration interface. Hashes and entities shown are sample fixtures and not yet finalized on Solana Devnet.",
+    "mobileAiTitle": "AI quick check",
+    "mobileAiSummary": "No anomaly found in the sample data.",
+    "mobileAiChecks": ["Batch ID and documents match", "All 5/5 stages have data", "No contradiction found in the sample data"],
+    "mobileShowStages": "View 5 stages",
+    "mobileHideStages": "Hide details",
+    "telemetryDistance": "354 km",
+    "telemetryDuration": "14.5 hrs",
+    "telemetryColdChain": "18°C Verified",
+    "telemetryRoute": "Highway 14 Highlands Corridor → HCMC",
+    "passportTitle": "DIGITAL PRODUCT PASSPORT",
+    "passportSubtitle": "Verifiable Supply-Chain Integrity & VietGAP Certification",
+    "aiCardTitle": "AI AUDIT & AUTOMATED VERIFICATION",
+    "aiCardStatus": "100% Document Match & Integrity",
+    "aiCardPoint1": "Matching Batch ID & test dates verified across all 5 stages",
+    "aiCardPoint2": "Input/output mass balances match declared 10% tolerance",
+    "aiCardPoint3": "0% prohibited pesticide residues detected in lab report",
+    "tabOverview": "Overview",
+    "tabAiCheck": "AI Cross-Check",
+    "tabDocuments": "Documents & Hash",
+    "copyHash": "Copy hash",
+    "copied": "Copied",
+    "openProof": "View cryptographic proof",
+    "closeProof": "Collapse",
+    "stages": {
+      "farm": {
+        "title": "Harvest",
+        "org": "Minh Phat Orchard",
+        "location": "Krong Pac, Dak Lak",
+        "time": "Aug 30, 2026 · 06:40",
+        "detail": "1,200 kg Ri6 batch harvested and registered under ID DUR-260830-01 at orchard.",
+        "shortPlace": "Krong Pac",
+        "docName": "VietGAP Cultivation Certificate #VG-2026-8812",
+        "docType": "Certified Good Agricultural Practices",
+        "coords": "12.6841° N, 108.2435° E",
+        "temp": "24°C"
+      },
+      "packing": {
+        "title": "Packaging",
+        "org": "Dak Farm Cooperative",
+        "location": "Buon Ma Thuot, Dak Lak",
+        "time": "Aug 30, 2026 · 14:15",
+        "detail": "Received 1,200 kg, packed 1,080 kg; declared processing loss: 10%.",
+        "shortPlace": "Buon Ma Thuot",
+        "aiCheck": "Input weight and output packed weight match the declared 10% loss tolerance.",
+        "docName": "Packing List & Sorting Report #PK-0412",
+        "docType": "Grading & Packaging Manifest",
+        "coords": "12.6667° N, 108.0500° E",
+        "temp": "20°C"
+      },
+      "inspection": {
+        "title": "Inspection",
+        "org": "QC Testing Center",
+        "location": "Dak Lak",
+        "time": "Aug 31, 2026 · 09:20",
+        "detail": "Food safety lab certificate linked with matching batch code and sampling date.",
+        "shortPlace": "QC Station",
+        "aiCheck": "Batch ID and test date on lab certificate match packaging facility records.",
+        "docName": "Pesticide Residue Analysis #KD-8921",
+        "docType": "Food Safety Laboratory Certificate",
+        "coords": "12.6900° N, 108.0800° E",
+        "temp": "22°C"
+      },
+      "logistics": {
+        "title": "Transit",
+        "org": "Green Route Logistics",
+        "location": "Dak Lak → HCMC",
+        "time": "Sep 01, 2026 · 05:30",
+        "detail": "Cold-chain truck dispatched batch along Highway 14 to Ho Chi Minh City warehouse.",
+        "shortPlace": "Highway 14",
+        "docName": "Cold-Chain e-Waybill #WB-7731",
+        "docType": "Electronic Waybill & Temperature Telemetry",
+        "coords": "11.5350° N, 106.8833° E",
+        "temp": "18°C (Reefer Truck)"
+      },
+      "retail": {
+        "title": "Retail Store",
+        "org": "Fresh Market Store",
+        "location": "District 7, Ho Chi Minh City",
+        "time": "Sep 03, 2026 · 08:10",
+        "detail": "Retailer confirmed delivery reception and activated public verification QR for consumers.",
+        "shortPlace": "District 7, HCMC",
+        "docName": "Handover Receipt & QR Activation #RT-1102",
+        "docType": "Retail Store Reception Receipt",
+        "coords": "10.7324° N, 106.7158° E",
+        "temp": "18°C (Display Cooler)"
+      }
+    }
+  },
+  "dualTrack": {
+    "badge": "One QR Code · Shared Stakeholder Accountability",
+    "title": "No single party controls the entire narrative.",
+    "description": "Each organization only confirms data for its own segment of the chain. Check-Di links these checkpoints into a verifiable timeline for consumers.",
+    "groups": [
+      {
+        "title": "Producers / Orchards",
+        "text": "Initialize batch records, register harvest parameters, and attach origin certificates."
+      },
+      {
+        "title": "Packaging & Quality Control",
+        "text": "Append inspection certificates, grading results, and sign off on processed quantities."
+      },
+      {
+        "title": "Logistics & Warehousing",
+        "text": "Log dispatch and delivery timestamps, route conditions, and custody handoffs."
+      },
+      {
+        "title": "Retailers & Consumers",
+        "text": "Retailers confirm stock arrival; shoppers scan QR codes to inspect the full authentic journey."
+      }
+    ],
+    "competitionBanner": "For UniHackFest, Technical Build proves AI document verification + hash integrity + QR scanning + Solana anchoring; Product & Business demonstrates real-world supply chain feasibility and stakeholder adoption. Both tracks share the same Check-Di core."
+  },
+  "architecture": {
+    "badge": "Cryptographic Hashes for Verified Integrity",
+    "title": "Blockchain does not replace real data. It guarantees historical integrity.",
+    "description": "Detailed documents and high-volume data remain off-chain. Each stage produces a canonicalized hash; Solana serves as the public layer verifying the hash, signing entity, timestamp, and status.",
+    "hashChainTitle": "SAMPLE HASH CHAIN",
+    "chainStages": ["Harvest", "Packaging", "Inspection", "Transit", "Retail"],
+    "demoDisclaimer": "The hashes shown above are sample data. The Solana program is not yet deployed on-chain in this milestone.",
+    "offChainTitle": "Off-Chain Holds Detailed Records",
+    "offChainText": "Certificates, high-res photos, exact warehouse addresses, and editable enterprise files remain stored off-chain.",
+    "onChainTitle": "On-Chain Stores Minimal Proofs",
+    "onChainText": "Batch/stage hashes, certifier public keys, schema versions, timestamps, and active status are anchored on-chain.",
+    "immutabilityTitle": "Modifications Require New Versions",
+    "immutabilityText": "If confirmed data is altered, existing hashes no longer match. The system must register a superseded version rather than quietly overwriting history."
+  },
+  "compliance": {
+    "badge": "Safety Boundaries",
+    "title": "Transparent integrity without crypto speculation.",
+    "description": "Check-Di uses blockchain strictly as an integrity proof layer, not as a financial trading system.",
+    "rules": [
+      "No raw or confidential documents stored on-chain",
+      "No tokens, no speculative investments, no crypto payments",
+      "AI highlights discrepancies without making automated fraud verdicts",
+      "Each party only verifies records within their direct custody"
+    ]
+  },
+  "footer": {
+    "brandTitle": "Check-Di",
+    "brandTagline": "Multi-stage supply chain traceability",
+    "copyright": "UniHackFest 2026 · Unified core for Technical Build & Product & Business"
+  },
+  "common": {
+    "switchLanguage": "Select language",
+    "vietnamese": "Tiếng Việt",
+    "english": "English"
+  }
+}

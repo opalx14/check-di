@@ -1,0 +1,247 @@
+{
+  "meta": {
+    "title": "Check-Di · Truy xuất nguồn gốc theo từng chặng",
+    "description": "Check-Di giúp theo dõi hành trình sản phẩm từ nơi sản xuất đến điểm bán bằng timeline, QR, AI đối chiếu chứng từ và hash kiểm tra tính toàn vẹn."
+  },
+  "nav": {
+    "journey": "Hành trình",
+    "demo": "Demo truy xuất",
+    "participants": "Dành cho ai",
+    "technology": "Công nghệ",
+    "safety": "An toàn dữ liệu",
+    "tryScan": "Quét thử sản phẩm",
+    "openMenu": "Mở menu"
+  },
+  "hero": {
+    "badge": "Dự án UniHackFest 2026",
+    "titleLine1": "Từ nơi sản xuất",
+    "titleLine2": "đến tay người mua.",
+    "description": "Check-Di ghi lại từng chặng của một lô hàng. Người mua chỉ cần quét QR để xem sản phẩm đã đi qua đâu, ai xác nhận và dữ liệu có còn nguyên vẹn hay không.",
+    "mobileTitle": "Quét QR. Biết nguồn gốc.",
+    "mobileDescription": "AI kiểm tra, map cho bạn thấy hành trình.",
+    "tags": ["Theo dõi từng chặng", "AI kiểm tra chứng từ", "QR cho người tiêu dùng"],
+    "scanCta": "Quét thử một lô hàng",
+    "mobileScanTitle": "Quét QR để kiểm tra",
+    "mobileScanHint": "AI đối chiếu ngay sau khi quét.",
+    "journeyCta": "Xem hành trình hoạt động",
+    "sampleBatch": "Lô hàng mẫu",
+    "productName": "Sầu riêng Ri6 · DUR-260830-01",
+    "routeSummary": "Hành trình từ Đắk Lắk đến TP.HCM",
+    "sampleDataBadge": "Dữ liệu mẫu",
+    "latestStageLabel": "Chặng gần nhất",
+    "latestStageValue": "Đã nhập điểm bán",
+    "latestStageTime": "TP.HCM · 03/09/2026",
+    "qrActionLabel": "Khi quét QR",
+    "qrActionValue": "Xem toàn bộ timeline",
+    "qrActionDetail": "Địa điểm · chứng từ · hash · đơn vị xác nhận",
+    "journeyStages": {
+      "farm": { "label": "Nhà vườn", "place": "Đắk Lắk" },
+      "packing": { "label": "Đóng gói", "place": "Buôn Ma Thuột" },
+      "inspection": { "label": "Kiểm định", "place": "Trạm QC" },
+      "logistics": { "label": "Vận chuyển", "place": "Đắk Lắk → TP.HCM" },
+      "retail": { "label": "Điểm bán", "place": "TP.HCM" }
+    }
+  },
+  "coreFlow": {
+    "badge": "Một lô hàng · Một hành trình",
+    "title": "Giống tracking đơn hàng, nhưng cho nguồn gốc sản phẩm.",
+    "description": "Mỗi chặng để lại một dấu vết có thể kiểm tra thay vì chỉ có một tem QR trỏ tới thông tin tĩnh.",
+    "steps": [
+      {
+        "title": "Mỗi bên ghi nhận chặng của mình",
+        "text": "Nhà vườn, đơn vị đóng gói, kiểm định, logistics và điểm bán cập nhật dữ liệu của lô hàng."
+      },
+      {
+        "title": "AI đối chiếu chứng từ",
+        "text": "AI đọc phiếu kiểm nghiệm, packing list, hóa đơn và cảnh báo khi ngày, số lượng hoặc mã lô không khớp."
+      },
+      {
+        "title": "Dữ liệu được tạo hash",
+        "text": "Sau khi đơn vị xác nhận, dữ liệu của chặng được chuẩn hóa và tạo mã kiểm tra tính toàn vẹn."
+      },
+      {
+        "title": "Người mua quét QR",
+        "text": "Trang truy xuất hiển thị timeline, địa điểm, đơn vị xác nhận và trạng thái dữ liệu của cả hành trình."
+      }
+    ]
+  },
+  "sandbox": {
+    "simulatedDataBadge": "Dữ liệu mô phỏng",
+    "title": "Theo dõi một lô hàng như theo dõi đơn.",
+    "description": "Bản đồ cho biết lô hàng đang ở chặng nào; chọn từng điểm để xem đơn vị, thời gian, chứng từ, AI kiểm tra và hash của chặng đó.",
+    "pause": "Tạm dừng",
+    "playJourney": "Chạy hành trình",
+    "backToMap": "Quay lại bản đồ",
+    "simulateQrScan": "Mô phỏng quét QR",
+    "mapTitle": "HÀNH LANG VẬN CHUYỂN & TRUY XUẤT",
+    "mapSubtitle": "Đắk Lắk → TP.HCM · Sầu riêng Ri6",
+    "stageCounter": "Chặng",
+    "originLabel": "ĐẮK LẮK (500M)",
+    "destinationLabel": "TP.HCM (10M)",
+    "progressLabel": "Tiến độ",
+    "stagesCount": "5 CHẶNG",
+    "journeyTitle": "Hành trình lô DUR-260830-01",
+    "viewingStage": "CHẶNG ĐANG XEM",
+    "recordedStatus": "Đã ghi nhận",
+    "orgLabel": "Đơn vị",
+    "locationLabel": "Địa điểm",
+    "timeLabel": "Thời gian",
+    "batchCodeLabel": "Mã lô",
+    "stageDataLabel": "Dữ liệu của chặng",
+    "aiCheckTitle": "AI đối chiếu chứng từ",
+    "aiCheckEmpty": "Chặng này chưa cần AI đối chiếu thêm trong dữ liệu mẫu.",
+    "documentsTitle": "Chứng từ liên quan",
+    "documentsValue": "Dữ liệu mẫu đã gắn với hồ sơ của đúng chặng.",
+    "dataHashTitle": "Hash dữ liệu",
+    "hashNote": "Mã rút gọn dùng cho demo.",
+    "consumerVerifiedAllStages": "Có dữ liệu ở đủ 5 chặng",
+    "consumerQrTitle": "QR công khai của lô",
+    "consumerNotice": "Đây là giao diện mô phỏng. Hash và tổ chức trong ví dụ chưa phải dữ liệu xác nhận thực tế trên Solana Devnet.",
+    "mobileAiTitle": "AI kiểm tra nhanh",
+    "mobileAiSummary": "Không thấy bất thường trong dữ liệu mẫu.",
+    "mobileAiChecks": ["Mã lô và chứng từ khớp", "Đủ dữ liệu 5/5 chặng", "Chưa thấy mâu thuẫn trong dữ liệu mẫu"],
+    "mobileShowStages": "Xem 5 chặng",
+    "mobileHideStages": "Ẩn chi tiết",
+    "telemetryDistance": "354 km",
+    "telemetryDuration": "14.5 giờ",
+    "telemetryColdChain": "18°C Đạt chuẩn",
+    "telemetryRoute": "Hành lang QL14 Tây Nguyên → TP.HCM",
+    "passportTitle": "CHỨNG CHỈ NGUỒN GỐC KỸ THUẬT SỐ",
+    "passportSubtitle": "Xác thực chuỗi cung ứng minh bạch & chuẩn VietGAP",
+    "aiCardTitle": "AI ĐỐI CHIẾU & KIỂM TRA TỰ ĐỘNG",
+    "aiCardStatus": "Khớp 100% dữ liệu chứng từ",
+    "aiCardPoint1": "Khớp mã lô và ngày lấy mẫu trên toàn bộ 5 chặng",
+    "aiCardPoint2": "Khối lượng đầu vào - ra đúng dung sai hao hụt 10%",
+    "aiCardPoint3": "Phiếu kiểm nghiệm 0% dư lượng BVTV vượt ngưỡng",
+    "tabOverview": "Tổng quan chặng",
+    "tabAiCheck": "AI Đối chiếu",
+    "tabDocuments": "Chứng từ & Hash",
+    "copyHash": "Sao chép hash",
+    "copied": "Đã sao chép",
+    "openProof": "Xem chi tiết proof",
+    "closeProof": "Thu gọn",
+    "stages": {
+      "farm": {
+        "title": "Thu hoạch",
+        "org": "Vườn Minh Phát",
+        "location": "Krông Pắc, Đắk Lắk",
+        "time": "30/08/2026 · 06:40",
+        "detail": "Lô Ri6 1.200 kg được tạo và gắn mã DUR-260830-01 tại vườn.",
+        "shortPlace": "Krông Pắc",
+        "docName": "Chứng nhận VietGAP #VG-2026-8812",
+        "docType": "Chứng nhận canh tác chuẩn VietGAP",
+        "coords": "12.6841° N, 108.2435° E",
+        "temp": "24°C"
+      },
+      "packing": {
+        "title": "Đóng gói",
+        "org": "HTX Đắk Farm",
+        "location": "Buôn Ma Thuột, Đắk Lắk",
+        "time": "30/08/2026 · 14:15",
+        "detail": "Nhận 1.200 kg, đóng gói 1.080 kg; hao hụt được khai báo 10%.",
+        "shortPlace": "Buôn Ma Thuột",
+        "aiCheck": "Khối lượng đầu vào và đầu ra khớp với mức hao hụt đã khai báo 10%.",
+        "docName": "Packing List & Phiếu sơ chế #PK-0412",
+        "docType": "Biên bản phân loại & đóng thùng",
+        "coords": "12.6667° N, 108.0500° E",
+        "temp": "20°C"
+      },
+      "inspection": {
+        "title": "Kiểm định",
+        "org": "Trung tâm QC Demo",
+        "location": "Đắk Lắk",
+        "time": "31/08/2026 · 09:20",
+        "detail": "Phiếu kiểm nghiệm được liên kết với đúng mã lô và ngày lấy mẫu.",
+        "shortPlace": "Trạm QC",
+        "aiCheck": "Mã lô và ngày trên phiếu kiểm nghiệm khớp với dữ liệu đóng gói.",
+        "docName": "Phiếu phân tích dư lượng BVTV #KD-8921",
+        "docType": "Báo cáo kiểm nghiệm an toàn thực phẩm",
+        "coords": "12.6900° N, 108.0800° E",
+        "temp": "22°C"
+      },
+      "logistics": {
+        "title": "Vận chuyển",
+        "org": "Green Route Logistics",
+        "location": "Đắk Lắk → TP.HCM",
+        "time": "01/09/2026 · 05:30",
+        "detail": "Xe lạnh nhận lô hàng và vận chuyển theo tuyến Quốc lộ 14 đến TP.HCM.",
+        "shortPlace": "Tuyến QL14",
+        "docName": "Vận đơn lạnh e-Waybill #WB-7731",
+        "docType": "Vận đơn điện tử & Giám sát nhiệt độ",
+        "coords": "11.5350° N, 106.8833° E",
+        "temp": "18°C (Xe lạnh)"
+      },
+      "retail": {
+        "title": "Điểm bán",
+        "org": "Cửa hàng Fresh Market",
+        "location": "Quận 7, TP.HCM",
+        "time": "03/09/2026 · 08:10",
+        "detail": "Điểm bán xác nhận đã nhận lô và kích hoạt tem QR cho người tiêu dùng tra cứu.",
+        "shortPlace": "Quận 7, TP.HCM",
+        "docName": "Biên bản giao nhận & Kích hoạt QR #RT-1102",
+        "docType": "Xác nhận tiếp nhận điểm bán lẻ",
+        "coords": "10.7324° N, 106.7158° E",
+        "temp": "18°C (Tủ mát)"
+      }
+    }
+  },
+  "dualTrack": {
+    "badge": "Một mã QR · Nhiều bên cùng chịu trách nhiệm",
+    "title": "Không phải một bên tự kể toàn bộ câu chuyện.",
+    "description": "Mỗi tổ chức chỉ xác nhận dữ liệu của chặng mình. Check-Di nối các chặng đó thành một hành trình mà người mua có thể kiểm tra.",
+    "groups": [
+      {
+        "title": "Nhà sản xuất / nhà vườn",
+        "text": "Tạo lô, ghi nhận thu hoạch hoặc sản xuất và gắn hồ sơ ban đầu cho sản phẩm."
+      },
+      {
+        "title": "Đóng gói / kiểm định",
+        "text": "Bổ sung chứng từ, kết quả kiểm tra và xác nhận dữ liệu thuộc phần mình chịu trách nhiệm."
+      },
+      {
+        "title": "Logistics / kho",
+        "text": "Cập nhật điểm nhận, điểm giao và trạng thái vận chuyển theo từng chặng của lô."
+      },
+      {
+        "title": "Điểm bán / người tiêu dùng",
+        "text": "Điểm bán xác nhận đã nhận hàng; người mua quét QR để xem lại toàn bộ hành trình."
+      }
+    ],
+    "competitionBanner": "Với UniHackFest, Technical Build chứng minh AI + hash + QR + Solana; Product & Business chứng minh nhu cầu truy xuất nguồn gốc và mô hình triển khai cho các bên trong chuỗi cung ứng. Cả hai dùng cùng một Check-Di."
+  },
+  "architecture": {
+    "badge": "Hash dùng để kiểm tra dữ liệu đã xác nhận",
+    "title": "Blockchain không thay thế dữ liệu thật. Nó giữ dấu vết của dữ liệu đã được xác nhận.",
+    "description": "Chứng từ và dữ liệu chi tiết vẫn ở off-chain. Mỗi chặng tạo một payload chuẩn hóa và hash; Solana dự kiến dùng làm lớp công khai để kiểm tra hash, đơn vị xác nhận, thời điểm và trạng thái.",
+    "hashChainTitle": "CHUỖI HASH MINH HỌA",
+    "chainStages": ["Thu hoạch", "Đóng gói", "Kiểm định", "Vận chuyển", "Điểm bán"],
+    "demoDisclaimer": "Các hash trên chỉ là dữ liệu mẫu. Program Solana thật chưa được deploy ở giai đoạn này.",
+    "offChainTitle": "Off-chain giữ dữ liệu chi tiết",
+    "offChainText": "Chứng từ, hình ảnh, địa chỉ chi tiết, hồ sơ doanh nghiệp và dữ liệu cần cập nhật/xóa được lưu ngoài blockchain.",
+    "onChainTitle": "On-chain chỉ giữ proof tối thiểu",
+    "onChainText": "Hash của lô/chặng, đơn vị xác nhận, phiên bản, thời điểm và trạng thái là những dữ liệu dự kiến cần công khai để đối soát.",
+    "immutabilityTitle": "Sửa dữ liệu thì phải tạo phiên bản mới",
+    "immutabilityText": "Nếu nội dung đã xác nhận thay đổi, hash cũ không còn khớp. Hệ thống phải ghi nhận phiên bản mới thay vì âm thầm ghi đè lịch sử."
+  },
+  "compliance": {
+    "badge": "Ranh giới an toàn",
+    "title": "Minh bạch hơn, không biến sản phẩm thành crypto.",
+    "description": "Check-Di dùng blockchain như lớp kiểm tra tính toàn vẹn, không phải hệ thống giao dịch tài sản.",
+    "rules": [
+      "Không lưu chứng từ gốc lên blockchain",
+      "Không token, không đầu tư, không thanh toán crypto",
+      "AI chỉ cảnh báo sai lệch, không tự kết luận gian lận",
+      "Mỗi bên chỉ xác nhận dữ liệu thuộc chặng mình chịu trách nhiệm"
+    ]
+  },
+  "footer": {
+    "brandTitle": "Check-Di",
+    "brandTagline": "Truy xuất nguồn gốc theo từng chặng",
+    "copyright": "UniHackFest 2026 · Một core cho Technical Build và Product & Business"
+  },
+  "common": {
+    "switchLanguage": "Chọn ngôn ngữ",
+    "vietnamese": "Tiếng Việt",
+    "english": "English"
+  }
+}
