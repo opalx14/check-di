@@ -1,0 +1,34 @@
+# macOS
+.DS_Store
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Node / web
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Rust / Anchor
+target/
+.anchor/
+
+# Solana local/test artifacts
+test-ledger/
+
+# IDE
+.idea/
+.vscode/
+
+# Temporary
+.tmp/
+tmp/
+
+# Obsolete local scaffold directories; active app lives in src/
+/apps/
+/packages/
