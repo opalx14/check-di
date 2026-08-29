@@ -2,47 +2,44 @@
 
 ## Product goal
 
-Cho phép một builder submit project artifacts, nhận AI evidence draft, được human reviewer xác nhận và phát hành một attestation có thể verify công khai.
+Cho phép một lô sản phẩm được theo dõi từ nơi sản xuất đến điểm bán, với mỗi chặng có dữ liệu, chứng từ, đơn vị chịu trách nhiệm và hash để đối soát tính toàn vẹn.
 
-## MVP user journeys
+## Primary users
 
-### Builder
-1. Submit repo/artifacts.
-2. Chọn rubric phù hợp.
-3. Xem AI evidence draft.
-4. Bổ sung evidence nếu thiếu.
+1. Nhà sản xuất/nhà vườn: tạo lô và sự kiện đầu tiên.
+2. Đơn vị đóng gói/kiểm định/logistics/điểm bán: bổ sung chặng mình phụ trách.
+3. Người tiêu dùng/verifier: quét QR để xem hành trình.
 
-### Reviewer / Issuer
-1. Mở assessment.
-2. Xem claim + evidence + confidence + warning.
-3. Approve / Edit / Reject / Needs more evidence.
-4. Chỉ sau approval mới được chuẩn bị attestation.
-5. Issuer ký issue/revoke/supersede bằng wallet của mình.
+## MVP flows
 
-### Verifier
-1. Mở public verify link/QR.
-2. Xem issuer, skill claims công khai, evidence public và trạng thái attestation.
-3. Kiểm tra integrity/status proof.
+### Create batch
 
-## Non-goals cho MVP
+`product -> batch ID -> origin -> public ID/QR`
 
-- Token/NFT marketplace.
-- Crypto payment/custody.
-- Recruiter auto-ranking.
-- Mainnet monetary flow.
-- University SIS/VNeID replacement.
-- Multi-chain/ZK/custom wallet.
+### Add trace event
 
-## Success condition
+`stage -> organization -> location -> timestamp -> data -> documents -> AI check -> confirm -> event hash`
 
-Vertical slice phải demo được end-to-end:
+### Consumer verify
 
-`artifact -> AI JSON with evidence -> human approval -> issue on Devnet -> public verify -> revoke/status update`
+`scan QR -> product summary -> journey map -> timeline -> organization -> status -> public evidence`
 
-## Open decisions
+## AI requirements
 
-- Web framework/package manager initialization.
-- Database provider/schema implementation.
-- AI model/provider abstraction.
-- Exact rubric `UniHackFest Builder v1` schema.
-- Solana issuer account/PDA details.
+- trích dữ liệu có cấu trúc từ chứng từ;
+- so sánh batch code, date, quantity, location;
+- cảnh báo contradiction/missing data;
+- luôn cho phép human review;
+- không tự kết luận gian lận.
+
+## Integrity requirements
+
+- canonicalize event payload;
+- SHA-256 event hash;
+- hỗ trợ previous event hash/version;
+- khi sửa dữ liệu đã xác nhận phải supersede, không overwrite lịch sử;
+- Solana Devnet proof chỉ được hiển thị là thật khi có transaction thật.
+
+## Definition of first vertical slice
+
+`create sample batch -> add packing event -> run deterministic AI check fixture -> confirm event -> generate hash -> public verify page`

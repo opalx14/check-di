@@ -1,39 +1,15 @@
-# Check-Di — Demo Script Foundation
+# Check-Di — Demo Script
 
-Target demo spine: khoảng 75–90 giây khi MVP hoàn chỉnh.
+## 75–90 second demo
 
-## 1. Hook
+1. **Problem** — “Người mua thấy tem QR, nhưng QR đó có thể chỉ trỏ tới dữ liệu do một bên tự khai.”
+2. **Create/choose batch** — mở lô `DUR-260830-01`.
+3. **Journey** — cho thấy nhà vườn -> đóng gói -> kiểm định -> logistics -> điểm bán trên map/timeline.
+4. **AI check** — mở packing/inspection document check và chỉ ra quantity/date/batch-code match hoặc warning.
+5. **Confirm + hash** — đơn vị xác nhận trace event; hệ thống tạo canonical event hash.
+6. **Devnet proof** — khi program thật đã có, mở transaction/registry proof. Nếu chưa có thì dùng fixture nhưng ghi rõ demo.
+7. **QR consumer view** — quét QR và mở public timeline.
 
-Một CV/certificate nói người dùng có skill, nhưng không chỉ ra nhanh artifact nào chứng minh claim đó.
+## Closing line
 
-## 2. Analyze
-
-Submit project/repo và chạy Check-Di Evidence Engine.
-
-Hiển thị:
-- claim;
-- evidence pointer;
-- confidence;
-- `needs_review` khi thiếu bằng chứng.
-
-## 3. Human review
-
-Reviewer approve/edit/reject. Claim thiếu evidence không được issue.
-
-## 4. Issue
-
-Issuer ký attestation bằng wallet và nhận Devnet transaction proof.
-
-## 5. Verify
-
-Public page hiển thị:
-- issuer;
-- integrity match;
-- version;
-- active/revoked/superseded status.
-
-## Close
-
-AI giảm workload review. Con người chịu trách nhiệm. Solana là integrity/status layer. Không token, không custody, không crypto payment.
-
-> Chỉ dùng live claims/transactions sau khi implementation thật tồn tại; không giả UI là transaction thật.
+“Check-Di không bảo blockchain biến dữ liệu sai thành đúng. Nó cho biết ai đã ghi nhận gì, ở chặng nào, và dữ liệu đã xác nhận có bị sửa sau đó hay không.”

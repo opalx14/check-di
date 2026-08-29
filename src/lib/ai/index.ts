@@ -1,7 +1,9 @@
-export const AI_ENGINE_NAME = "Check-Di Evidence Engine";
+export const AI_ENGINE_NAME = "Check-Di Document Check";
 
-export type EvidenceReviewStatus =
-  | "pending_human"
-  | "approved"
-  | "needs_review"
-  | "rejected";
+export type DocumentCheckStatus = "matched" | "warning" | "needs_review";
+
+export type DocumentCheckResult = {
+  status: DocumentCheckStatus;
+  message: string;
+  comparedFields: string[];
+};

@@ -15,9 +15,9 @@ const fontMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Check-Di · Evidence-backed Skill Verification on Solana",
+  title: "Check-Di · Truy xuất nguồn gốc theo từng chặng",
   description:
-    "Biến project artifacts thành skill claims có evidence xác thực, AI hỗ trợ phân tích, con người kiểm duyệt và on-chain attestation trên Solana Devnet.",
+    "Check-Di giúp theo dõi hành trình sản phẩm từ nơi sản xuất đến điểm bán bằng timeline, QR, AI đối chiếu chứng từ và hash kiểm tra tính toàn vẹn.",
 };
 
 export default function RootLayout({

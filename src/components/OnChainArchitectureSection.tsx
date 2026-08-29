@@ -1,116 +1,69 @@
-"use client";
+import { Database, FileLock2, Hash, Link2, ShieldCheck } from "lucide-react";
 
-import React from "react";
-import { ShieldCheck, Database, Lock, Key, Cpu, Server, CheckCircle2 } from "lucide-react";
-import { ON_CHAIN_FIELDS, SOLANA_NETWORK, SOLANA_RPC_URL, CHECK_DI_PROGRAM_NAME } from "@/lib/solana/config";
+const CHAIN = [
+  { label: "Thu hoạch", hash: "a81c...92fa" },
+  { label: "Đóng gói", hash: "bf21...4ac8" },
+  { label: "Kiểm định", hash: "c902...e113" },
+  { label: "Vận chuyển", hash: "d710...33bd" },
+  { label: "Điểm bán", hash: "e445...81cc" },
+] as const;
 
 export function OnChainArchitectureSection() {
   return (
-    <section id="onchain" className="relative py-20 sm:py-28 border-t border-white/5 bg-[#070a13]/80">
+    <section id="technology" className="border-t border-white/5 py-20 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-950/40 px-3.5 py-1 text-xs font-semibold text-emerald-300 backdrop-blur">
-            <ShieldCheck className="size-3.5" />
-            <span>Solana Devnet Program</span>
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-950/30 px-3.5 py-1 text-xs font-semibold text-emerald-300">
+            <Hash className="size-3.5" />
+            Hash dùng để kiểm tra dữ liệu đã xác nhận
           </div>
-          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
-            Cấu trúc On-chain PDA & Bảo mật Dữ liệu
-          </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-sm leading-relaxed text-slate-300 sm:text-base">
-            Check-Di thiết kế on-chain account theo chuẩn tối giản nhất: chỉ lưu các hashes và
-            commitments cần thiết cho việc đối soát tính toàn vẹn (Integrity Proof).
+          <h2 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-5xl">Blockchain không thay thế dữ liệu thật. Nó giữ dấu vết của dữ liệu đã được xác nhận.</h2>
+          <p className="mt-4 text-sm leading-relaxed text-slate-300 sm:text-base">
+            Chứng từ và dữ liệu chi tiết vẫn ở off-chain. Mỗi chặng tạo một payload chuẩn hóa và hash; Solana dự kiến dùng làm lớp công khai để kiểm tra hash, đơn vị xác nhận, thời điểm và trạng thái.
           </p>
         </div>
 
-        {/* 2-Column Specs Layout */}
-        <div className="mt-12 grid gap-8 lg:grid-cols-2">
-          {/* Left: On-chain Struct Breakdown */}
-          <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-6 backdrop-blur-xl sm:p-8">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <div className="flex items-center gap-2">
-                <Database className="size-4.5 text-cyan-400" />
-                <h3 className="text-sm font-bold text-white font-mono">
-                  {CHECK_DI_PROGRAM_NAME} :: Attestation
-                </h3>
-              </div>
-              <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-emerald-400 border border-emerald-500/20">
-                Network: {SOLANA_NETWORK}
-              </span>
+        <div className="mt-12 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-3xl border border-white/10 bg-[#0a0f1b] p-6">
+            <div className="flex items-center gap-2 text-cyan-300">
+              <Link2 className="size-4" />
+              <p className="text-xs font-bold">CHUỖI HASH MINH HỌA</p>
             </div>
-
-            <p className="mt-4 text-xs text-slate-300 leading-relaxed">
-              Mỗi chứng chỉ được lưu trữ dưới dạng một <strong>Program Derived Address (PDA)</strong>{" "}
-              với seed duy nhất: <code className="text-cyan-300 font-mono">[&quot;attestation&quot;, issuer, subject_commitment]</code>.
-            </p>
-
-            {/* Field Table */}
-            <div className="mt-6 space-y-2 font-mono text-xs">
-              {ON_CHAIN_FIELDS.map((field, idx) => (
-                <div
-                  key={field}
-                  className="flex items-center justify-between rounded-xl border border-white/5 bg-[#050811] p-3 text-slate-300"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-[10px] text-slate-500 font-bold">#{idx + 1}</span>
-                    <span className="font-bold text-cyan-300">{field}</span>
-                  </div>
-                  <span className="text-[11px] text-slate-400">
-                    {field === "issuer"
-                      ? "Pubkey (32 B)"
-                      : field.includes("hash") || field.includes("root") || field.includes("commitment")
-                      ? "[u8; 32] (SHA-256)"
-                      : field === "issued_at"
-                      ? "i64 (Unix Timestamp)"
-                      : field === "status"
-                      ? "enum AttestationStatus (1 B)"
-                      : "u8 (Version)"}
-                  </span>
+            <div className="mt-6 grid gap-3 sm:grid-cols-5">
+              {CHAIN.map((item, index) => (
+                <div key={item.label} className="relative rounded-xl border border-white/10 bg-slate-900/60 p-3 text-center">
+                  <p className="text-xs font-semibold text-white">{item.label}</p>
+                  <p className="mt-2 font-mono text-[11px] text-cyan-300">{item.hash}</p>
+                  {index < CHAIN.length - 1 && <span className="absolute -right-3 top-1/2 hidden -translate-y-1/2 text-slate-600 sm:block">→</span>}
                 </div>
               ))}
             </div>
-
-            <div className="mt-5 flex items-center justify-between text-[11px] text-slate-400 pt-3 border-t border-white/10">
-              <span>Solana RPC Endpoint:</span>
-              <span className="font-mono text-cyan-400 truncate max-w-[200px]">{SOLANA_RPC_URL}</span>
+            <div className="mt-5 rounded-xl border border-amber-500/20 bg-amber-950/20 p-3 text-xs leading-relaxed text-amber-200/90">
+              Các hash trên chỉ là dữ liệu mẫu. Program Solana thật chưa được deploy ở giai đoạn này.
             </div>
           </div>
 
-          {/* Right: Data Boundary & Privacy Invariants */}
-          <div className="space-y-6">
-            <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-6 backdrop-blur-xl sm:p-8">
-              <div className="flex items-center gap-2 text-amber-400">
-                <Lock className="size-4.5" />
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                  Ranh giới Dữ liệu Tuyệt đối (Data Boundaries)
-                </h3>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+            <div className="rounded-2xl border border-white/10 bg-slate-900/55 p-5">
+              <div className="flex items-center gap-2 text-emerald-300">
+                <Database className="size-4" />
+                <h3 className="text-sm font-bold text-white">Off-chain giữ dữ liệu chi tiết</h3>
               </div>
-
-              <div className="mt-4 space-y-4 text-xs leading-relaxed text-slate-300">
-                <div className="rounded-xl border border-amber-500/20 bg-amber-950/20 p-4">
-                  <h4 className="font-bold text-amber-300">1. Không bao giờ lưu PII on-chain</h4>
-                  <p className="mt-1 text-slate-300">
-                    Họ tên, email, CCCD/hộ chiếu, số điện thoại hoặc mã nguồn riêng tư của ứng viên
-                    không bao giờ được gửi lên blockchain. Chỉ có giá trị băm (Hash commitment) được lưu.
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-cyan-500/20 bg-cyan-950/20 p-4">
-                  <h4 className="font-bold text-cyan-300">2. Quyền thu hồi & Cập nhật (Supersede)</h4>
-                  <p className="mt-1 text-slate-300">
-                    Issuer có thể chuyển trạng thái chứng chỉ sang <code className="text-cyan-200">Revoked</code>{" "}
-                    hoặc nâng cấp sang version mới thông qua instruction <code className="text-cyan-200">supersede_attestation</code>.
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-4">
-                  <h4 className="font-bold text-emerald-300">3. Chi phí vận hành tối ưu</h4>
-                  <p className="mt-1 text-slate-300">
-                    Nhờ kích thước tài khoản nhỏ gọn (~178 bytes), chi phí rent-exempt cho mỗi chứng
-                    chỉ trên Solana chỉ dưới $0.001 USD, hoàn toàn khả thi cho quy mô triệu chứng chỉ.
-                  </p>
-                </div>
+              <p className="mt-3 text-xs leading-relaxed text-slate-400">Chứng từ, hình ảnh, địa chỉ chi tiết, hồ sơ doanh nghiệp và dữ liệu cần cập nhật/xóa được lưu ngoài blockchain.</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-slate-900/55 p-5">
+              <div className="flex items-center gap-2 text-cyan-300">
+                <ShieldCheck className="size-4" />
+                <h3 className="text-sm font-bold text-white">On-chain chỉ giữ proof tối thiểu</h3>
               </div>
+              <p className="mt-3 text-xs leading-relaxed text-slate-400">Hash của lô/chặng, đơn vị xác nhận, phiên bản, thời điểm và trạng thái là những dữ liệu dự kiến cần công khai để đối soát.</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-slate-900/55 p-5 sm:col-span-2 lg:col-span-1">
+              <div className="flex items-center gap-2 text-purple-300">
+                <FileLock2 className="size-4" />
+                <h3 className="text-sm font-bold text-white">Sửa dữ liệu thì phải tạo phiên bản mới</h3>
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-slate-400">Nếu nội dung đã xác nhận thay đổi, hash cũ không còn khớp. Hệ thống phải ghi nhận phiên bản mới thay vì âm thầm ghi đè lịch sử.</p>
             </div>
           </div>
         </div>

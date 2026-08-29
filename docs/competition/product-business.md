@@ -1,37 +1,35 @@
 # Check-Di — Product & Business Track
 
-## Positioning
+## Problem
 
-Track product/business dùng **cùng Check-Di core product** với Technical Build Track.
+Nguồn gốc sản phẩm đi qua nhiều bên nhưng người mua thường chỉ thấy thông tin cuối cùng. Việc audit trách nhiệm theo từng chặng tốn thời gian và dễ phụ thuộc vào dữ liệu tập trung của một bên.
 
-## Story to prove
+## Product thesis
 
-- CV/certificate không cho verifier thấy granular project evidence nhanh.
-- Reviewer/issuer mất thời gian đọc repo/artifacts thủ công.
-- AI giảm chi phí chuyển dữ liệu không cấu trúc thành evidence map.
-- Human reviewer giữ trách nhiệm quyết định.
-- Solana cung cấp shared integrity/status registry thay vì thay thế toàn bộ database.
+Check-Di biến một mã QR thành timeline nguồn gốc có nhiều bên cùng xác nhận. AI giảm công kiểm tra chứng từ; hash/integrity proof giúp phát hiện dữ liệu đã xác nhận bị thay đổi.
 
 ## Beachhead
 
-- hackathon organizers;
-- coding clubs;
-- bootcamps;
-- project-based university courses;
-- training providers.
+Một chuỗi nông sản có batch rõ ràng:
 
-## Evidence required
+`nhà vườn -> đóng gói -> kiểm định -> logistics -> điểm bán`
 
-- interviews thật;
-- pilot issuer ngoài team nếu có thể;
-- measured review workflow;
-- market memo/GTM;
-- real product metrics, không seed giả thành traction.
+## Users
 
-## Business hypothesis
+- producer/HTX;
+- packing/QC;
+- logistics;
+- retail;
+- consumer/verifier.
 
-- Student/public verification: free.
-- Issuer workflow: B2B subscription/per cohort.
-- Verification API/enterprise workflow: future paid tier.
+## GTM hypothesis
 
-Không tạo codebase riêng cho track này.
+Bắt đầu bằng một pilot với 1–2 tổ chức trong một chuỗi mẫu, sau đó mở rộng theo batch và đối tác. Public QR verification miễn phí; workflow/issuer dashboard và API là phần có thể thương mại hóa.
+
+## What to validate
+
+- ai chịu trách nhiệm nhập dữ liệu ở từng chặng;
+- chứng từ nào cần đối chiếu;
+- dữ liệu nào công khai cho consumer;
+- incentive để từng bên tham gia;
+- integration với hệ thống truy xuất hiện có thay vì cố thay thế tất cả.

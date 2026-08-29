@@ -1,31 +1,25 @@
 # Check-Di — Technical Build Track
 
-## Positioning
-
-Track kỹ thuật dùng **cùng Check-Di core product** với Product & Business Track.
-
 ## What to prove
 
-- AI Evidence Engine trả structured output có evidence pointer.
-- Human review là gate trước issue.
-- Solana/Anchor program chạy trên Devnet.
-- Issuer-controlled lifecycle: issue/revoke/supersede.
-- Wallet integration và transaction proof có thể mở trên Explorer.
-- Public verifier phát hiện status/integrity mismatch.
-- Tests cho AI/API/program boundary.
+- Next.js product flow chạy thật.
+- Trace event schema và canonical hashing.
+- AI đọc/đối chiếu chứng từ có structured output.
+- QR/public verification page.
+- Anchor program trên Solana Devnet cho batch/event integrity.
+- Transaction Explorer proof và revoke/supersede lifecycle.
 
-## Demo spine
+## Demo path
 
-`submit -> AI evidence -> human review -> issuer sign -> Devnet tx -> public verify -> revoke/status`
+`batch -> add trace event -> AI check -> confirm -> event hash -> Devnet registry -> QR verify`
 
-## Submission evidence
+## Technical talking points
 
-- public/source repo theo yêu cầu BTC;
-- architecture diagram;
-- program ID + transaction signatures;
-- AI eval fixtures/metrics;
-- setup/test instructions;
-- technical appendix;
-- backup demo.
+- Blockchain là integrity/status layer, không phải nơi lưu toàn bộ supply-chain data.
+- AI là quality gate, không tự xác nhận nguồn gốc.
+- Mỗi organization chỉ ký/xác nhận chặng thuộc trách nhiệm của mình.
+- Public verifier recompute hash để phát hiện dữ liệu off-chain bị sửa.
 
-Không build codebase riêng cho track này.
+## Definition of done
+
+Không dùng mock transaction như proof thật. Track chỉ được coi là sẵn sàng khi có Program ID + issue/append transaction + Explorer link + verification flow chạy được.

@@ -1,35 +1,38 @@
 # Check-Di — AI Evaluation Plan
 
-Status: **foundation only**.
+## AI job
 
-## Output contract to enforce
+AI hỗ trợ đọc và đối chiếu chứng từ của một trace event.
 
-Mỗi AI-generated skill claim phải có:
-- skill/claim;
-- evidence pointer(s);
-- reason;
-- confidence;
-- review status;
-- rubric version;
-- model version.
+## Required outputs
 
-Nếu evidence không đủ, output phải chuyển sang `needs_review` thay vì bịa claim.
+Mỗi check phải có:
+
+- trường dữ liệu đã đọc;
+- nguồn/chứng từ liên quan;
+- giá trị so sánh giữa các chặng;
+- trạng thái `matched`, `warning` hoặc `needs_review`;
+- giải thích ngắn cho cảnh báo.
+
+## Example checks
+
+- batch ID trên packing list có khớp lô hiện tại không;
+- ngày kiểm định có hợp lý so với ngày thu hoạch/đóng gói không;
+- số lượng đầu vào/đầu ra có chênh lệch bất thường không;
+- địa điểm giao/nhận có khớp event logistics không.
+
+## Guardrails
+
+- Không có dữ liệu -> `needs_review`.
+- Không tự kết luận gian lận.
+- Không tự xác nhận nguồn gốc.
+- Output phải qua schema validation.
+- Demo fixtures phải được ghi rõ là fixture.
 
 ## Metrics planned
 
-- Structured JSON validity
-- Evidence citation coverage
-- Unsupported-claim rate
-- Missing-evidence handling
-- Contradiction handling
-- Human acceptance/edit/reject rate
-
-## Fixture strategy
-
-Tạo fixed fixtures cho ít nhất:
-- GOOD evidence case;
-- MISSING evidence case;
-- CONTRADICTION case;
-- TEAM evidence / attribution uncertain case.
-
-Không dùng screenshot chatbot làm bằng chứng duy nhất cho AI integration.
+- field extraction accuracy;
+- mismatch detection precision/recall trên fixture set;
+- schema validity;
+- unsupported-claim rate;
+- human acceptance/edit rate.

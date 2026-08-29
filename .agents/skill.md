@@ -2,55 +2,54 @@
 
 ## Mục tiêu
 
-Phát triển Check-Di thành một web app Next.js có thể demo end-to-end cho UniHackFest 2026 với hai track dùng chung một core.
+Phát triển Check-Di thành web truy xuất nguồn gốc theo hành trình sản phẩm: người dùng quét QR và xem sản phẩm đã đi qua những đâu, đơn vị nào xác nhận, chứng từ nào liên quan và dữ liệu có bị thay đổi sau xác nhận hay không.
 
 ## Luồng cốt lõi
 
 ```text
-Artifacts
-  -> AI evidence mapping
-  -> Human review
-  -> Issuer approval
-  -> Solana attestation
-  -> Public verification
+Batch / QR
+  -> Supply-chain events
+  -> AI document checks
+  -> Participant confirmation
+  -> Hash / integrity proof
+  -> Consumer verification page
 ```
 
 ## Stack đã chốt
 
 - Web: Next.js App Router + TypeScript.
 - Styling: Tailwind CSS.
-- Package manager/script runner local: Bun.
-- Next.js dev/start port: `7314`.
-- Dùng `bun run ...` làm entrypoint; không force `bun --bun` cho Next.js 16 trên Bun 1.2.18.
-- Solana frontend: ưu tiên `@solana/kit` + `@solana/react` khi bắt đầu wallet/on-chain integration.
+- Package manager/script runner: Bun.
+- Dev/start port: `7314`.
+- Solana frontend: ưu tiên `@solana/kit` + `@solana/react` khi triển khai on-chain.
 - Solana program: Anchor/Rust trong `programs/check_di_registry`.
-- Database: PostgreSQL/Supabase-compatible layer ở `src/lib/db` khi triển khai persistence.
-- AI: structured evidence engine ở `src/lib/ai`.
+- Database: PostgreSQL/Supabase-compatible layer ở `src/lib/db`.
+- AI: document extraction/cross-checking ở `src/lib/ai`.
 
 ## Module ownership
 
-- `src/app`: route/UI/API orchestration.
+- `src/app`: UI/API orchestration.
 - `src/components`: reusable web components.
-- `src/lib/ai`: schema, prompt, evaluator, evidence attribution.
-- `src/lib/db`: data access, persistence, retention boundary.
-- `src/lib/solana`: network config, client, transaction/program integration.
-- `src/types`: product contracts.
-- `programs/check_di_registry`: issue/revoke/supersede logic.
+- `src/lib/ai`: OCR/document extraction abstraction, cross-document checks, anomaly flags.
+- `src/lib/db`: batch, trace events, organizations, documents, QR/public view.
+- `src/lib/solana`: network config, hash anchoring, transaction/program integration.
+- `src/types`: traceability contracts.
+- `programs/check_di_registry`: batch/event integrity and status logic.
 
 ## Quy tắc implementation
 
-- Không build feature ngoài MVP trước khi flow end-to-end chạy được.
-- Không để AI tự cấp credential.
-- Không lưu PII/raw evidence on-chain.
-- Không đưa token/NFT marketplace/custody/payment vào MVP.
-- Không trộn legacy Solana wallet stack nếu chưa có lý do rõ ràng.
-- Giữ Devnet làm network mặc định trong giai đoạn thi.
+- Mọi màn hình phải phục vụ một hành vi thật: tạo lô, thêm chặng, kiểm tra chứng từ, xác nhận, quét QR, xem hành trình.
+- AI không được tự kết luận nguồn gốc là thật; chỉ hỗ trợ đối chiếu/cảnh báo.
+- Không lưu PII/raw documents on-chain.
+- Không token/NFT marketplace/custody/payment trong MVP.
+- Devnet là network mặc định trong giai đoạn thi.
+- Không trình bày dữ liệu mô phỏng như transaction/proof thật.
 
-## Definition of Done cho feature
+## Definition of Done
 
 Feature chỉ xem là xong khi:
 
 1. Code chạy được.
-2. Có error handling phù hợp.
-3. Có test/check tương ứng khi infrastructure đã sẵn sàng.
+2. Có trạng thái loading/error/empty phù hợp.
+3. Có check/test tương ứng khi infrastructure sẵn sàng.
 4. Có thể xuất hiện trong live demo hoặc submission package.

@@ -1,43 +1,32 @@
-"use client";
+import { CheckCircle2, ShieldCheck } from "lucide-react";
 
-import React from "react";
-import { ShieldAlert, CheckCircle2, XCircle, Scale } from "lucide-react";
+const RULES = [
+  "Không lưu chứng từ gốc lên blockchain",
+  "Không token, không đầu tư, không thanh toán crypto",
+  "AI chỉ cảnh báo sai lệch, không tự kết luận gian lận",
+  "Mỗi bên chỉ xác nhận dữ liệu thuộc chặng mình chịu trách nhiệm",
+] as const;
 
 export function ComplianceBanner() {
-  const boundaries = [
-    { title: "No Token / Token Sale", desc: "Không phát hành token đầu cơ hay kêu gọi đầu tư." },
-    { title: "No Crypto Custody", desc: "Không giữ private key hay tài sản của người dùng." },
-    { title: "Zero PII On-chain", desc: "Thông tin cá nhân được bảo vệ nghiêm ngặt off-chain." },
-    { title: "Human Final Decision", desc: "AI chỉ trích xuất dẫn chứng; con người quyết định cấp." },
-  ];
-
   return (
-    <section id="compliance" className="py-16 border-t border-white/5 bg-[#060810]">
+    <section id="safety" className="border-t border-white/5 bg-[#060810] py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl border border-white/10 bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-[#080d1a] p-6 backdrop-blur-xl sm:p-8">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-xl">
-              <div className="inline-flex items-center gap-2 rounded-lg bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300 border border-cyan-500/20">
-                <Scale className="size-3.5" />
-                <span>Compliance & Product Boundary</span>
+        <div className="rounded-3xl border border-white/10 bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-[#080d1a] p-6 sm:p-8">
+          <div className="grid gap-7 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+                <ShieldCheck className="size-3.5" />
+                Ranh giới an toàn
               </div>
-              <h3 className="text-xl font-bold text-white sm:text-2xl">
-                Cam kết Quản trị & Tuân thủ Pháp lý (UniHackFest 2026)
-              </h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Check-Di được xây dựng với mục tiêu ứng dụng thực tế lâu dài, tuân thủ nghiêm ngặt các
-                chuẩn mực an toàn thông tin và không chứa các yếu tố rủi ro tài chính.
-              </p>
+              <h3 className="mt-3 text-2xl font-black text-white">Minh bạch hơn, không biến sản phẩm thành crypto.</h3>
+              <p className="mt-3 text-xs leading-relaxed text-slate-400">Check-Di dùng blockchain như lớp kiểm tra tính toàn vẹn, không phải hệ thống giao dịch tài sản.</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:w-1/2">
-              {boundaries.map((b, idx) => (
-                <div key={idx} className="flex items-start gap-2.5 rounded-xl border border-white/5 bg-slate-950/60 p-3 text-xs">
-                  <CheckCircle2 className="size-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-white block">{b.title}</strong>
-                    <span className="text-slate-400 text-[11px] leading-tight block mt-0.5">{b.desc}</span>
-                  </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {RULES.map((rule) => (
+                <div key={rule} className="flex items-start gap-2.5 rounded-xl border border-white/5 bg-slate-950/60 p-3 text-xs text-slate-300">
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-400" />
+                  <span>{rule}</span>
                 </div>
               ))}
             </div>

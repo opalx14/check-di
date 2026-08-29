@@ -1,28 +1,22 @@
-# programs/check_di_registry
+# check_di_registry
 
-Planned Solana/Anchor program cho Check-Di attestation registry.
+Anchor/Rust boundary cho integrity registry của Check-Di.
 
-## Planned on-chain state
+## Planned responsibilities
 
-- issuer pubkey;
-- subject commitment;
-- credential schema hash;
-- evidence root;
-- assessment hash;
-- rubric hash;
-- issued/expiry timestamps;
-- status;
-- version/supersedes.
+- khởi tạo registry cho một product batch;
+- ghi nhận hash của từng trace event;
+- liên kết `previous_event_hash` để audit thứ tự hành trình;
+- lưu organization/authority đã xác nhận;
+- quản lý `active`, `revoked`, `superseded` và version;
+- phát transaction proof trên Solana Devnet.
 
-## Planned instructions
+## Không lưu on-chain
 
-- `initialize_issuer`
-- `issue_attestation`
-- `revoke_attestation`
-- `supersede_attestation`
+- chứng từ gốc;
+- hình ảnh;
+- thông tin cá nhân;
+- địa chỉ chi tiết không cần công khai;
+- toàn bộ dữ liệu nghiệp vụ của lô hàng.
 
-## Boundary
-
-Program không lưu PII/raw artifacts và không triển khai token, marketplace, custody, payment hay yield trong MVP.
-
-Anchor crate chưa được khởi tạo ở phase foundation này.
+Program chưa được triển khai trong phase hiện tại. Không trình bày hash/transaction mẫu trên UI như Devnet proof thật.

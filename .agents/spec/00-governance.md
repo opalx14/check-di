@@ -2,63 +2,68 @@
 
 ## Scope
 
-Tài liệu này khóa các nguyên tắc nền của Check-Di trong giai đoạn UniHackFest 2026.
+Khóa các nguyên tắc nền của Check-Di trong giai đoạn UniHackFest 2026.
 
 ## One product, two tracks
 
-Check-Di chỉ có một core implementation.
+Check-Di có một core implementation duy nhất.
 
-- Technical Build Track nhấn mạnh implementation, AI evaluation, Solana Devnet, program/PDA, transaction proof và test.
-- Product & Business Track nhấn mạnh problem, user, issuer/verifier workflow, market, GTM và pilot.
+- Technical Build Track: AI kiểm tra chứng từ, hash/integrity proof, QR verification, Solana Devnet, program/PDA và test.
+- Product & Business Track: bài toán hàng giả/không rõ nguồn gốc, minh bạch chuỗi cung ứng, user workflow, market, GTM và pilot.
 
-Không fork business logic hoặc tạo app riêng chỉ để phục vụ track.
+Không fork business logic hoặc tạo app riêng theo track.
 
 ## Core product flow
 
-`Artifacts -> AI Evidence Engine -> Human Review -> Issuer Approval -> Solana Attestation -> Public Verify`
+`Batch/QR -> Trace Events -> AI Document Checks -> Participant Confirmation -> Hash/Integrity Proof -> Consumer Verify`
 
-Mọi feature mới phải hỗ trợ trực tiếp ít nhất một bước trong flow này hoặc một deliverable thi đấu bắt buộc.
+## Data truth model
+
+Blockchain không tự chứng minh dữ liệu ngoài đời là đúng.
+
+Mỗi tổ chức chỉ xác nhận dữ liệu thuộc chặng mình chịu trách nhiệm. Check-Di phải hiển thị rõ:
+
+- ai ghi nhận;
+- ai xác nhận;
+- thời điểm;
+- chứng từ liên quan;
+- hash/integrity status;
+- trạng thái active/revoked/superseded nếu có.
 
 ## AI governance
 
-AI chỉ là decision-support layer:
-- evidence extraction;
-- rubric mapping;
-- missing/contradictory evidence detection;
-- confidence + draft claim.
+AI là lớp hỗ trợ kiểm tra:
 
-Credential chỉ được issue sau human review/issuer approval.
+- trích dữ liệu từ chứng từ;
+- so sánh số lượng, ngày tháng, mã lô, địa điểm;
+- phát hiện mismatch/contradiction;
+- gợi ý cần kiểm tra thêm.
 
-Không dùng AI để tự động kết luận gian lận, tuyển/loại người, hoặc tạo skill claim không có evidence pointer.
+AI không tự xác nhận nguồn gốc, không tự buộc tội gian lận.
 
 ## On-chain governance
 
-Solana là integrity/status layer, không phải nơi chứa toàn bộ hồ sơ.
+Solana là integrity/status layer. Không lưu toàn bộ hồ sơ lên chain.
 
-On-chain chỉ giữ dữ liệu tối thiểu cần cho verification/audit, ví dụ issuer, commitments/hashes, version, timestamp và status.
+On-chain chỉ giữ dữ liệu tối thiểu như batch/event hash, organization/issuer key, version, timestamp và status. Raw document, thông tin cá nhân và dữ liệu nhạy cảm ở off-chain.
 
-PII/raw evidence phải ở off-chain.
+## Crypto boundary
 
-## Crypto boundary cho MVP
+Không build token sale, reward token, NFT marketplace, swap, custody, crypto payment, staking/yield hoặc investment language cho MVP.
 
-Không build:
-- reward/token sale;
-- NFT marketplace;
-- swap/order book;
-- custody;
-- crypto payment;
-- staking/yield;
-- investment language.
+## Demo truthfulness
+
+- Dữ liệu giả phải ghi rõ là demo/mô phỏng.
+- Không hiển thị transaction/PDA/Verified giả như dữ liệu Devnet thật.
+- Khi chưa deploy program, UI phải nói rõ đây là kiến trúc dự kiến.
 
 ## Definition of Done
 
 Một vertical slice chỉ được coi là hoàn chỉnh khi có thể demo end-to-end và có artefact phục vụ submission.
 
-Khi implementation bắt đầu, mỗi phần phải có check/test phù hợp trước khi đánh dấu done trong `STATUS.md`.
-
 ## Nhật ký triển khai
 
-### 2026-08-29
-- Khởi tạo governance riêng cho Check-Di.
-- Chuẩn hóa agent instructions theo kiến trúc và phạm vi riêng của Check-Di.
-- Khóa nguyên tắc một core product cho hai track và các boundary AI/Solana/compliance.
+### 2026-08-30
+- Khóa lại đúng core Check-Di: truy xuất nguồn gốc sản phẩm theo timeline/map, QR và hash theo từng chặng.
+- AI chuyển sang nhiệm vụ đọc/đối chiếu chứng từ và cảnh báo sai lệch.
+- Hai track tiếp tục dùng chung một sản phẩm.

@@ -1,36 +1,31 @@
 # Check-Di — Market Memo Foundation
 
-## Initial market thesis
+## Problem hypothesis
 
-Check-Di không cạnh tranh trực tiếp với formal diploma verification. Sản phẩm tập trung vào **granular project-based proof-of-skill**: claim kỹ năng nào dựa trên artifact nào, rubric nào, ai review và trạng thái xác nhận hiện tại.
+Người mua, nhà bán lẻ và các bên kiểm soát chất lượng cần biết một sản phẩm đã đi qua đâu và ai chịu trách nhiệm cho từng chặng. QR tĩnh hoặc dữ liệu tập trung do một bên tự nhập không giải quyết tốt bài toán audit giữa nhiều bên.
 
-## Beachhead segments
+## Beachhead
 
-1. Hackathon organizers
-2. Coding clubs
-3. Bootcamps
-4. Project-based university courses
-5. Training providers
+Bắt đầu với một chuỗi nông sản/lô hàng có hành trình rõ:
 
-## Buyer / user split
+`nhà vườn -> đóng gói -> kiểm định -> logistics -> điểm bán`
 
-- Builder/student: tạo hồ sơ evidence-backed.
-- Issuer/reviewer: dùng workflow để review/issue.
-- Verifier/recruiter: kiểm tra claim nhanh.
-- B2B payer dự kiến: issuer/training organizer, không phải student verifier.
+## Value by participant
 
-## Hypothesis to validate
+- Producer: chứng minh nguồn gốc và quy trình ban đầu.
+- Processor/QC: liên kết chứng từ với đúng lô và đúng thời điểm.
+- Logistics: tạo dấu vết nhận/giao.
+- Retail: cho người mua truy xuất nhanh bằng QR.
+- Consumer: xem timeline/map thay vì chỉ tin một nhãn mô tả.
 
-- Reviewer thực sự mất thời gian đọc artifacts thủ công.
-- Evidence map có citation giúp giảm review time.
-- Issuer chấp nhận human-in-loop + public verification workflow.
-- Verifier coi issuer + evidence + status quan trọng hơn một certificate ảnh tĩnh.
+## Business hypothesis
 
-## Required validation
+Issuer/organization SaaS hoặc per-batch/per-cohort pricing; public consumer verification miễn phí. Không dùng tokenomics.
 
-- Student/builder interviews.
-- Mentor/issuer interviews.
-- Recruiter/verifier interviews.
-- Ít nhất một pilot issuer ngoài team trước submission nếu có thể.
+## Validation needed
 
-Không ghi traction giả hoặc market number chưa được nghiên cứu/xác minh.
+- phỏng vấn nhà vườn/HTX;
+- đơn vị đóng gói/kiểm định;
+- logistics/retail;
+- người tiêu dùng;
+- xác định dữ liệu nào họ sẵn sàng công khai và dữ liệu nào phải giữ riêng.

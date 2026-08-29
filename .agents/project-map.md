@@ -1,109 +1,79 @@
 # Check-Di Project Map
 
-## Product architecture
+## Product
+
+Check-Di là nền tảng truy xuất nguồn gốc theo hành trình sản phẩm. Mỗi lô hàng có mã QR/public ID; các bên trong chuỗi cung ứng ghi nhận sự kiện, đính kèm chứng từ, xác nhận dữ liệu và tạo hash để kiểm tra tính toàn vẹn.
+
+## Main user flow
 
 ```text
-Browser
-  -> Next.js App Router
-      -> src/lib/ai
-      -> src/lib/db
-      -> src/lib/solana
-           -> check_di_registry (Solana Devnet)
+Nhà sản xuất / nhà vườn
+  -> Thu mua / sơ chế / đóng gói
+  -> Kiểm định
+  -> Logistics / kho
+  -> Điểm bán
+  -> Người tiêu dùng quét QR
 ```
 
-## Root
+Mỗi chặng gồm:
+
+```text
+Location + timestamp + organization + batch data + documents
+  -> AI cross-check
+  -> Human/organization confirmation
+  -> Canonical event payload
+  -> Hash / integrity proof
+```
+
+## Active structure
 
 ### `src/app`
-Next.js App Router của web app Check-Di.
+Next.js App Router, landing, API và các route sản phẩm sau này:
 
-Planned product surfaces:
-
-```text
-/
-/submit
-/issuer
-/verify/[id]
-/api/...
-```
+- `/` landing + demo.
+- `/batches/new` tạo lô.
+- `/batches/[id]` quản lý hành trình.
+- `/batches/[id]/events/new` thêm chặng.
+- `/verify/[publicId]` trang người tiêu dùng quét QR.
 
 ### `src/components`
-Reusable UI components. Chưa tách design system riêng ở giai đoạn foundation.
+UI dùng lại: hero, journey timeline/map preview, document check, QR/public verification.
 
 ### `src/lib/ai`
-AI Evidence Engine.
-
-Responsibilities:
-
-- normalize artifact input;
-- map evidence vào rubric;
-- trả structured claim/evidence output;
-- confidence + `needs_review`;
-- không issue credential.
+AI đọc chứng từ và đối chiếu dữ liệu giữa các chặng. Không tự xác nhận nguồn gốc.
 
 ### `src/lib/db`
-Off-chain data layer.
-
-PII, raw artifacts, AI output, reviewer notes và consent nằm ở đây hoặc storage tương ứng; không đưa raw data on-chain.
+Off-chain persistence cho organizations, batches, trace events, documents, AI checks và public projection.
 
 ### `src/lib/solana`
-Solana integration boundary.
-
-- Devnet config;
-- client/provider setup;
-- wallet/signing integration;
-- transaction helpers;
-- `check_di_registry` client.
+Solana config/client và hash anchoring. Chỉ lưu integrity/status data tối thiểu.
 
 ### `src/types`
-Domain contracts dùng chung giữa UI, route handlers, AI, DB và Solana mapping.
+Domain contracts: Batch, TraceEvent, Organization, DocumentEvidence, IntegrityProof, AIValidation.
 
 ### `programs/check_di_registry`
-Anchor/Rust program.
+Anchor/Rust program cho batch/event registry, issue/append/revoke/supersede integrity state.
 
-Planned state transitions:
-
-```text
-issue_attestation
-revoke_attestation
-supersede_attestation
-```
-
-On-chain data tối thiểu:
+## Dependency direction
 
 ```text
-issuer
-subject_commitment
-evidence_root
-assessment_hash
-rubric_hash
-issued_at
-status
-version
+src/app
+  -> src/components
+  -> src/lib/ai
+  -> src/lib/db
+  -> src/lib/solana
+  -> src/types
+
+src/lib/*
+  -> src/types
+
+programs/check_di_registry
+  -> độc lập với Next.js runtime
 ```
 
-### `tests`
+## Competition
 
-- `tests/ai`: fixed evidence fixtures và AI evaluation.
-- `tests/api`: route/API integration.
-- `tests/anchor`: Solana program tests.
+Hai track dùng cùng một core:
 
-### `docs`
-
-- `docs/product`: problem, PRD, market.
-- `docs/technical`: architecture, AI evaluation, Devnet proof.
-- `docs/competition`: hai track, demo, pitch.
-- `docs/compliance`: legal/product boundaries.
-
-## Shared core for two tracks
-
-```text
-Technical Build
-  -> cùng source code
-  -> nhấn mạnh AI implementation + Solana program + Devnet proof
-
-Product & Business
-  -> cùng source code
-  -> nhấn mạnh problem + workflow + pilot issuer + GTM
-```
-
-Không fork product theo track.
+- Technical Build: AI document checks, hash chain, QR verification, Solana Devnet proof.
+- Product & Business: chống hàng giả/không rõ nguồn gốc, minh bạch chuỗi cung ứng, onboarding nhà vườn/doanh nghiệp/retail, GTM.
