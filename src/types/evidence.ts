@@ -4,11 +4,18 @@ export type TraceEvent = {
   id: string;
   batchId: string;
   stage: "production" | "packing" | "inspection" | "logistics" | "retail";
+  organizationId: string;
   organizationName: string;
   location: string;
   occurredAt: string;
   summary: string;
+  documents?: string[];
+  metrics?: Record<string, string | number | boolean>;
+  aiValidations?: AIValidation[];
+  previousEventHash?: string;
   eventHash?: string;
+  signerPublicKey?: string;
+  signature?: string;
   status: TraceEventStatus;
 };
 

@@ -21,12 +21,21 @@ Không fork business logic hoặc tạo app riêng theo track.
 
 Blockchain không tự chứng minh dữ liệu ngoài đời là đúng.
 
-Mỗi tổ chức chỉ xác nhận dữ liệu thuộc chặng mình chịu trách nhiệm. Check-Di phải hiển thị rõ:
+Mỗi tổ chức chỉ xác nhận dữ liệu thuộc chặng mình chịu trách nhiệm. Mỗi trace event đã xác nhận phải nối tiếp event trước theo mô hình:
+
+`canonical event payload + previous_event_hash -> event_hash -> organization signs event_hash`
+
+Chặng kế tiếp dùng `event_hash` của chặng trước làm `previous_event_hash`. Nhờ vậy nếu dữ liệu của một chặng cũ bị sửa, chuỗi hash và chữ ký từ chặng đó trở đi sẽ không còn khớp.
+
+Check-Di phải hiển thị rõ:
 
 - ai ghi nhận;
-- ai xác nhận;
+- ai xác nhận/ký;
+- signer/public key hoặc định danh tổ chức;
 - thời điểm;
 - chứng từ liên quan;
+- previous event hash + event hash;
+- chữ ký/xác nhận của chặng;
 - hash/integrity status;
 - trạng thái active/revoked/superseded nếu có.
 

@@ -69,6 +69,7 @@ export type SandboxDictionary = {
   journeyTitle: string;
   viewingStage: string;
   recordedStatus: string;
+  signedStatus: string;
   orgLabel: string;
   locationLabel: string;
   timeLabel: string;
@@ -80,6 +81,11 @@ export type SandboxDictionary = {
   documentsValue: string;
   dataHashTitle: string;
   hashNote: string;
+  chainProofTitle: string;
+  signedByLabel: string;
+  previousHashLabel: string;
+  signatureLabel: string;
+  demoChainStatus: string;
   consumerVerifiedAllStages: string;
   consumerQrTitle: string;
   consumerNotice: string;

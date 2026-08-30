@@ -2,7 +2,7 @@
 
 ## Current phase
 
-**Phase 1 — Product foundation & traceability demo**
+**Phase 2 — First real off-chain vertical slice**
 
 ## Product core
 
@@ -13,84 +13,99 @@ Batch / QR
   -> Trace Events
   -> AI Document Checks
   -> Participant Confirmation
-  -> Hash / Integrity Proof
+  -> SHA-256 Hash Chain
+  -> Organization Signature
   -> Consumer Verify
 ```
 
 ## Completed
 
+### Product/UI foundation
+
 - Next.js App Router + TypeScript + Tailwind + Bun foundation.
 - Dev/start port `7314`.
-- Landing đã chuyển hoàn toàn sang use case supply-chain traceability.
-- Hero mô tả hành trình sản phẩm từ nơi sản xuất đến tay người mua.
-- Demo mô phỏng có lô `DUR-260830-01` với 5 chặng:
-  - thu hoạch;
-  - sơ chế & đóng gói;
-  - kiểm định;
-  - vận chuyển;
-  - điểm bán.
-- Journey map full-width có marker theo chặng, đường tiến độ và hiệu ứng chạy hành trình.
-- Click marker trên map đồng bộ với phần chi tiết chặng.
-- Consumer QR view hiển thị bản đồ + timeline hành trình.
-- Mobile UX tối giản thành `QR -> AI quick check -> Map`; 5 chặng chỉ mở khi người dùng yêu cầu, còn các section giải thích dài chỉ hiển thị từ tablet/desktop.
-- Mỗi chặng mô phỏng organization, location, timestamp, event data, AI check và event hash.
-- UI ghi rõ dữ liệu mô phỏng, không giả transaction/Devnet proof thật.
-- Product rules, project map, governance, README và competition docs đã chuyển sang traceability core.
-- Domain boundaries đã đổi sang batch / trace event / integrity model.
-- Nâng cấp giao diện Bản đồ hành trình (Geographic Transit Corridor Visualizer):
-  - Thay thế đường cong đồ thị hình sin bằng hành lang vận chuyển tự nhiên mượt mà (Đắk Lắk → QL14 → TP.HCM);
-  - Bổ sung Telemetry HUD thời gian thực: khoảng cách 354km, thời gian vận chuyển 14.5h, giám sát chuỗi lạnh 18°C;
-  - Luminous route beam với hiệu ứng laser gradient và contour địa hình cao nguyên - đồng bằng;
-  - Waypoint markers hiển thị rõ trạng thái xác nhận (micro checkmark) và beacon định vị không bị che khuất icon.
-- Nâng cấp toàn diện giao diện Quét QR Người Tiêu Dùng (Digital Product Passport):
-  - Thẻ chứng chỉ nguồn gốc kỹ thuật số sang trọng với viền gradient holographic;
-  - Khung AI Radar đối chiếu 5/5 chứng từ (khớp mã lô, ngày lấy mẫu, dung sai hao hụt 10%, 0% dư lượng BVTV);
-  - Timeline 5 chặng tương tác trực quan kèm chứng từ số (VietGAP, Packing list, QC analysis, Vận đơn xe lạnh);
-  - Hệ thống sao chép hash on-chain Solana Devnet tức thì với thông báo toast phản hồi.
-- Nâng cấp hệ thống Typography chuẩn AI & Web3 hiện đại:
-  - Font Display: `Be Vietnam Pro` (tối ưu nét chữ tiếng Việt chuẩn xác, thẩm mỹ cao);
-  - Font UI & Body: `Plus Jakarta Sans` (hiện đại, geometric tech);
-  - Font Code & Hash: `JetBrains Mono` (dành cho mã lô, transaction hash, timestamp, badge chỉ số).
-  - Cấu hình Tailwind v4 `@theme` và font feature smoothing tối ưu cho UI tối màu (dark theme).
+- Landing đã chuyển hoàn toàn sang supply-chain traceability.
+- Demo lô `DUR-260830-01` có 5 chặng: thu hoạch, đóng gói, kiểm định, vận chuyển, điểm bán.
+- Journey map mô phỏng có marker, tiến độ, telemetry và hiệu ứng theo chặng.
+- Mobile UX ưu tiên `QR -> AI quick check -> Map`; chi tiết mở theo yêu cầu.
+- UI ghi rõ dữ liệu demo và không trình bày Devnet proof giả như dữ liệu thật.
+- i18n Việt/Anh và typography hiện tại đã tích hợp trong web.
 
+### Real vertical slice
 
-## Validation status
+- Có sample batch repository tại `src/lib/db/sample-batch.ts`.
+- Có deterministic document/data checks tại `src/lib/ai/trace-checks.ts`:
+  - kiểm tra hao hụt đóng gói;
+  - kiểm tra thứ tự thời gian thu hoạch/kiểm định.
+- Có canonical JSON normalization + SHA-256 thật tại `src/lib/traceability/server.ts`.
+- Mỗi event đã xác nhận dùng mô hình:
 
-- Bun local: `1.2.18`.
-- Next.js dev/start port: `7314`.
-- `bun run typecheck`: passed sau product pivot.
-- `bun run build`: passed sau product pivot.
-- `GET /`: `200` trên runtime local.
-- `GET /api/health`: `200`, phase `traceability-demo`.
-- `git diff --check`: passed cho phạm vi traceability đã commit.
+```text
+canonical payload + previousEventHash
+  -> SHA-256 eventHash
+  -> organization signs eventHash with Ed25519
+```
+
+- Chặng đầu dùng `previousEventHash = GENESIS`; chặng sau tham chiếu `eventHash` của chặng trước.
+- Demo organization signing keys là deterministic test keys, không phải production identity keys.
+- Có verify lại từng event:
+  - previous-hash link;
+  - recomputed SHA-256 hash;
+  - Ed25519 signature.
+- Có tamper detection: sửa payload lịch sử làm chain verification fail.
+- API thật:
+  - `GET /api/batches/[publicId]` trả batch + events + proof + chain verification.
+  - `GET /api/qr/[publicId]` tạo QR demo thông qua QR image provider và encode URL verify của domain hiện tại.
+- Public consumer route thật:
+  - `/verify/[publicId]`;
+  - sample hoạt động: `/verify/DUR-260830-01`.
+- Landing QR passport đã liên kết sang public verify route thật.
+- Public verify page hiển thị:
+  - trạng thái hash/signature chain;
+  - AI check fixture;
+  - 5 trạm;
+  - previous hash;
+  - event hash;
+  - signer public key;
+  - Ed25519 signature;
+  - JSON proof link.
+
+### Validation
+
+- `bun test tests/traceability.test.ts`: **4 passed, 0 failed**.
+- `bun run typecheck`: passed.
+- `bun run build`: passed.
+- `git diff --check`: passed.
+- `GET /verify/DUR-260830-01`: `200`.
+- `GET /api/batches/DUR-260830-01`: chain verification `valid: true`.
+- `GET /api/qr/DUR-260830-01`: redirect `307` tới QR image chứa đúng verify URL.
 
 ## Not implemented yet
 
-- Database schema/persistence thật.
-- Create batch flow thật.
-- Add trace event flow thật.
+- Database persistence thật (PostgreSQL/Supabase).
+- UI tạo batch và thêm trace event thật từ người dùng.
 - Document upload/storage thật.
-- AI model/document extraction thật.
-- Organization authentication/sign-off.
-- QR generation/public verify route thật.
-- Canonical hashing utility.
+- OCR/LLM document extraction thật; AI hiện là deterministic validation fixture.
+- Production organization authentication và secure key management.
+- Production/local QR renderer độc lập provider ngoài.
 - Anchor program source code.
 - Solana Devnet deployment/transactions.
-- Automated tests.
+- On-chain anchoring cho event hash/status.
 
-Theo phạm vi hackathon hiện tại, map/GPS provider thật không phải yêu cầu bắt buộc; demo map mô phỏng được giữ để tập trung vào core traceability, AI check và integrity proof.
+Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt buộc; map mô phỏng được giữ để tập trung vào traceability, AI checks và integrity proof.
 
 ## Next milestone
 
-**Phase 2 — First real vertical slice**
+**Phase 3 — Persisted trace events + Solana Devnet anchor**
 
 ```text
-create sample batch
-  -> add packing trace event
-  -> run deterministic document-check fixture
-  -> organization confirms event
-  -> canonicalize + SHA-256 hash
-  -> public /verify/[publicId] timeline
+create batch form
+  -> persist batch
+  -> add trace event form
+  -> AI/document validation
+  -> organization confirmation
+  -> canonical SHA-256 + Ed25519 signature
+  -> persist event
+  -> anchor eventHash/status on Solana Devnet
+  -> public verify shows real Devnet transaction
 ```
-
-Sau khi vertical slice off-chain chạy ổn mới nối `check_di_registry` lên Solana Devnet.

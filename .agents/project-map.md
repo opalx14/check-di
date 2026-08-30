@@ -31,10 +31,12 @@ Location + timestamp + organization + batch data + documents
 Next.js App Router, landing, API và các route sản phẩm sau này:
 
 - `/` landing + demo.
-- `/batches/new` tạo lô.
-- `/batches/[id]` quản lý hành trình.
-- `/batches/[id]/events/new` thêm chặng.
-- `/verify/[publicId]` trang người tiêu dùng quét QR.
+- `/verify/[publicId]` trang người tiêu dùng quét QR — đã có vertical slice mẫu.
+- `/api/batches/[publicId]` public proof JSON — đã có vertical slice mẫu.
+- `/api/qr/[publicId]` QR demo trỏ tới verify route — đã có vertical slice mẫu.
+- `/batches/new` tạo lô — chưa triển khai UI/persistence.
+- `/batches/[id]` quản lý hành trình — chưa triển khai UI/persistence.
+- `/batches/[id]/events/new` thêm chặng — chưa triển khai UI/persistence.
 
 ### `src/components`
 UI dùng lại: hero, journey timeline/map preview, document check, QR/public verification.
@@ -45,8 +47,11 @@ AI đọc chứng từ và đối chiếu dữ liệu giữa các chặng. Khôn
 ### `src/lib/db`
 Off-chain persistence cho organizations, batches, trace events, documents, AI checks và public projection.
 
+### `src/lib/traceability`
+Canonicalization, SHA-256 event hashing, Ed25519 demo signing và chain verification server-side.
+
 ### `src/lib/solana`
-Solana config/client và hash anchoring. Chỉ lưu integrity/status data tối thiểu.
+Solana config/client và hash anchoring. Chỉ lưu integrity/status data tối thiểu; Devnet anchoring chưa triển khai.
 
 ### `src/types`
 Domain contracts: Batch, TraceEvent, Organization, DocumentEvidence, IntegrityProof, AIValidation.

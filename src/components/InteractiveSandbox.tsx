@@ -39,6 +39,9 @@ type TraceStage = {
   time: string;
   detail: string;
   hash: string;
+  previousHash: string;
+  signerKey: string;
+  signature: string;
   icon: typeof Sprout;
   aiCheck?: string;
   x: number; // percentage (0-100)
@@ -56,6 +59,8 @@ type TraceStage = {
 const STAGE_CONFIGS: Array<{
   id: StageId;
   hash: string;
+  signerKey: string;
+  signature: string;
   icon: typeof Sprout;
   x: number;
   y: number;
@@ -63,11 +68,11 @@ const STAGE_CONFIGS: Array<{
   svgY: number;
   highway?: string;
 }> = [
-  { id: "farm", hash: "a81c7f023d88b492fa", icon: Sprout, x: 12, y: 26, svgX: 120, svgY: 85, highway: "QL26" },
-  { id: "packing", hash: "bf2160ae991c4ac831", icon: Warehouse, x: 30, y: 39, svgX: 300, svgY: 125, highway: "QL14" },
-  { id: "inspection", hash: "c90234de5113e1137a", icon: PackageCheck, x: 48, y: 51.5, svgX: 480, svgY: 165, highway: "QL14" },
-  { id: "logistics", hash: "d710aa4933bd33bd6f", icon: Truck, x: 68, y: 65.5, svgX: 680, svgY: 210, highway: "ĐT741" },
-  { id: "retail", hash: "e445bb1081cc81cc90", icon: MapPin, x: 88, y: 79.5, svgX: 880, svgY: 255, highway: "QL13 / Q7" },
+  { id: "farm", hash: "a81c7f023d88b492fa", signerKey: "farm...7K2P", signature: "sig01...91af", icon: Sprout, x: 12, y: 26, svgX: 120, svgY: 85, highway: "QL26" },
+  { id: "packing", hash: "bf2160ae991c4ac831", signerKey: "coop...3M8Q", signature: "sig02...4cd1", icon: Warehouse, x: 30, y: 39, svgX: 300, svgY: 125, highway: "QL14" },
+  { id: "inspection", hash: "c90234de5113e1137a", signerKey: "qc...9N4R", signature: "sig03...0be7", icon: PackageCheck, x: 48, y: 51.5, svgX: 480, svgY: 165, highway: "QL14" },
+  { id: "logistics", hash: "d710aa4933bd33bd6f", signerKey: "logi...5T1V", signature: "sig04...83d2", icon: Truck, x: 68, y: 65.5, svgX: 680, svgY: 210, highway: "ĐT741" },
+  { id: "retail", hash: "e445bb1081cc81cc90", signerKey: "shop...2H6X", signature: "sig05...71c9", icon: MapPin, x: 88, y: 79.5, svgX: 880, svgY: 255, highway: "QL13 / Q7" },
 ];
 
 // Continuous natural South-West transit corridor from Dak Lak (Highlands) to HCMC (Delta)
@@ -81,7 +86,7 @@ export function InteractiveSandbox() {
   const [copiedHash, setCopiedHash] = useState<string | null>(null);
 
   const stages: TraceStage[] = useMemo(() => {
-    return STAGE_CONFIGS.map((cfg) => {
+    return STAGE_CONFIGS.map((cfg, index) => {
       const stageDict = dict.sandbox.stages[cfg.id];
       return {
         id: cfg.id,
@@ -91,6 +96,9 @@ export function InteractiveSandbox() {
         time: stageDict.time,
         detail: stageDict.detail,
         hash: cfg.hash,
+        previousHash: index === 0 ? "GENESIS" : STAGE_CONFIGS[index - 1].hash,
+        signerKey: cfg.signerKey,
+        signature: cfg.signature,
         icon: cfg.icon,
         aiCheck: "aiCheck" in stageDict ? (stageDict.aiCheck as string) : undefined,
         x: cfg.x,
@@ -631,7 +639,7 @@ function StageDetail({
 
           <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 font-mono text-[11px] font-semibold text-emerald-300">
             <CheckCircle2 className="size-3.5" />
-            {dict.sandbox.recordedStatus}
+            {dict.sandbox.signedStatus}
           </span>
         </div>
 
@@ -735,11 +743,11 @@ function StageDetail({
             )}
 
             <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-emerald-300">
                   <Hash className="size-4" />
                   <p className="font-mono text-xs font-bold uppercase tracking-wider">
-                    {dict.sandbox.dataHashTitle}
+                    {dict.sandbox.chainProofTitle}
                   </p>
                 </div>
                 <button
@@ -751,8 +759,26 @@ function StageDetail({
                   {copiedHash === stage.hash ? dict.sandbox.copied : dict.sandbox.copyHash}
                 </button>
               </div>
-              <p className="mt-2 font-mono text-sm font-semibold text-emerald-300">{stage.hash}</p>
-              <p className="mt-1 font-mono text-[10px] text-slate-500">{dict.sandbox.hashNote}</p>
+
+              <div className="mt-3 space-y-2 font-mono text-[10px]">
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-slate-950/40 px-3 py-2">
+                  <span className="text-slate-500">{dict.sandbox.signedByLabel}</span>
+                  <span className="truncate text-cyan-300">{stage.organization} · {stage.signerKey}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-slate-950/40 px-3 py-2">
+                  <span className="text-slate-500">{dict.sandbox.previousHashLabel}</span>
+                  <span className="text-slate-300">{stage.previousHash}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-slate-950/40 px-3 py-2">
+                  <span className="text-slate-500">{dict.sandbox.dataHashTitle}</span>
+                  <span className="font-semibold text-emerald-300">{stage.hash}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-slate-950/40 px-3 py-2">
+                  <span className="text-slate-500">{dict.sandbox.signatureLabel}</span>
+                  <span className="text-purple-300">{stage.signature}</span>
+                </div>
+              </div>
+              <p className="mt-2 font-mono text-[10px] text-slate-500">{dict.sandbox.hashNote}</p>
             </div>
           </div>
         )}
@@ -760,7 +786,7 @@ function StageDetail({
 
       {/* Footer Disclaimer */}
       <div className="mt-5 border-t border-white/5 pt-3 font-mono text-[10px] text-slate-500">
-        Mã lô: <span className="text-cyan-300">DUR-260830-01</span> · Solana Devnet Integrity Anchor
+        Mã lô: <span className="text-cyan-300">DUR-260830-01</span> · {dict.sandbox.demoChainStatus}
       </div>
     </div>
   );
@@ -839,13 +865,23 @@ function ConsumerView({
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-3 self-start rounded-2xl border border-white/10 bg-slate-950/70 p-3 sm:flex-col sm:items-center sm:text-center">
-            <QrCode className="size-10 text-cyan-300" strokeWidth={1.5} />
+          <a
+            href="/verify/DUR-260830-01"
+            className="flex shrink-0 items-center gap-3 self-start rounded-2xl border border-white/10 bg-slate-950/70 p-3 transition hover:border-cyan-500/30 sm:flex-col sm:items-center sm:text-center"
+          >
+            <span className="rounded-lg bg-white p-1.5">
+              <img
+                src="/api/qr/DUR-260830-01"
+                alt="QR xác minh lô DUR-260830-01"
+                className="size-12 sm:size-16"
+              />
+            </span>
             <div>
-              <p className="font-mono text-[10px] font-bold text-slate-400">{dict.sandbox.consumerQrTitle}</p>
-              <p className="font-mono text-[9px] text-emerald-400">STATUS: VERIFIED</p>
+              <p className="font-mono text-[10px] font-bold text-slate-300">{dict.sandbox.consumerQrTitle}</p>
+              <p className="mt-0.5 font-mono text-[9px] text-cyan-300">/verify/DUR-260830-01</p>
+              <p className="mt-0.5 font-mono text-[9px] text-amber-300">{dict.sandbox.demoChainStatus}</p>
             </div>
-          </div>
+          </a>
         </div>
 
         {/* 2. AI Intelligence & Document Cross-Check Radar Card */}
@@ -950,7 +986,7 @@ function ConsumerView({
                     <span className="font-mono text-[10px] text-slate-400">{stage.time.split("·")[0]}</span>
                     <div className="mt-1 flex items-center justify-end gap-1 text-emerald-300">
                       <CheckCircle2 className="size-3.5" />
-                      <span className="font-mono text-[10px] font-bold">XÁC NHẬN</span>
+                      <span className="font-mono text-[10px] font-bold">{dict.sandbox.signedStatus}</span>
                     </div>
                   </div>
                 </div>
@@ -965,18 +1001,28 @@ function ConsumerView({
                         <span className="font-mono text-[11px] font-semibold">{stage.docName}</span>
                       </div>
                     )}
-                    <div className="flex items-center justify-between rounded-lg border border-white/5 bg-slate-950/60 px-3 py-1.5 font-mono text-[10px]">
-                      <span className="text-slate-500">Hash: <span className="text-emerald-300">{stage.hash}</span></span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onCopyHash(stage.hash);
-                        }}
-                        className="text-cyan-400 hover:text-cyan-300"
-                      >
-                        {copiedHash === stage.hash ? dict.sandbox.copied : dict.sandbox.copyHash}
-                      </button>
+                    <div className="space-y-1.5 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 font-mono text-[10px]">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-slate-500">{dict.sandbox.signedByLabel}</span>
+                        <span className="truncate text-cyan-300">{stage.signerKey}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-slate-500">{dict.sandbox.previousHashLabel}</span>
+                        <span className="text-slate-400">{stage.previousHash}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-slate-500">{dict.sandbox.dataHashTitle}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onCopyHash(stage.hash);
+                          }}
+                          className="text-emerald-300 hover:text-emerald-200"
+                        >
+                          {stage.hash} · {copiedHash === stage.hash ? dict.sandbox.copied : dict.sandbox.copyHash}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
