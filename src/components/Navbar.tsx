@@ -1,7 +1,7 @@
 "use client";
 
 import { useI18n } from "@/lib/i18n";
-import { QrCode } from "lucide-react";
+import { Plus, QrCode } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function Navbar() {
@@ -41,6 +41,13 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
+          <a
+            href="/batches/new"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 font-display text-xs font-semibold text-slate-200 transition hover:border-cyan-500/30 hover:text-cyan-200"
+          >
+            <Plus className="size-3.5" />
+            {dict.nav.createBatch}
+          </a>
           <LanguageSwitcher />
           <a
             href="#demo"

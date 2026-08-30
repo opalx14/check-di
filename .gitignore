@@ -28,6 +28,7 @@ test-ledger/
 # Temporary
 .tmp/
 tmp/
+.data/
 
 # Obsolete local scaffold directories; active app lives in src/
 /apps/

@@ -31,12 +31,15 @@ Location + timestamp + organization + batch data + documents
 Next.js App Router, landing, API và các route sản phẩm sau này:
 
 - `/` landing + demo.
-- `/verify/[publicId]` trang người tiêu dùng quét QR — đã có vertical slice mẫu.
-- `/api/batches/[publicId]` public proof JSON — đã có vertical slice mẫu.
-- `/api/qr/[publicId]` QR demo trỏ tới verify route — đã có vertical slice mẫu.
-- `/batches/new` tạo lô — chưa triển khai UI/persistence.
-- `/batches/[id]` quản lý hành trình — chưa triển khai UI/persistence.
-- `/batches/[id]/events/new` thêm chặng — chưa triển khai UI/persistence.
+- `/verify/[publicId]` trang người tiêu dùng quét QR — đọc public proof từ persisted repository.
+- `/api/batches` tạo batch mới.
+- `/api/batches/[publicId]` public proof JSON từ các event đã xác nhận.
+- `/api/qr/[publicId]` QR demo trỏ tới verify route của batch đã có proof.
+- `/api/manage/batches/[id]` đọc dữ liệu quản lý gồm cả draft event.
+- `/api/manage/batches/[id]/events` tạo trace event dạng draft.
+- `/api/manage/batches/[id]/events/[eventId]/confirm` xác nhận, hash và ký event.
+- `/batches/new` form tạo lô thật trong prototype.
+- `/batches/[id]` quản lý hành trình, AI warning, draft và xác nhận từng chặng.
 
 ### `src/components`
 UI dùng lại: hero, journey timeline/map preview, document check, QR/public verification.
@@ -45,7 +48,7 @@ UI dùng lại: hero, journey timeline/map preview, document check, QR/public ve
 AI đọc chứng từ và đối chiếu dữ liệu giữa các chặng. Không tự xác nhận nguồn gốc.
 
 ### `src/lib/db`
-Off-chain persistence cho organizations, batches, trace events, documents, AI checks và public projection.
+Repository off-chain cho batches/trace events và public projection. Prototype hiện có file-backed adapter lưu tại `.data/check-di-store.json`; contract được tách để sau chuyển sang PostgreSQL/Supabase mà không đổi UI/API flow.
 
 ### `src/lib/traceability`
 Canonicalization, SHA-256 event hashing, Ed25519 demo signing và chain verification server-side.

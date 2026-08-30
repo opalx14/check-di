@@ -15,8 +15,10 @@ import {
 } from "lucide-react";
 import { notFound } from "next/navigation";
 
-import { getSampleBatch } from "@/lib/db/sample-batch";
+import { batchRepository } from "@/lib/db/persistent-store";
 import type { TraceEvent } from "@/types/evidence";
+
+export const dynamic = "force-dynamic";
 
 const stageMeta = {
   production: { label: "Thu hoạch", icon: Sprout },
@@ -46,10 +48,11 @@ export default async function VerifyBatchPage({
   params: Promise<{ publicId: string }>;
 }) {
   const { publicId } = await params;
-  const batch = getSampleBatch(publicId);
+  const batch = await batchRepository.getPublicProof(publicId);
 
-  if (!batch) notFound();
+  if (!batch || batch.events.length === 0) notFound();
 
+  const destination = batch.events.at(-1)?.location ?? batch.origin;
   const aiChecks = batch.events.flatMap((event) => event.aiValidations ?? []);
   const warnings = aiChecks.filter((check) => check.status !== "matched");
 
@@ -75,7 +78,7 @@ export default async function VerifyBatchPage({
                 <h1 className="font-display mt-2 text-2xl font-extrabold tracking-tight text-white sm:text-4xl">
                   {batch.productName}
                 </h1>
-                <p className="mt-1 text-sm text-slate-400">{batch.origin} → Quận 7, TP.HCM</p>
+                <p className="mt-1 text-sm text-slate-400">{batch.origin} → {destination}</p>
               </div>
               <div className="hidden rounded-2xl bg-white p-2 sm:block">
                 <img
@@ -94,7 +97,7 @@ export default async function VerifyBatchPage({
                 </div>
                 <p className="mt-1 text-xs leading-relaxed text-slate-400">
                   {batch.chainVerification.valid
-                    ? "5/5 chặng nối đúng previous hash và chữ ký Ed25519 kiểm tra được."
+                    ? `${batch.events.length}/${batch.events.length} chặng nối đúng previous hash và chữ ký Ed25519 kiểm tra được.`
                     : "Phát hiện chặng không khớp chuỗi integrity."}
                 </p>
               </div>
@@ -117,7 +120,7 @@ export default async function VerifyBatchPage({
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">Hành trình</p>
-                <h2 className="font-display mt-1 text-lg font-bold text-white">5 trạm · 5 lần xác nhận</h2>
+                <h2 className="font-display mt-1 text-lg font-bold text-white">{batch.events.length} trạm · {batch.events.length} lần xác nhận</h2>
               </div>
               <span className="font-mono text-[10px] text-emerald-300">SHA-256 + Ed25519</span>
             </div>

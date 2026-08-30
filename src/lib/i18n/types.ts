@@ -7,6 +7,7 @@ export type NavDictionary = {
   technology: string;
   safety: string;
   tryScan: string;
+  createBatch: string;
   openMenu: string;
 };
 

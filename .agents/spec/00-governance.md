@@ -48,7 +48,7 @@ AI là lớp hỗ trợ kiểm tra:
 - phát hiện mismatch/contradiction;
 - gợi ý cần kiểm tra thêm.
 
-AI không tự xác nhận nguồn gốc, không tự buộc tội gian lận.
+AI không tự xác nhận nguồn gốc, không tự buộc tội gian lận. Cảnh báo AI không được tự động chặn quyền xác nhận của tổ chức; bên xác nhận vẫn chịu trách nhiệm về dữ liệu mà mình ký.
 
 ## On-chain governance
 

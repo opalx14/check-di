@@ -10,6 +10,7 @@
     "technology": "Technology",
     "safety": "Data Integrity",
     "tryScan": "Try Product Scan",
+    "createBatch": "Create batch",
     "openMenu": "Open menu"
   },
   "hero": {
