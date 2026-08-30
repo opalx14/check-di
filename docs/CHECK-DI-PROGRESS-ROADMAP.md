@@ -2,6 +2,8 @@
 
 Cập nhật: **30/08/2026**
 
+> Trạng thái mới nhất: Phase 4A đã nối minimal Solana Devnet integrity anchor bằng SPL Memo program, có retry + live RPC verification + Explorer link. Devnet RPC hoạt động nhưng smoke test transaction mới hiện bị chặn ở funding vì public faucet trả `429`; chưa được phép tuyên bố transaction mới đã thành công. Custom `check_di_registry` Anchor/PDA vẫn là bước kế tiếp sau khi có funded fee-payer.
+
 Tài liệu này tổng hợp trạng thái hiện tại của Check-Di sau các vòng phát triển từ khởi tạo dự án đến workflow quản lý lô có persistence. Mục tiêu là để tiếp tục phát triển, demo và chuẩn bị submission mà không phải đọc lại toàn bộ lịch sử trao đổi.
 
 ---

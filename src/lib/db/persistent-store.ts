@@ -5,7 +5,12 @@ import { dirname, join } from "node:path";
 import { checkChronology, checkPackingLoss } from "@/lib/ai/trace-checks";
 import { getSampleBatch } from "@/lib/db/sample-batch";
 import { confirmTraceEvent, verifyTraceChain } from "@/lib/traceability/server";
-import type { AIValidation, ProductBatch, TraceEvent } from "@/types/evidence";
+import type {
+  AIValidation,
+  ProductBatch,
+  SolanaIntegrityProof,
+  TraceEvent,
+} from "@/types/evidence";
 
 export type ManagedProductBatch = ProductBatch & {
   createdAt: string;
@@ -303,6 +308,25 @@ export function createFileBatchRepository(
         batch.events[eventIndex] = confirmed;
         batch.updatedAt = new Date().toISOString();
         return clone(confirmed);
+      });
+    },
+
+    async setSolanaProof(
+      batchId: string,
+      eventId: string,
+      solanaProof: SolanaIntegrityProof,
+    ) {
+      return mutate((store) => {
+        const batch = store.batches.find((item) => item.id === batchId);
+        if (!batch) throw new Error("batch_not_found");
+
+        const event = batch.events.find((item) => item.id === eventId);
+        if (!event) throw new Error("event_not_found");
+        if (event.status !== "confirmed") throw new Error("event_not_confirmed");
+
+        event.solanaProof = solanaProof;
+        batch.updatedAt = new Date().toISOString();
+        return clone(event);
       });
     },
 

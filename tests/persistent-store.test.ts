@@ -46,6 +46,24 @@ describe("Check-Di persistent batch workflow", () => {
       expect(confirmed.previousEventHash).toBe("GENESIS");
       expect(confirmed.eventHash).toHaveLength(64);
       expect(confirmed.signature?.length).toBeGreaterThan(40);
+
+      const withSolanaProof = await repository.setSolanaProof(batch.id, draft.id, {
+        network: "devnet",
+        kind: "spl-memo",
+        programId: "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
+        status: "confirmed",
+        transactionSignature: "demo-devnet-signature",
+        slot: 123,
+        payerPublicKey: "demo-payer",
+        memo: "demo-memo",
+        explorerUrl: "https://explorer.solana.com/tx/demo-devnet-signature?cluster=devnet",
+        anchoredAt: "2026-08-30T08:30:00.000Z",
+        attemptedAt: "2026-08-30T08:30:00.000Z",
+      });
+      expect(withSolanaProof.solanaProof?.status).toBe("confirmed");
+
+      const proof = await repository.getPublicProof(batch.publicId);
+      expect(proof?.events[0]?.solanaProof?.transactionSignature).toBe("demo-devnet-signature");
     });
   });
 

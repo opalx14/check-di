@@ -1,5 +1,20 @@
 export type TraceEventStatus = "draft" | "confirmed" | "revoked" | "superseded";
 
+export type SolanaIntegrityProof = {
+  network: "devnet";
+  kind: "spl-memo";
+  programId: string;
+  status: "confirmed" | "failed";
+  transactionSignature?: string;
+  slot?: number;
+  payerPublicKey?: string;
+  memo?: string;
+  explorerUrl?: string;
+  anchoredAt?: string;
+  attemptedAt: string;
+  error?: string;
+};
+
 export type TraceEvent = {
   id: string;
   batchId: string;
@@ -16,6 +31,7 @@ export type TraceEvent = {
   eventHash?: string;
   signerPublicKey?: string;
   signature?: string;
+  solanaProof?: SolanaIntegrityProof;
   status: TraceEventStatus;
 };
 

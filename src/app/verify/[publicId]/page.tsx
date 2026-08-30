@@ -2,6 +2,7 @@ import {
   Bot,
   CheckCircle2,
   ChevronRight,
+  ExternalLink,
   Hash,
   KeyRound,
   MapPin,
@@ -16,6 +17,10 @@ import {
 import { notFound } from "next/navigation";
 
 import { batchRepository } from "@/lib/db/persistent-store";
+import {
+  verifySolanaIntegrityProof,
+  type SolanaAnchorVerification,
+} from "@/lib/solana/server";
 import type { TraceEvent } from "@/types/evidence";
 
 export const dynamic = "force-dynamic";
@@ -55,6 +60,10 @@ export default async function VerifyBatchPage({
   const destination = batch.events.at(-1)?.location ?? batch.origin;
   const aiChecks = batch.events.flatMap((event) => event.aiValidations ?? []);
   const warnings = aiChecks.filter((check) => check.status !== "matched");
+  const solanaChecks = await Promise.all(
+    batch.events.map((event) => verifySolanaIntegrityProof(event.solanaProof)),
+  );
+  const anchoredCount = solanaChecks.filter((check) => check.valid).length;
 
   return (
     <main className="min-h-screen bg-[#07090e] text-slate-100">
@@ -65,8 +74,8 @@ export default async function VerifyBatchPage({
           <a href="/" className="font-display text-lg font-black tracking-tight text-white">
             Check-Di
           </a>
-          <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1 font-mono text-[10px] font-bold text-amber-300">
-            DEMO · CHƯA GHI DEVNET
+          <span className={`rounded-full border px-3 py-1 font-mono text-[10px] font-bold ${anchoredCount > 0 ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300" : "border-amber-500/25 bg-amber-500/10 text-amber-300"}`}>
+            {anchoredCount > 0 ? `SOLANA DEVNET · ${anchoredCount}/${batch.events.length} ANCHORED` : "DEMO · CHƯA GHI DEVNET"}
           </span>
         </header>
 
@@ -127,7 +136,12 @@ export default async function VerifyBatchPage({
 
             <div className="mt-5 space-y-3">
               {batch.events.map((event, index) => (
-                <TraceEventCard key={event.id} event={event} index={index} />
+                <TraceEventCard
+                  key={event.id}
+                  event={event}
+                  index={index}
+                  solanaCheck={solanaChecks[index]}
+                />
               ))}
             </div>
           </div>
@@ -162,14 +176,22 @@ export default async function VerifyBatchPage({
         </section>
 
         <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-500">
-          Demo key được tạo deterministic để kiểm thử chữ ký. Đây chưa phải khóa danh tính production và chưa anchor lên Solana Devnet.
+          Ed25519 organization key và Solana fee-payer hiện vẫn là key demo, chưa phải production identity/key management. Chỉ transaction được RPC Devnet xác minh đúng memo mới hiển thị là anchored.
         </p>
       </div>
     </main>
   );
 }
 
-function TraceEventCard({ event, index }: { event: TraceEvent; index: number }) {
+function TraceEventCard({
+  event,
+  index,
+  solanaCheck,
+}: {
+  event: TraceEvent;
+  index: number;
+  solanaCheck: SolanaAnchorVerification;
+}) {
   const meta = stageMeta[event.stage];
   const Icon = meta.icon;
   const aiChecks = event.aiValidations ?? [];
@@ -211,6 +233,25 @@ function TraceEventCard({ event, index }: { event: TraceEvent; index: number }) 
           <ProofLine icon={KeyRound} label="Signer public key" value={shorten(event.signerPublicKey, 14, 10)} accent="cyan" />
           <ProofLine icon={Signature} label="Ed25519 signature" value={shorten(event.signature, 14, 10)} accent="purple" />
         </div>
+
+        {solanaCheck.valid && event.solanaProof?.explorerUrl ? (
+          <a
+            href={event.solanaProof.explorerUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3 text-xs text-emerald-300 hover:bg-emerald-500/10"
+          >
+            <span className="flex items-center gap-2 font-semibold">
+              <ShieldCheck className="size-3.5" />
+              Solana Devnet proof · slot {solanaCheck.slot ?? event.solanaProof.slot}
+            </span>
+            <ExternalLink className="size-3.5" />
+          </a>
+        ) : event.solanaProof?.status === "failed" ? (
+          <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-3 text-xs text-amber-200/80">
+            Off-chain proof hợp lệ · Solana anchor chưa thành công.
+          </div>
+        ) : null}
       </div>
     </details>
   );

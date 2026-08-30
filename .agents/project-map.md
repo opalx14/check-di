@@ -54,7 +54,7 @@ Repository off-chain cho batches/trace events và public projection. Prototype h
 Canonicalization, SHA-256 event hashing, Ed25519 demo signing và chain verification server-side.
 
 ### `src/lib/solana`
-Solana config/client và hash anchoring. Chỉ lưu integrity/status data tối thiểu; Devnet anchoring chưa triển khai.
+Solana config + server-side Devnet anchoring. Phase 4A đã có SPL Memo integrity anchor, demo fee-payer signing, retry, persistence tx proof và live RPC verification. Custom `check_di_registry` Anchor/PDA program vẫn chưa triển khai.
 
 ### `src/types`
 Domain contracts: Batch, TraceEvent, Organization, DocumentEvidence, IntegrityProof, AIValidation.

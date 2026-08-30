@@ -5,6 +5,7 @@ import {
   Bot,
   CheckCircle2,
   Clock3,
+  ExternalLink,
   FileText,
   Hash,
   Loader2,
@@ -41,15 +42,25 @@ function errorMessage(value: string) {
   return "Không thể lưu thay đổi. Vui lòng thử lại.";
 }
 
+function solanaErrorMessage(value: string) {
+  if (value.startsWith("devnet_fee_payer_needs_funding:")) {
+    const address = value.split(":").at(-1);
+    return `Ví fee-payer Devnet chưa có test SOL. Nạp SOL Devnet cho ${address ?? "địa chỉ fee-payer"} rồi bấm thử anchor lại.`;
+  }
+  return `Không thể anchor Devnet: ${value}`;
+}
+
 export function BatchManagementClient({ batch }: { batch: ManagedProductBatch }) {
   const router = useRouter();
   const [stage, setStage] = useState<TraceEvent["stage"]>("production");
   const [saving, setSaving] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [anchoringId, setAnchoringId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const draft = batch.events.find((event) => event.status === "draft");
   const confirmed = batch.events.filter((event) => event.status === "confirmed");
+  const anchored = confirmed.filter((event) => event.solanaProof?.status === "confirmed");
 
   async function addEvent(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -108,7 +119,11 @@ export function BatchManagementClient({ batch }: { batch: ManagedProductBatch })
       `/api/manage/batches/${encodeURIComponent(batch.id)}/events/${encodeURIComponent(eventId)}/confirm`,
       { method: "POST" },
     );
-    const payload = (await response.json()) as { ok: boolean; error?: string };
+    const payload = (await response.json()) as {
+      ok: boolean;
+      error?: string;
+      solana?: { anchored?: boolean; error?: string };
+    };
 
     if (!response.ok) {
       setError(errorMessage(payload.error ?? "unknown_error"));
@@ -116,7 +131,36 @@ export function BatchManagementClient({ batch }: { batch: ManagedProductBatch })
       return;
     }
 
+    if (payload.solana?.anchored === false && payload.solana.error) {
+      setError(`Chặng đã ký thành công. ${solanaErrorMessage(payload.solana.error)}`);
+    }
+
     setConfirmingId(null);
+    router.refresh();
+  }
+
+  async function anchorEvent(eventId: string) {
+    setAnchoringId(eventId);
+    setError(null);
+
+    const response = await fetch(
+      `/api/manage/batches/${encodeURIComponent(batch.id)}/events/${encodeURIComponent(eventId)}/anchor`,
+      { method: "POST" },
+    );
+    const payload = (await response.json()) as {
+      ok: boolean;
+      error?: string;
+      solana?: { error?: string };
+    };
+
+    if (!response.ok) {
+      setError(solanaErrorMessage(payload.solana?.error ?? payload.error ?? "unknown_error"));
+      setAnchoringId(null);
+      router.refresh();
+      return;
+    }
+
+    setAnchoringId(null);
     router.refresh();
   }
 
@@ -149,9 +193,9 @@ export function BatchManagementClient({ batch }: { batch: ManagedProductBatch })
               <h1 className="font-display mt-2 text-2xl font-extrabold text-white sm:text-3xl">{batch.productName}</h1>
               <p className="mt-1 text-sm text-slate-400">Nguồn gốc: {batch.origin}</p>
             </div>
-            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] px-4 py-3 text-xs text-amber-100/80">
-              <p className="font-bold text-amber-300">Prototype persistence</p>
-              <p className="mt-1">Lưu trên local server · chưa Solana Devnet</p>
+            <div className={`rounded-2xl border px-4 py-3 text-xs ${anchored.length > 0 ? "border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-100/80" : "border-amber-500/20 bg-amber-500/[0.06] text-amber-100/80"}`}>
+              <p className={`font-bold ${anchored.length > 0 ? "text-emerald-300" : "text-amber-300"}`}>Solana Devnet integrity</p>
+              <p className="mt-1">{anchored.length > 0 ? `${anchored.length}/${confirmed.length} chặng có transaction thật` : "Chưa có chặng được anchor"}</p>
             </div>
           </div>
 
@@ -159,7 +203,7 @@ export function BatchManagementClient({ batch }: { batch: ManagedProductBatch })
             <Stat label="Đã xác nhận" value={`${confirmed.length}`} />
             <Stat label="Draft" value={draft ? "1" : "0"} />
             <Stat label="Hash chain" value={confirmed.length ? "Đang nối" : "Chưa bắt đầu"} />
-            <Stat label="Public verify" value={confirmed.length ? "Sẵn sàng" : "Chưa có proof"} />
+            <Stat label="Solana Devnet" value={confirmed.length ? `${anchored.length}/${confirmed.length}` : "Chưa có proof"} />
           </div>
         </section>
 
@@ -185,7 +229,9 @@ export function BatchManagementClient({ batch }: { batch: ManagedProductBatch })
                     event={event}
                     index={index}
                     confirming={confirmingId === event.id}
+                    anchoring={anchoringId === event.id}
                     onConfirm={() => confirmEvent(event.id)}
+                    onAnchor={() => anchorEvent(event.id)}
                   />
                 ))}
               </div>
@@ -209,7 +255,7 @@ export function BatchManagementClient({ batch }: { batch: ManagedProductBatch })
                   className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-emerald-300 disabled:opacity-60"
                 >
                   {confirmingId === draft.id ? <Loader2 className="size-4 animate-spin" /> : <Signature className="size-4" />}
-                  {confirmingId === draft.id ? "Đang ký & tạo hash..." : "Xác nhận chặng & tạo hash"}
+                  {confirmingId === draft.id ? "Đang ký & ghi Devnet..." : "Xác nhận chặng & tạo hash"}
                 </button>
               </div>
             ) : (
@@ -293,12 +339,16 @@ function EventCard({
   event,
   index,
   confirming,
+  anchoring,
   onConfirm,
+  onAnchor,
 }: {
   event: TraceEvent;
   index: number;
   confirming: boolean;
+  anchoring: boolean;
   onConfirm: () => void;
+  onAnchor: () => void;
 }) {
   const aiWarnings = (event.aiValidations ?? []).filter((item) => item.status !== "matched");
   const isDraft = event.status === "draft";
@@ -338,12 +388,37 @@ function EventCard({
       )}
 
       {!isDraft && (
-        <div className="mt-3 grid gap-2 font-mono text-[9px] sm:grid-cols-2">
-          <Proof label="Previous" value={short(event.previousEventHash)} icon={Hash} />
-          <Proof label="Event hash" value={short(event.eventHash, 14, 10)} icon={Hash} accent />
-          <Proof label="Signer" value={short(event.signerPublicKey, 14, 8)} icon={ShieldCheck} />
-          <Proof label="Signature" value={short(event.signature, 14, 8)} icon={Signature} />
-        </div>
+        <>
+          <div className="mt-3 grid gap-2 font-mono text-[9px] sm:grid-cols-2">
+            <Proof label="Previous" value={short(event.previousEventHash)} icon={Hash} />
+            <Proof label="Event hash" value={short(event.eventHash, 14, 10)} icon={Hash} accent />
+            <Proof label="Signer" value={short(event.signerPublicKey, 14, 8)} icon={ShieldCheck} />
+            <Proof label="Signature" value={short(event.signature, 14, 8)} icon={Signature} />
+          </div>
+
+          {event.solanaProof?.status === "confirmed" && event.solanaProof.explorerUrl ? (
+            <a
+              href={event.solanaProof.explorerUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2.5 text-xs font-bold text-emerald-300 hover:bg-emerald-500/15"
+            >
+              <ShieldCheck className="size-3.5" />
+              Anchored on Solana Devnet
+              <ExternalLink className="size-3.5" />
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={onAnchor}
+              disabled={anchoring}
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-500/25 bg-cyan-500/10 px-3 py-2.5 text-xs font-bold text-cyan-300 hover:bg-cyan-500/15 disabled:opacity-50"
+            >
+              {anchoring ? <Loader2 className="size-3.5 animate-spin" /> : <ShieldCheck className="size-3.5" />}
+              {anchoring ? "Đang ghi Solana Devnet..." : event.solanaProof?.status === "failed" ? "Thử anchor Devnet lại" : "Anchor lên Solana Devnet"}
+            </button>
+          )}
+        </>
       )}
 
       {isDraft && (

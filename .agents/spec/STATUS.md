@@ -2,7 +2,7 @@
 
 ## Current phase
 
-**Phase 3 — Persisted batch workflow prototype**
+**Phase 4A — Solana Devnet memo integrity anchor integration**
 
 ## Product core
 
@@ -83,17 +83,28 @@ canonical payload + previousEventHash
 - `GET /api/qr/[publicId]`: QR demo encode URL verify của domain hiện tại, chỉ hoạt động khi batch đã có confirmed proof.
 - `/verify/[publicId]`: consumer verify page đọc persisted proof và hiển thị số trạm động.
 
+### Solana Devnet anchor integration
+
+- Confirm route hiện giữ thứ tự `off-chain confirm -> SHA-256/Ed25519 -> persist -> Devnet anchor`.
+- Dùng SPL Memo program trên Devnet làm minimal integrity anchor ở Phase 4A để có transaction thật mà không đưa raw document/PII on-chain.
+- Memo chứa version, Check-Di app marker, public batch ID, event ID, event hash, previous hash, issuer signer và status.
+- Server có legacy Solana transaction serialization + Ed25519 fee-payer signing trực tiếp bằng Node crypto, không cần thêm package runtime.
+- Fee-payer Devnet là demo key riêng; mặc định lưu trong `.data/solana-devnet-fee-payer.json` với mode 0600 hoặc có thể cấp seed bằng env.
+- Khi thiếu test SOL, app thử Devnet airdrop; nếu faucet lỗi/hết quota thì event vẫn confirmed off-chain và lưu trạng thái anchor `failed` để retry.
+- Có endpoint retry `POST /api/manage/batches/[id]/events/[eventId]/anchor`.
+- Public JSON proof đọc transaction lại từ Devnet RPC và chỉ đánh dấu anchor hợp lệ khi transaction tồn tại, không lỗi và Memo instruction khớp chính xác memo đã persist.
+- Public verify page chỉ hiện `Anchored on Solana Devnet` khi live RPC verification pass; có link Solana Explorer thật.
+- Management UI hiển thị số chặng đã anchor, Explorer link hoặc nút retry.
+- Custom `check_di_registry` Anchor/PDA program vẫn là phase kế tiếp; Phase 4A dùng SPL Memo như minimal live anchor, không giả mạo đây là custom program.
+
 ### Validation
 
-- `bun test tests/traceability.test.ts tests/persistent-store.test.ts`: **6 passed, 0 failed**.
+- `bun test tests/traceability.test.ts tests/persistent-store.test.ts tests/solana-anchor.test.ts`: **9 passed, 0 failed, 40 assertions**.
 - `bun run typecheck`: passed.
-- `bun run build`: passed.
-- Runtime HTTP flow đã xác nhận:
-  - `POST /api/batches` tạo batch `201`;
-  - tạo event trả `status: draft` và chưa có hash/signature;
-  - confirm event sinh SHA-256 + Ed25519;
-  - `GET /api/batches/[publicId]` trả `chainVerification.valid: true`;
-  - `/verify/[publicId]` trả `200`.
+- `git diff --check`: passed.
+- Devnet RPC `getLatestBlockhash`: hoạt động, trả blockhash/slot thật.
+- Live transaction smoke test đã chạy tới bước funding fee-payer nhưng public Devnet faucet trả RPC `429` (airdrop quota/rate limit), vì vậy **chưa có transaction signature mới để tuyên bố anchor thành công trong môi trường hiện tại**.
+- Code giữ đúng fallback: off-chain confirmation không bị rollback và UI cho phép nạp test SOL rồi retry anchor.
 
 ## Not implemented yet
 
@@ -104,24 +115,25 @@ canonical payload + previousEventHash
 - Document upload/storage thật.
 - OCR/LLM document extraction thật; AI hiện là deterministic validation fixture.
 - Production/local QR renderer độc lập provider ngoài.
-- Anchor program source code.
-- Solana Devnet deployment/transactions.
-- On-chain anchoring cho event hash/status.
+- Custom Anchor/PDA program source + deployment cho `check_di_registry`.
+- Một funded Devnet fee-payer để hoàn tất live transaction smoke test trong môi trường hiện tại; public faucet đang trả `429`.
+- PDA-backed on-chain status/revoke/supersede; Phase 4A hiện dùng SPL Memo transaction làm minimal integrity anchor.
 
 Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt buộc; map mô phỏng được giữ để tập trung vào traceability, AI checks và integrity proof.
 
 ## Next milestone
 
-**Phase 4 — Solana Devnet integrity anchor**
+**Phase 4B — Fund + prove live Devnet transaction, sau đó custom Anchor registry**
+
+Ngay khi fee-payer có test SOL:
 
 ```text
-persisted confirmed event
-  -> eventHash + batch/public id + signer + status
-  -> Anchor program / PDA
-  -> Solana Devnet transaction
+confirmed event
+  -> retry /anchor
+  -> real SPL Memo Devnet transaction
   -> persist tx signature / slot
-  -> public verify checks off-chain chain + on-chain anchor
-  -> explorer link is real
+  -> public verify live-checks memo
+  -> Explorer link thật
 ```
 
-Sau Devnet anchor mới ưu tiên thay file-backed adapter bằng PostgreSQL/Supabase nếu thời gian thi yêu cầu triển khai multi-user/production-like hơn.
+Sau khi vertical slice live này được chứng minh, triển khai `check_di_registry` custom Anchor/PDA program cho `initialize/append/update status`, rồi mới ưu tiên PostgreSQL/Supabase nếu thời gian thi cần multi-user/production-like hơn.
