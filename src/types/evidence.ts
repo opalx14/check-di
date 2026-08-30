@@ -2,14 +2,19 @@ export type TraceEventStatus = "draft" | "confirmed" | "revoked" | "superseded";
 
 export type SolanaIntegrityProof = {
   network: "devnet";
-  kind: "spl-memo";
+  kind: "check-di-registry" | "spl-memo";
   programId: string;
   status: "confirmed" | "failed";
   transactionSignature?: string;
   slot?: number;
   payerPublicKey?: string;
+  organizationPublicKey?: string;
+  registryAddress?: string;
+  eventPda?: string;
   memo?: string;
   explorerUrl?: string;
+  registryExplorerUrl?: string;
+  eventExplorerUrl?: string;
   anchoredAt?: string;
   attemptedAt: string;
   error?: string;

@@ -54,13 +54,13 @@ Repository off-chain cho batches/trace events và public projection. Prototype h
 Canonicalization, SHA-256 event hashing, Ed25519 demo signing và chain verification server-side.
 
 ### `src/lib/solana`
-Solana config + server-side Devnet anchoring. Phase 4A đã có SPL Memo integrity anchor, demo fee-payer signing, retry, persistence tx proof và live RPC verification. Custom `check_di_registry` Anchor/PDA program vẫn chưa triển khai.
+Solana config + server-side Devnet integrity. Custom `check_di_registry` hiện là proof chính: service initialize/backfill Batch/Event PDA, persist on-chain metadata và public verify đọc PDA live từ Devnet RPC. SPL Memo Phase 4A được giữ làm fallback. RPC path có retry/backoff cho public Devnet rate limit.
 
 ### `src/types`
 Domain contracts: Batch, TraceEvent, Organization, DocumentEvidence, IntegrityProof, AIValidation.
 
 ### `programs/check_di_registry`
-Anchor/Rust program cho batch/event registry, issue/append/revoke/supersede integrity state.
+Anchor 1.1.2/Rust program đã build SBF và deploy thật trên Devnet tại `9sNDitEeYSFQ7LxmNuaiZPoCLVdrzhdR8P5zmoEW78Yi`. Có `initialize_batch`, `append_event`, `set_event_status`, previous-hash enforcement, organization signer bắt buộc và lifecycle `active/revoked/superseded`; Batch/Event PDA đã được smoke test và đọc ngược RPC thành công.
 
 ## Dependency direction
 

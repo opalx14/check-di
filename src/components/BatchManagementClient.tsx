@@ -21,6 +21,22 @@ import { useState } from "react";
 import type { ManagedProductBatch } from "@/lib/db/persistent-store";
 import type { TraceEvent } from "@/types/evidence";
 
+type FeePayerStatus = {
+  address: string;
+  balanceLamports: number;
+  balanceSol: number;
+  minimumLamports: number;
+  funded: boolean;
+};
+
+type RegistryProgramStatus = {
+  programId: string;
+  deployed: boolean;
+  executable: boolean;
+  owner?: string;
+  lamports?: number;
+};
+
 const stageLabels: Record<TraceEvent["stage"], string> = {
   production: "Thu hoạch / sản xuất",
   packing: "Sơ chế & đóng gói",
@@ -47,10 +63,18 @@ function solanaErrorMessage(value: string) {
     const address = value.split(":").at(-1);
     return `Ví fee-payer Devnet chưa có test SOL. Nạp SOL Devnet cho ${address ?? "địa chỉ fee-payer"} rồi bấm thử anchor lại.`;
   }
-  return `Không thể anchor Devnet: ${value}`;
+  return `Không thể ghi proof lên Solana Devnet: ${value}`;
 }
 
-export function BatchManagementClient({ batch }: { batch: ManagedProductBatch }) {
+export function BatchManagementClient({
+  batch,
+  feePayerStatus,
+  registryProgramStatus,
+}: {
+  batch: ManagedProductBatch;
+  feePayerStatus: FeePayerStatus | null;
+  registryProgramStatus: RegistryProgramStatus | null;
+}) {
   const router = useRouter();
   const [stage, setStage] = useState<TraceEvent["stage"]>("production");
   const [saving, setSaving] = useState(false);
@@ -61,6 +85,12 @@ export function BatchManagementClient({ batch }: { batch: ManagedProductBatch })
   const draft = batch.events.find((event) => event.status === "draft");
   const confirmed = batch.events.filter((event) => event.status === "confirmed");
   const anchored = confirmed.filter((event) => event.solanaProof?.status === "confirmed");
+  const registryAnchored = anchored.filter(
+    (event) => event.solanaProof?.kind === "check-di-registry",
+  );
+  const memoFallback = anchored.filter(
+    (event) => event.solanaProof?.kind === "spl-memo",
+  );
 
   async function addEvent(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -122,7 +152,13 @@ export function BatchManagementClient({ batch }: { batch: ManagedProductBatch })
     const payload = (await response.json()) as {
       ok: boolean;
       error?: string;
-      solana?: { anchored?: boolean; error?: string };
+      solana?: {
+        anchored?: boolean;
+        proofKind?: "check-di-registry" | "spl-memo";
+        fallback?: boolean;
+        registryError?: string;
+        error?: string;
+      };
     };
 
     if (!response.ok) {
@@ -133,6 +169,10 @@ export function BatchManagementClient({ batch }: { batch: ManagedProductBatch })
 
     if (payload.solana?.anchored === false && payload.solana.error) {
       setError(`Chặng đã ký thành công. ${solanaErrorMessage(payload.solana.error)}`);
+    } else if (payload.solana?.fallback) {
+      setError(
+        `Chặng đã ký và có SPL Memo fallback, nhưng custom Check-Di Registry chưa ghi được: ${payload.solana.registryError ?? "registry_anchor_failed"}`,
+      );
     }
 
     setConfirmingId(null);
@@ -150,7 +190,12 @@ export function BatchManagementClient({ batch }: { batch: ManagedProductBatch })
     const payload = (await response.json()) as {
       ok: boolean;
       error?: string;
-      solana?: { error?: string };
+      solana?: {
+        proofKind?: "check-di-registry" | "spl-memo";
+        fallback?: boolean;
+        registryError?: string;
+        error?: string;
+      };
     };
 
     if (!response.ok) {
@@ -158,6 +203,12 @@ export function BatchManagementClient({ batch }: { batch: ManagedProductBatch })
       setAnchoringId(null);
       router.refresh();
       return;
+    }
+
+    if (payload.solana?.fallback) {
+      setError(
+        `Đã có SPL Memo fallback, nhưng custom Check-Di Registry chưa ghi được: ${payload.solana.registryError ?? "registry_anchor_failed"}`,
+      );
     }
 
     setAnchoringId(null);
@@ -194,8 +245,14 @@ export function BatchManagementClient({ batch }: { batch: ManagedProductBatch })
               <p className="mt-1 text-sm text-slate-400">Nguồn gốc: {batch.origin}</p>
             </div>
             <div className={`rounded-2xl border px-4 py-3 text-xs ${anchored.length > 0 ? "border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-100/80" : "border-amber-500/20 bg-amber-500/[0.06] text-amber-100/80"}`}>
-              <p className={`font-bold ${anchored.length > 0 ? "text-emerald-300" : "text-amber-300"}`}>Solana Devnet integrity</p>
-              <p className="mt-1">{anchored.length > 0 ? `${anchored.length}/${confirmed.length} chặng có transaction thật` : "Chưa có chặng được anchor"}</p>
+              <p className={`font-bold ${registryAnchored.length > 0 ? "text-emerald-300" : "text-amber-300"}`}>Check-Di Registry · Solana Devnet</p>
+              <p className="mt-1">
+                {registryAnchored.length > 0
+                  ? `${registryAnchored.length}/${confirmed.length} chặng có Event PDA · ${memoFallback.length} fallback`
+                  : anchored.length > 0
+                    ? `${anchored.length}/${confirmed.length} chặng đang dùng Memo fallback`
+                    : "Chưa có chặng được ghi on-chain"}
+              </p>
             </div>
           </div>
 
@@ -203,7 +260,51 @@ export function BatchManagementClient({ batch }: { batch: ManagedProductBatch })
             <Stat label="Đã xác nhận" value={`${confirmed.length}`} />
             <Stat label="Draft" value={draft ? "1" : "0"} />
             <Stat label="Hash chain" value={confirmed.length ? "Đang nối" : "Chưa bắt đầu"} />
-            <Stat label="Solana Devnet" value={confirmed.length ? `${anchored.length}/${confirmed.length}` : "Chưa có proof"} />
+            <Stat label="Registry PDA" value={confirmed.length ? `${registryAnchored.length}/${confirmed.length}` : "Chưa có proof"} />
+          </div>
+
+          <div className="mt-3 grid gap-2 lg:grid-cols-2">
+            {feePayerStatus && (
+              <div className={`flex flex-col gap-3 rounded-2xl border p-3 sm:flex-row sm:items-center sm:justify-between ${feePayerStatus.funded ? "border-emerald-500/15 bg-emerald-500/[0.04]" : "border-amber-500/15 bg-amber-500/[0.04]"}`}>
+                <div className="min-w-0">
+                  <p className={`text-xs font-bold ${feePayerStatus.funded ? "text-emerald-300" : "text-amber-300"}`}>
+                    Fee-payer Devnet · {feePayerStatus.funded ? "đủ phí giao dịch" : "cần nạp test SOL"}
+                  </p>
+                  <p className="mt-1 truncate font-mono text-[10px] text-slate-400">{feePayerStatus.address}</p>
+                  <p className="mt-1 text-[10px] text-slate-500">
+                    Balance {feePayerStatus.balanceSol.toFixed(6)} SOL · cần tối thiểu {(feePayerStatus.minimumLamports / 1_000_000_000).toFixed(6)} SOL
+                  </p>
+                </div>
+                {!feePayerStatus.funded && (
+                  <a
+                    href="https://faucet.solana.com/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-200 hover:bg-amber-500/15"
+                  >
+                    Mở Devnet faucet
+                    <ExternalLink className="size-3.5" />
+                  </a>
+                )}
+              </div>
+            )}
+
+            {registryProgramStatus && (
+              <a
+                href={`https://explorer.solana.com/address/${encodeURIComponent(registryProgramStatus.programId)}?cluster=devnet`}
+                target="_blank"
+                rel="noreferrer"
+                className={`flex items-center justify-between gap-3 rounded-2xl border p-3 ${registryProgramStatus.deployed ? "border-emerald-500/15 bg-emerald-500/[0.04]" : "border-slate-700/60 bg-slate-950/35"}`}
+              >
+                <div className="min-w-0">
+                  <p className={`text-xs font-bold ${registryProgramStatus.deployed ? "text-emerald-300" : "text-slate-300"}`}>
+                    check_di_registry · {registryProgramStatus.deployed ? "deployed" : "source ready · chưa deploy"}
+                  </p>
+                  <p className="mt-1 truncate font-mono text-[10px] text-slate-500">{registryProgramStatus.programId}</p>
+                </div>
+                <ExternalLink className="size-3.5 shrink-0 text-slate-500" />
+              </a>
+            )}
           </div>
         </section>
 
@@ -255,7 +356,7 @@ export function BatchManagementClient({ batch }: { batch: ManagedProductBatch })
                   className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-emerald-300 disabled:opacity-60"
                 >
                   {confirmingId === draft.id ? <Loader2 className="size-4 animate-spin" /> : <Signature className="size-4" />}
-                  {confirmingId === draft.id ? "Đang ký & ghi Devnet..." : "Xác nhận chặng & tạo hash"}
+                  {confirmingId === draft.id ? "Đang ký & ghi Registry PDA..." : "Xác nhận chặng & tạo hash"}
                 </button>
               </div>
             ) : (
@@ -404,7 +505,9 @@ function EventCard({
               className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2.5 text-xs font-bold text-emerald-300 hover:bg-emerald-500/15"
             >
               <ShieldCheck className="size-3.5" />
-              Anchored on Solana Devnet
+              {event.solanaProof.kind === "check-di-registry"
+                ? `Check-Di Registry · PDA ${short(event.solanaProof.eventPda, 8, 6)}`
+                : "SPL Memo · fallback proof"}
               <ExternalLink className="size-3.5" />
             </a>
           ) : (
@@ -415,7 +518,7 @@ function EventCard({
               className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-500/25 bg-cyan-500/10 px-3 py-2.5 text-xs font-bold text-cyan-300 hover:bg-cyan-500/15 disabled:opacity-50"
             >
               {anchoring ? <Loader2 className="size-3.5 animate-spin" /> : <ShieldCheck className="size-3.5" />}
-              {anchoring ? "Đang ghi Solana Devnet..." : event.solanaProof?.status === "failed" ? "Thử anchor Devnet lại" : "Anchor lên Solana Devnet"}
+              {anchoring ? "Đang ghi Check-Di Registry..." : event.solanaProof?.status === "failed" ? "Thử ghi Registry lại" : "Ghi Check-Di Registry PDA"}
             </button>
           )}
         </>

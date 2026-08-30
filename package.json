@@ -10,9 +10,15 @@
     "dev": "next dev -p 7314",
     "build": "next build",
     "start": "next start -p 7314",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "program:check": "cargo check -p check_di_registry",
+    "program:test": "cargo test -p check_di_registry",
+    "program:smoke": "bun scripts/smoke-solana-registry.ts",
+    "product:smoke": "bun scripts/smoke-solana-product-flow.ts"
   },
   "dependencies": {
+    "@solana/kit": "^8.2.0",
     "i18next": "^26.4.0",
     "lucide-react": "^1.37.0",
     "next": "16.3.3",

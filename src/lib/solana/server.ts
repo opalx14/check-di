@@ -3,6 +3,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 import {
+  CHECK_DI_REGISTRY_PROGRAM_ID,
   SOLANA_NETWORK,
   SOLANA_RPC_URL,
 } from "@/lib/solana/config";
@@ -19,6 +20,22 @@ export type SolanaAnchorVerification = {
   valid: boolean;
   slot?: number;
   error?: string;
+};
+
+export type DevnetFeePayerStatus = {
+  address: string;
+  balanceLamports: number;
+  balanceSol: number;
+  minimumLamports: number;
+  funded: boolean;
+};
+
+export type DevnetRegistryProgramStatus = {
+  programId: string;
+  deployed: boolean;
+  executable: boolean;
+  owner?: string;
+  lamports?: number;
 };
 
 type RpcError = {
@@ -201,6 +218,40 @@ async function getBalance(publicKey: string) {
   return result.value;
 }
 
+export async function getDevnetFeePayerStatus(): Promise<DevnetFeePayerStatus> {
+  const feePayer = await getOrCreateFeePayer();
+  const balanceLamports = await getBalance(feePayer.publicKey);
+
+  return {
+    address: feePayer.publicKey,
+    balanceLamports,
+    balanceSol: balanceLamports / 1_000_000_000,
+    minimumLamports: MIN_FEE_PAYER_BALANCE,
+    funded: balanceLamports >= MIN_FEE_PAYER_BALANCE,
+  };
+}
+
+export async function getDevnetRegistryProgramStatus(): Promise<DevnetRegistryProgramStatus> {
+  const result = await rpc<{
+    value: {
+      executable: boolean;
+      lamports: number;
+      owner: string;
+    } | null;
+  }>("getAccountInfo", [
+    CHECK_DI_REGISTRY_PROGRAM_ID,
+    { commitment: "confirmed", encoding: "base64" },
+  ]);
+
+  return {
+    programId: CHECK_DI_REGISTRY_PROGRAM_ID,
+    deployed: result.value !== null && result.value.executable,
+    executable: result.value?.executable ?? false,
+    owner: result.value?.owner,
+    lamports: result.value?.lamports,
+  };
+}
+
 async function waitForSignature(signature: string, attempts = 24) {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const result = await rpc<{
@@ -310,6 +361,11 @@ export function isSolanaAutoAnchorEnabled() {
 export async function getDevnetFeePayerAddress() {
   const feePayer = await getOrCreateFeePayer();
   return feePayer.publicKey;
+}
+
+export async function getDevnetFeePayerKeypairBytes() {
+  const feePayer = await getOrCreateFeePayer();
+  return Uint8Array.from([...feePayer.seed, ...feePayer.publicKeyBytes]);
 }
 
 export async function anchorTraceEventOnDevnet({

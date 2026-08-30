@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { batchRepository } from "@/lib/db/persistent-store";
-import { verifySolanaIntegrityProof } from "@/lib/solana/server";
+import { verifyTraceEventSolanaProof } from "@/lib/solana/verification";
 
 export const dynamic = "force-dynamic";
 
@@ -22,8 +22,11 @@ export async function GET(
   const solanaChecks = await Promise.all(
     batch.events.map(async (event) => ({
       eventId: event.id,
-      ...(await verifySolanaIntegrityProof(event.solanaProof)),
+      ...(await verifyTraceEventSolanaProof(batch.publicId, event)),
+      proofKind: event.solanaProof?.kind,
       transactionSignature: event.solanaProof?.transactionSignature,
+      registryAddress: event.solanaProof?.registryAddress,
+      eventPda: event.solanaProof?.eventPda,
       explorerUrl: event.solanaProof?.explorerUrl,
     })),
   );
@@ -33,12 +36,18 @@ export async function GET(
     ok: true,
     batch,
     proof: {
-      type: "off-chain-ed25519-hash-chain+solana-memo-anchor",
+      type: "off-chain-ed25519-hash-chain+check-di-registry-pda",
       persistence: "local-file",
       solanaAnchored: anchoredEvents > 0,
       allConfirmedEventsAnchored:
         batch.events.length > 0 && anchoredEvents === batch.events.length,
       anchoredEvents,
+      registryAnchoredEvents: solanaChecks.filter(
+        (check) => check.valid && check.kind === "check-di-registry",
+      ).length,
+      memoFallbackEvents: solanaChecks.filter(
+        (check) => check.valid && check.kind === "spl-memo",
+      ).length,
       confirmedEvents: batch.events.length,
       solanaChecks,
     },

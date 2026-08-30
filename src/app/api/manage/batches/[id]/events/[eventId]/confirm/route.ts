@@ -31,6 +31,12 @@ export async function POST(
       solana: {
         anchored: anchorResult.anchored,
         reused: anchorResult.reused,
+        proofKind: anchorResult.proofKind,
+        fallback: "fallback" in anchorResult ? anchorResult.fallback : false,
+        registryError:
+          "registryError" in anchorResult
+            ? anchorResult.registryError
+            : undefined,
         error: "error" in anchorResult ? anchorResult.error : undefined,
       },
     });

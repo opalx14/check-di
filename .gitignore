@@ -17,6 +17,7 @@ coverage/
 # Rust / Anchor
 target/
 .anchor/
+programs/*/Cargo.lock
 
 # Solana local/test artifacts
 test-ledger/

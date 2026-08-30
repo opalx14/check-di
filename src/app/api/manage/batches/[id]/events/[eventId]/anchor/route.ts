@@ -20,6 +20,10 @@ export async function POST(
       solana: {
         anchored: result.anchored,
         reused: result.reused,
+        proofKind: result.proofKind,
+        fallback: "fallback" in result ? result.fallback : false,
+        registryError:
+          "registryError" in result ? result.registryError : undefined,
         error: "error" in result ? result.error : undefined,
       },
     }, { status: result.anchored ? 200 : 503 });

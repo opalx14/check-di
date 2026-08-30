@@ -2,6 +2,10 @@ import { notFound } from "next/navigation";
 
 import { BatchManagementClient } from "@/components/BatchManagementClient";
 import { batchRepository } from "@/lib/db/persistent-store";
+import {
+  getDevnetFeePayerStatus,
+  getDevnetRegistryProgramStatus,
+} from "@/lib/solana/server";
 
 export const dynamic = "force-dynamic";
 
@@ -15,5 +19,16 @@ export default async function BatchManagementPage({
 
   if (!batch) notFound();
 
-  return <BatchManagementClient batch={batch} />;
+  const [feePayerStatus, registryProgramStatus] = await Promise.all([
+    getDevnetFeePayerStatus().catch(() => null),
+    getDevnetRegistryProgramStatus().catch(() => null),
+  ]);
+
+  return (
+    <BatchManagementClient
+      batch={batch}
+      feePayerStatus={feePayerStatus}
+      registryProgramStatus={registryProgramStatus}
+    />
+  );
 }

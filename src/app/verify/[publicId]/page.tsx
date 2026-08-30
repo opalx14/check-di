@@ -18,9 +18,9 @@ import { notFound } from "next/navigation";
 
 import { batchRepository } from "@/lib/db/persistent-store";
 import {
-  verifySolanaIntegrityProof,
-  type SolanaAnchorVerification,
-} from "@/lib/solana/server";
+  verifyTraceEventSolanaProof,
+  type SolanaProofVerification,
+} from "@/lib/solana/verification";
 import type { TraceEvent } from "@/types/evidence";
 
 export const dynamic = "force-dynamic";
@@ -61,9 +61,14 @@ export default async function VerifyBatchPage({
   const aiChecks = batch.events.flatMap((event) => event.aiValidations ?? []);
   const warnings = aiChecks.filter((check) => check.status !== "matched");
   const solanaChecks = await Promise.all(
-    batch.events.map((event) => verifySolanaIntegrityProof(event.solanaProof)),
+    batch.events.map((event) =>
+      verifyTraceEventSolanaProof(batch.publicId, event),
+    ),
   );
   const anchoredCount = solanaChecks.filter((check) => check.valid).length;
+  const registryCount = solanaChecks.filter(
+    (check) => check.valid && check.kind === "check-di-registry",
+  ).length;
 
   return (
     <main className="min-h-screen bg-[#07090e] text-slate-100">
@@ -75,7 +80,11 @@ export default async function VerifyBatchPage({
             Check-Di
           </a>
           <span className={`rounded-full border px-3 py-1 font-mono text-[10px] font-bold ${anchoredCount > 0 ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300" : "border-amber-500/25 bg-amber-500/10 text-amber-300"}`}>
-            {anchoredCount > 0 ? `SOLANA DEVNET · ${anchoredCount}/${batch.events.length} ANCHORED` : "DEMO · CHƯA GHI DEVNET"}
+            {registryCount > 0
+              ? `CHECK-DI REGISTRY · ${registryCount}/${batch.events.length} VERIFIED`
+              : anchoredCount > 0
+                ? `SOLANA DEVNET · ${anchoredCount}/${batch.events.length} FALLBACK`
+                : "DEMO · CHƯA GHI DEVNET"}
           </span>
         </header>
 
@@ -176,7 +185,7 @@ export default async function VerifyBatchPage({
         </section>
 
         <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-500">
-          Ed25519 organization key và Solana fee-payer hiện vẫn là key demo, chưa phải production identity/key management. Chỉ transaction được RPC Devnet xác minh đúng memo mới hiển thị là anchored.
+          Ed25519 organization key và Solana fee-payer hiện vẫn là key demo, chưa phải production identity/key management. Check-Di ưu tiên xác minh Batch/Event PDA trực tiếp từ custom registry trên Devnet; SPL Memo chỉ còn là fallback.
         </p>
       </div>
     </main>
@@ -190,7 +199,7 @@ function TraceEventCard({
 }: {
   event: TraceEvent;
   index: number;
-  solanaCheck: SolanaAnchorVerification;
+  solanaCheck: SolanaProofVerification;
 }) {
   const meta = stageMeta[event.stage];
   const Icon = meta.icon;
@@ -241,11 +250,13 @@ function TraceEventCard({
             rel="noreferrer"
             className="mt-3 flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3 text-xs text-emerald-300 hover:bg-emerald-500/10"
           >
-            <span className="flex items-center gap-2 font-semibold">
-              <ShieldCheck className="size-3.5" />
-              Solana Devnet proof · slot {solanaCheck.slot ?? event.solanaProof.slot}
+            <span className="flex min-w-0 items-center gap-2 font-semibold">
+              <ShieldCheck className="size-3.5 shrink-0" />
+              {solanaCheck.kind === "check-di-registry"
+                ? `Check-Di Registry · Event PDA ${shorten(event.solanaProof.eventPda, 10, 8)}`
+                : `SPL Memo fallback · slot ${solanaCheck.slot ?? event.solanaProof.slot ?? "—"}`}
             </span>
-            <ExternalLink className="size-3.5" />
+            <ExternalLink className="size-3.5 shrink-0" />
           </a>
         ) : event.solanaProof?.status === "failed" ? (
           <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-3 text-xs text-amber-200/80">

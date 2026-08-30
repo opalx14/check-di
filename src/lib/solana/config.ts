@@ -3,6 +3,9 @@ export const SOLANA_NETWORK = process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? "devnet"
 export const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? "https://api.devnet.solana.com";
 
 export const CHECK_DI_PROGRAM_NAME = "check_di_registry";
+export const CHECK_DI_REGISTRY_PROGRAM_ID =
+  process.env.NEXT_PUBLIC_CHECK_DI_REGISTRY_PROGRAM_ID ??
+  "9sNDitEeYSFQ7LxmNuaiZPoCLVdrzhdR8P5zmoEW78Yi";
 
 export const ON_CHAIN_FIELDS = [
   "batch_hash",

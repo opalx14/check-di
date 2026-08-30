@@ -2,7 +2,7 @@
 
 ## Current phase
 
-**Phase 4A — Solana Devnet memo integrity anchor integration**
+**Phase 5B — Custom `check_di_registry` deployed và trở thành proof chính của product flow**
 
 ## Product core
 
@@ -16,7 +16,8 @@ Batch / QR
   -> SHA-256 Hash Chain
   -> Organization Ed25519 Signature
   -> Persist Event
-  -> Consumer Verify
+  -> Check-Di Registry Batch/Event PDA on Solana Devnet
+  -> Consumer Verify + live RPC verification
 ```
 
 ## Completed
@@ -83,28 +84,50 @@ canonical payload + previousEventHash
 - `GET /api/qr/[publicId]`: QR demo encode URL verify của domain hiện tại, chỉ hoạt động khi batch đã có confirmed proof.
 - `/verify/[publicId]`: consumer verify page đọc persisted proof và hiển thị số trạm động.
 
-### Solana Devnet anchor integration
+### Solana Devnet integrity integration
 
-- Confirm route hiện giữ thứ tự `off-chain confirm -> SHA-256/Ed25519 -> persist -> Devnet anchor`.
-- Dùng SPL Memo program trên Devnet làm minimal integrity anchor ở Phase 4A để có transaction thật mà không đưa raw document/PII on-chain.
-- Memo chứa version, Check-Di app marker, public batch ID, event ID, event hash, previous hash, issuer signer và status.
-- Server có legacy Solana transaction serialization + Ed25519 fee-payer signing trực tiếp bằng Node crypto, không cần thêm package runtime.
-- Fee-payer Devnet là demo key riêng; mặc định lưu trong `.data/solana-devnet-fee-payer.json` với mode 0600 hoặc có thể cấp seed bằng env.
-- Khi thiếu test SOL, app thử Devnet airdrop; nếu faucet lỗi/hết quota thì event vẫn confirmed off-chain và lưu trạng thái anchor `failed` để retry.
+- Confirm route giữ thứ tự `off-chain confirm -> SHA-256/Ed25519 -> persist -> custom Devnet registry`.
+- Custom program `check_di_registry` hiện là **proof chính**; SPL Memo Phase 4A chỉ còn fallback nếu registry path không khả dụng.
+- Fee-payer Devnet là demo key riêng tại `.data/solana-devnet-fee-payer.json`; private key không commit Git.
 - Có endpoint retry `POST /api/manage/batches/[id]/events/[eventId]/anchor`.
-- Public JSON proof đọc transaction lại từ Devnet RPC và chỉ đánh dấu anchor hợp lệ khi transaction tồn tại, không lỗi và Memo instruction khớp chính xác memo đã persist.
-- Public verify page chỉ hiện `Anchored on Solana Devnet` khi live RPC verification pass; có link Solana Explorer thật.
-- Management UI hiển thị số chặng đã anchor, Explorer link hoặc nút retry.
-- Custom `check_di_registry` Anchor/PDA program vẫn là phase kế tiếp; Phase 4A dùng SPL Memo như minimal live anchor, không giả mạo đây là custom program.
+- Registry service tự initialize Batch PDA nếu chưa có và backfill các confirmed Event PDA theo đúng thứ tự previous-hash trước khi ghi event mục tiêu.
+- RPC client có retry/exponential backoff cho HTTP 429 để backfill nhiều chặng ổn định hơn trên public Devnet RPC.
+- Public JSON proof và `/verify/[publicId]` đọc Batch/Event PDA lại trực tiếp từ Devnet RPC, đối chiếu batch hash, event hash, previous hash, organization signer/hash, authority, registry link và lifecycle status; read-only verifier dùng persisted public authority, không cần private fee-payer key để derive PDA.
+- Persistence lưu `programId`, Batch PDA, Event PDA, organization public key, transaction/Explorer proof khi có.
+- Management UI ưu tiên hiển thị `Check-Di Registry · Event PDA`; Memo được ghi rõ là fallback, không được trình bày như custom registry proof.
+- App chỉ gọi custom program là deployed khi RPC xác nhận program account `executable = true`.
+
+### Custom `check_di_registry` Anchor/PDA program
+
+- Rust/Anchor workspace tại root dùng `anchor-lang = 1.1.2`.
+- Canonical Devnet program ID: `9sNDitEeYSFQ7LxmNuaiZPoCLVdrzhdR8P5zmoEW78Yi`.
+- Program đã build SBF và deploy thật lên Devnet; RPC xác nhận `executable = true`.
+- Deploy transaction: `3vhUrCXzYESp35V4iX24hnQz7LV7LFM1tbb11YFZMLPTx1ypp6uS1ndWTc3QNNppWRs7tHJbbVccfztQM1yQbHPJ`.
+- `initialize_batch(batch_hash)` tạo Batch Registry PDA.
+- `append_event(...)` tạo Event Proof PDA, bắt buộc previous hash khớp registry head và yêu cầu organization signer ký instruction.
+- `set_event_status(...)` hỗ trợ lifecycle `active -> revoked|superseded` ở program layer.
+- Batch registry giữ authority, batch hash, last event hash, event count, status và timestamps.
+- Event proof giữ event hash, previous hash, organization signer pubkey + organization hash, authority, version, status và timestamps.
+- `GENESIS` off-chain ánh xạ thành zero hash `[0; 32]` on-chain.
+- Live smoke `DUR-260830-02` đã tạo Batch PDA `rMJQtaADihWqThytPv5aLHAtJkcPhDkbis5KKAnkBVe` và Event PDA `Dd7JhZdVxBXmn6XbA3Tc36tEj85of3pEeDqgG3ApWZHa`, đọc ngược RPC và verify hợp lệ.
+- Multi-event sample `DUR-260830-01` đã backfill toàn bộ chuỗi confirmed lên Registry PDA/Event PDA thành công.
 
 ### Validation
 
-- `bun test tests/traceability.test.ts tests/persistent-store.test.ts tests/solana-anchor.test.ts`: **9 passed, 0 failed, 40 assertions**.
+- `bun test`: **11 passed, 0 failed, 44 assertions**.
 - `bun run typecheck`: passed.
+- `bun run build`: passed.
+- `bun run program:test`: **3 passed, 0 failed**.
+- `bun run program:check`: passed, không còn host cfg warnings.
+- `cargo build-sbf`: passed; sinh `target/deploy/check_di_registry.so`.
 - `git diff --check`: passed.
-- Devnet RPC `getLatestBlockhash`: hoạt động, trả blockhash/slot thật.
-- Live transaction smoke test đã chạy tới bước funding fee-payer nhưng public Devnet faucet trả RPC `429` (airdrop quota/rate limit), vì vậy **chưa có transaction signature mới để tuyên bố anchor thành công trong môi trường hiện tại**.
-- Code giữ đúng fallback: off-chain confirmation không bị rollback và UI cho phép nạp test SOL rồi retry anchor.
+- Fee-payer `g83EX9BBPEmjv1fRwdeRcZVvA8EdhMsqDe3W1Cta8ai` đã được cấp 5 Devnet SOL, đã trả phí deploy/PDA transactions thật và hiện còn khoảng **3.73677232 SOL**.
+- SPL Memo live transaction đã từng verify thành công trước khi chuyển sang custom registry.
+- `solana program show` xác nhận custom program `executable`, upgrade authority là fee-payer demo và last deployed slot `490197159`.
+- `bun run program:smoke -- DUR-260830-02`: Batch/Event PDA đọc ngược và live verification pass.
+- `bun run product:smoke -- DUR-260830-02`: migration `spl-memo -> check-di-registry` pass.
+- `bun run product:smoke -- DUR-260830-01`: multi-event Registry backfill pass sau retry/backoff 429.
+- Off-chain confirmation vẫn không rollback nếu Solana tạm lỗi; Memo fallback và retry endpoint vẫn giữ để demo không mất dữ liệu.
 
 ## Not implemented yet
 
@@ -115,25 +138,26 @@ canonical payload + previousEventHash
 - Document upload/storage thật.
 - OCR/LLM document extraction thật; AI hiện là deterministic validation fixture.
 - Production/local QR renderer độc lập provider ngoài.
-- Custom Anchor/PDA program source + deployment cho `check_di_registry`.
-- Một funded Devnet fee-payer để hoàn tất live transaction smoke test trong môi trường hiện tại; public faucet đang trả `429`.
-- PDA-backed on-chain status/revoke/supersede; Phase 4A hiện dùng SPL Memo transaction làm minimal integrity anchor.
+- PDA-backed revoke/supersede transaction từ app; instruction on-chain đã có nhưng management flow chưa gọi instruction này.
+- Wallet/Phantom organization signing; hiện organization signer vẫn là deterministic demo signer server-side.
 
 Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt buộc; map mô phỏng được giữ để tập trung vào traceability, AI checks và integrity proof.
 
 ## Next milestone
 
-**Phase 4B — Fund + prove live Devnet transaction, sau đó custom Anchor registry**
+**Phase 6 — Document upload + AI extraction/check production-like**
 
-Ngay khi fee-payer có test SOL:
+Blockchain vertical slice đã chạy live. Milestone tiếp theo tập trung biến AI từ deterministic fixture thành luồng chứng từ thật:
 
 ```text
-confirmed event
-  -> retry /anchor
-  -> real SPL Memo Devnet transaction
-  -> persist tx signature / slot
-  -> public verify live-checks memo
-  -> Explorer link thật
+upload PDF/image
+  -> extract document fields
+  -> normalize structured evidence
+  -> compare against batch/event data
+  -> matched / warning / needs_review
+  -> human/organization confirmation
+  -> SHA-256 + Ed25519
+  -> Check-Di Registry Event PDA
 ```
 
-Sau khi vertical slice live này được chứng minh, triển khai `check_di_registry` custom Anchor/PDA program cho `initialize/append/update status`, rồi mới ưu tiên PostgreSQL/Supabase nếu thời gian thi cần multi-user/production-like hơn.
+Sau AI document slice mới ưu tiên PostgreSQL/Supabase adapter, organization auth/Phantom signing và PDA-backed revoke/supersede UI.

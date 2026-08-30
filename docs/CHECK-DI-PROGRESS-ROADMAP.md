@@ -2,7 +2,7 @@
 
 Cập nhật: **30/08/2026**
 
-> Trạng thái mới nhất: Phase 4A đã nối minimal Solana Devnet integrity anchor bằng SPL Memo program, có retry + live RPC verification + Explorer link. Devnet RPC hoạt động nhưng smoke test transaction mới hiện bị chặn ở funding vì public faucet trả `429`; chưa được phép tuyên bố transaction mới đã thành công. Custom `check_di_registry` Anchor/PDA vẫn là bước kế tiếp sau khi có funded fee-payer.
+> Trạng thái mới nhất: Phase 5B đã hoàn tất custom `check_di_registry` vertical slice trên Solana Devnet. Program `9sNDitEeYSFQ7LxmNuaiZPoCLVdrzhdR8P5zmoEW78Yi` đã build SBF + deploy thật, Batch/Event PDA đã được tạo và đọc ngược RPC. Product flow hiện ưu tiên custom Registry PDA làm proof chính; SPL Memo chỉ còn fallback.
 
 Tài liệu này tổng hợp trạng thái hiện tại của Check-Di sau các vòng phát triển từ khởi tạo dự án đến workflow quản lý lô có persistence. Mục tiêu là để tiếp tục phát triển, demo và chuẩn bị submission mà không phải đọc lại toàn bộ lịch sử trao đổi.
 
@@ -33,8 +33,8 @@ Batch / QR
   -> Canonical Payload
   -> SHA-256 Event Hash
   -> Ed25519 Signature
-  -> Consumer Verify
-  -> Solana Devnet Anchor (bước tiếp theo)
+  -> Check-Di Registry Batch/Event PDA trên Solana Devnet
+  -> Consumer Verify + live RPC verification
 ```
 
 Check-Di **không dùng blockchain để khẳng định dữ liệu ngoài đời tự động là thật**. Mỗi tổ chức chỉ chịu trách nhiệm xác nhận dữ liệu của chặng mình phụ trách.
@@ -522,9 +522,8 @@ git diff --check: passed
 - OCR;
 - LLM extraction;
 - PostgreSQL/Supabase;
-- Solana Anchor program;
-- Solana Devnet transaction;
-- on-chain status/revoke/supersede;
+- on-chain status/revoke/supersede transaction từ management UI; instruction đã deploy nhưng app chưa gọi lifecycle instruction;
+- organization wallet/Phantom signing; hiện vẫn dùng deterministic demo organization signer server-side;
 - real-world GPS/map provider.
 
 ---
@@ -542,7 +541,7 @@ Giữ off-chain:
 - AI extraction/check result;
 - full trace event payload.
 
-### On-chain sau này
+### On-chain hiện tại
 
 Chỉ anchor dữ liệu integrity tối thiểu:
 
@@ -561,50 +560,35 @@ Không đưa raw document hoặc dữ liệu nhạy cảm lên chain.
 
 ## 10. Roadmap tiếp theo
 
-### Ưu tiên 1 — Solana Devnet anchor
-
-Đây là bước tăng giá trị mạnh nhất cho Technical Track.
-
-Flow mục tiêu:
+### Đã hoàn tất — Solana custom registry vertical slice
 
 ```text
 organization confirms event
-  -> eventHash already exists
-  -> submit minimal integrity record to Solana Devnet
-  -> receive transaction signature
-  -> persist tx signature / PDA reference
-  -> public verify page checks Devnet proof
+  -> SHA-256 + Ed25519 off-chain proof
+  -> initialize Batch Registry PDA nếu cần
+  -> backfill confirmed Event PDA theo previous-hash chain
+  -> append Event Proof PDA
+  -> persist program / registry / event PDA metadata
+  -> public verify đọc PDA live từ Devnet RPC
 ```
 
-Public page sau đó mới được phép nói:
+Program `9sNDitEeYSFQ7LxmNuaiZPoCLVdrzhdR8P5zmoEW78Yi` đã `executable = true`; lô 1 chặng và lô mẫu 5 chặng đều đã smoke test thành công. RPC 429 được xử lý bằng retry/exponential backoff. SPL Memo chỉ còn fallback.
+
+### Ưu tiên 1 — Document upload + AI extraction thật
+
+Biến AI fixture thành luồng evidence thật:
 
 ```text
-Anchored on Solana Devnet
-Tx: <real transaction signature>
+upload PDF/image
+  -> extract fields
+  -> normalize evidence
+  -> compare batch/event/document
+  -> matched / warning / needs_review
+  -> organization xác nhận
+  -> hash/sign + Registry PDA
 ```
 
-Không hiển thị tx/PDA giả.
-
-### Ưu tiên 2 — Anchor status model
-
-Cần hỗ trợ:
-
-```text
-active
-revoked
-superseded
-```
-
-Nếu một event phải sửa, không overwrite event cũ âm thầm.
-
-Nên tạo version mới:
-
-```text
-old event -> superseded
-new event -> active
-```
-
-### Ưu tiên 3 — PostgreSQL/Supabase adapter
+### Ưu tiên 2 — PostgreSQL/Supabase adapter
 
 Sau khi Devnet slice hoạt động ổn, đổi persistence adapter:
 
@@ -627,7 +611,7 @@ ai_checks
 integrity_anchors
 ```
 
-### Ưu tiên 4 — Organization authentication
+### Ưu tiên 3 — Organization authentication
 
 Cần phân biệt:
 
@@ -641,29 +625,7 @@ Mỗi organization chỉ xác nhận chặng thuộc quyền của mình.
 
 Demo key deterministic phải được thay bằng secure key/wallet flow trước production.
 
-### Ưu tiên 5 — Document upload + AI extraction
-
-Flow mục tiêu:
-
-```text
-upload PDF/image
-  -> extract text/fields
-  -> normalize
-  -> compare with batch/event data
-  -> matched / warning / needs_review
-  -> human/organization decides confirmation
-```
-
-Các field ưu tiên:
-
-- batch ID;
-- date/time;
-- quantity/weight;
-- source/destination;
-- certificate/test result;
-- document number.
-
-### Ưu tiên 6 — QR renderer local
+### Ưu tiên 4 — QR renderer local
 
 Hiện QR image có thể dùng external provider.
 
@@ -673,7 +635,7 @@ Nên đổi sang local/server QR generation trước demo final để:
 - tránh privacy leak URL;
 - ổn định khi pitch.
 
-### Ưu tiên 7 — Demo script
+### Ưu tiên 5 — Demo script
 
 Demo final nên ngắn và có câu chuyện rõ:
 
@@ -684,12 +646,12 @@ Demo final nên ngắn và có câu chuyện rõ:
 4. AI đối chiếu khối lượng
 5. HTX vẫn là bên quyết định ký
 6. Hash chain được nối
-7. Anchor event hash lên Solana Devnet
+7. Event được ghi vào Check-Di Registry PDA trên Solana Devnet
 8. Mở điện thoại quét QR
-9. Consumer thấy hành trình + real Devnet proof
+9. Consumer thấy hành trình + live PDA verification
 ```
 
-### Ưu tiên 8 — Product & Business package
+### Ưu tiên 6 — Product & Business package
 
 Chuẩn bị song song:
 
@@ -712,16 +674,14 @@ Không nên tiếp tục dành nhiều thời gian chỉnh landing nếu không 
 Thứ tự nên là:
 
 ```text
-1. Solana Devnet minimal registry
-2. Anchor one confirmed event thật
-3. Verify transaction từ public page
-4. status active/revoked/superseded
-5. Postgres/Supabase adapter
-6. organization auth
-7. document upload + OCR/LLM
-8. local QR renderer
-9. final demo polish
-10. pitch/submission package cho 2 track
+1. document upload + OCR/LLM extraction
+2. AI normalize/compare evidence
+3. PostgreSQL/Supabase adapter
+4. organization auth + wallet/Phantom signing
+5. PDA-backed revoke/supersede UI
+6. local QR renderer
+7. final demo polish
+8. pitch/submission package cho 2 track
 ```
 
 ---
@@ -749,9 +709,11 @@ Thứ tự nên là:
 03. docs: đồng bộ trạng thái spec truy xuất nguồn gốc
 04. feat: tối ưu trải nghiệm truy xuất mobile và giao diện song ngữ
 05. feat: hoàn thiện vertical slice truy xuất và xác minh chuỗi
+06. feat: triển khai workflow quản lý lô và persistence
+07. feat: tích hợp integrity anchor trên Solana Devnet
 ```
 
-Commit tiếp theo của workflow persistence sẽ là commit `06`.
+Phase 5 custom registry hiện đang là thay đổi chưa commit tiếp theo sau commit `07`.
 
 ---
 
@@ -769,7 +731,8 @@ Create Batch
   -> SHA-256
   -> Ed25519
   -> Persist
-  -> Public Verify
+  -> Check-Di Registry Batch/Event PDA
+  -> Public Verify đọc live Devnet RPC
 ```
 
-Bước tiếp theo có giá trị kỹ thuật cao nhất là đưa **event hash/status thật lên Solana Devnet** và xác minh transaction thật từ public verify page.
+Custom Solana vertical slice đã hoàn tất. Bước tiếp theo có giá trị sản phẩm/kỹ thuật cao nhất là đưa **chứng từ thật vào AI extraction/check flow**, nhưng vẫn giữ nguyên nguyên tắc AI chỉ hỗ trợ đối chiếu và organization là bên quyết định xác nhận.
