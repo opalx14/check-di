@@ -28,7 +28,10 @@
     "db:track-doctor": "bun scripts/check-track-lanes.ts",
     "auth:smoke": "bun scripts/smoke-supabase-auth.ts",
     "auth:demo:provision": "bun scripts/provision-demo-organization.ts",
-    "monitor": "bun scripts/monitor-web-activity.ts"
+    "monitor": "bun scripts/monitor-web-activity.ts",
+    "creditcoin:doctor": "bun scripts/check-creditcoin-readiness.ts",
+    "creditcoin:proof": "bun scripts/fetch-attestcoin-proof.ts",
+    "creditcoin:contracts:compile": "bunx --bun solc@0.8.30 --base-path . --include-path . --bin -o .tmp/creditcoin-solc contracts/creditcoin/src/sepolia/CheckDiSourceRegistry.sol contracts/creditcoin/src/creditcoin/CheckDiAttestedRegistry.sol"
   },
   "dependencies": {
     "@solana/kit": "^8.2.0",

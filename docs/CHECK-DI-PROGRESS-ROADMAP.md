@@ -247,7 +247,7 @@ Declared loss: 10%
 
 Kiểm tra thời điểm kiểm định có diễn ra sau thu hoạch hay không.
 
-AI hiện **không phải OCR/LLM thật**. Đây là validation engine deterministic để có một vertical slice đáng tin cậy trước khi nối model thật.
+Deterministic checks vẫn được giữ làm lớp rule-based. Phase 6 đã bổ sung pipeline chứng từ thật: PDF/JPG/PNG/WebP được lưu off-chain, tính SHA-256 và chạy **demo extraction deterministic** từ tên file + metadata chặng để mô phỏng structured fields trước khi cross-check với batch/event. Không cần API key, billing hoặc mạng ngoài; UI/public proof luôn ghi rõ đây là mô phỏng, không phải OCR/LLM production.
 
 Một nguyên tắc đã khóa:
 
@@ -383,9 +383,7 @@ write temp file
 
 Dữ liệu sống qua refresh/restart local/VPS.
 
-Đây là persistence phù hợp prototype/hackathon hiện tại, **chưa phải PostgreSQL/Supabase production**.
-
-Domain và API đã được tách để sau này đổi repository adapter mà không phải viết lại toàn bộ UI.
+Đây vẫn là persistence mặc định phù hợp zero-config local/hackathon. Phase 7A đã bổ sung `BatchRepository` contract và Supabase Data API adapter; runtime có thể chọn `file|supabase` qua `CHECK_DI_DB_DRIVER` mà không đổi UI/API/Solana flow. Remote Supabase project chưa được provision/apply migration trong repo hiện tại nên chưa gọi là production persistence live.
 
 ### 5.13 API quản trị
 
@@ -511,17 +509,20 @@ git diff --check: passed
 - public verify route;
 - JSON proof API;
 - QR encode verify URL;
-- deterministic AI data checks.
+- deterministic AI data checks;
+- upload PDF/ảnh thật vào draft;
+- magic-byte validation + private off-chain storage (`file|supabase`) + document SHA-256;
+- deterministic document extraction demo không phụ thuộc API key;
+- document/batch/event cross-check + management/public evidence UI.
 
 ### Vẫn là demo/prototype
 
 - organization authentication;
 - secure key storage;
 - production identity/KYC;
-- upload file thật;
-- OCR;
-- LLM extraction;
-- PostgreSQL/Supabase;
+- OCR/LLM production thật; hackathon demo hiện cố ý dùng deterministic extraction;
+- Supabase remote deployment/migration + demo data migration; schema và runtime adapter đã có nhưng chưa provision project thật;
+- Supabase Storage adapter/private bucket đã có nhưng chưa verify trên remote project thật; local fallback vẫn là `.data/documents`;
 - on-chain status/revoke/supersede transaction từ management UI; instruction đã deploy nhưng app chưa gọi lifecycle instruction;
 - organization wallet/Phantom signing; hiện vẫn dùng deterministic demo organization signer server-side;
 - real-world GPS/map provider.
@@ -574,44 +575,67 @@ organization confirms event
 
 Program `9sNDitEeYSFQ7LxmNuaiZPoCLVdrzhdR8P5zmoEW78Yi` đã `executable = true`; lô 1 chặng và lô mẫu 5 chặng đều đã smoke test thành công. RPC 429 được xử lý bằng retry/exponential backoff. SPL Memo chỉ còn fallback.
 
-### Ưu tiên 1 — Document upload + AI extraction thật
-
-Biến AI fixture thành luồng evidence thật:
+### Đã triển khai — Document upload + AI demo extraction pipeline
 
 ```text
 upload PDF/image
-  -> extract fields
-  -> normalize evidence
+  -> validate magic bytes + max 10 MB
+  -> save raw file private off-chain (local mode 0600 hoặc Supabase private bucket)
+  -> SHA-256 document thật
+  -> deterministic demo extraction từ filename/metadata
   -> compare batch/event/document
   -> matched / warning / needs_review
   -> organization xác nhận
-  -> hash/sign + Registry PDA
+  -> document hash/evidence nằm trong signed event
+  -> Registry PDA
 ```
 
-### Ưu tiên 2 — PostgreSQL/Supabase adapter
+UI/API/test đã hoàn tất và không còn external AI blocker. `bun run document:smoke` chạy toàn bộ demo extraction/cross-check không cần credential.
 
-Sau khi Devnet slice hoạt động ổn, đổi persistence adapter:
+### Đã triển khai — PostgreSQL/Supabase schema + adapter foundation
+
+Runtime persistence hiện theo mô hình:
 
 ```text
-file-backed repository
-        ↓
-PostgreSQL/Supabase repository
+BatchRepository
+  ├── file adapter       -> .data/check-di-store.json
+  └── supabase adapter   -> Supabase Data API / PostgreSQL schema
 ```
 
-Không đổi domain contract và API flow nếu không cần.
+`CHECK_DI_DB_DRIVER=file|supabase` chọn adapter mà không đổi domain contract, API, AI flow hoặc Solana anchor service.
 
-Schema MVP dự kiến:
+Migration `supabase/migrations/202608300001_check_di_core.sql` tạo schema normalized:
 
 ```text
 organizations
+organization_members
 batches
 trace_events
 documents
+document_extractions
 ai_checks
-integrity_anchors
+integrity_proofs
 ```
 
-### Ưu tiên 3 — Organization authentication
+Database trigger khóa batch identity/payload đã confirmed và chỉ cho document/extraction/AI check mutate khi event còn draft. RLS đã bật. Raw document có cùng chiến lược adapter: `file` ở local hoặc private Supabase Storage bucket `check-di-documents` khi DB driver là Supabase; migration tạo bucket private, giới hạn 10 MB và whitelist PDF/JPEG/PNG/WebP. `bun run db:doctor` kiểm tra read-only Data API + bucket sau khi có credential. Chưa apply lên remote project vì chưa có Supabase URL/service-role credential trong repo; do đó đây là foundation đã test bằng mock Data API/Storage API, chưa phải remote database live.
+
+### Ưu tiên 1 — Provision Supabase + migrate demo data
+
+Khi có Supabase project thật:
+
+```text
+apply migration
+  -> cấu hình CHECK_DI_SUPABASE_URL + service-role
+  -> smoke CRUD/confirm trên DB thật
+  -> migrate/seed DUR-260830-01
+  -> switch CHECK_DI_DB_DRIVER=supabase
+  -> document storage tự chuyển sang private Supabase bucket
+  -> bun run db:doctor
+```
+
+Không cần đưa raw documents lên Solana hoặc public bucket; Supabase mode đã có private Storage adapter, còn local/VPS có persistent disk vẫn có thể ép `CHECK_DI_DOCUMENT_STORAGE_DRIVER=file`.
+
+### Ưu tiên 2 — Organization authentication
 
 Cần phân biệt:
 
@@ -625,7 +649,7 @@ Mỗi organization chỉ xác nhận chặng thuộc quyền của mình.
 
 Demo key deterministic phải được thay bằng secure key/wallet flow trước production.
 
-### Ưu tiên 4 — QR renderer local
+### Ưu tiên 3 — QR renderer local
 
 Hiện QR image có thể dùng external provider.
 
@@ -635,7 +659,7 @@ Nên đổi sang local/server QR generation trước demo final để:
 - tránh privacy leak URL;
 - ổn định khi pitch.
 
-### Ưu tiên 5 — Demo script
+### Ưu tiên 4 — Demo script
 
 Demo final nên ngắn và có câu chuyện rõ:
 
@@ -651,7 +675,7 @@ Demo final nên ngắn và có câu chuyện rõ:
 9. Consumer thấy hành trình + live PDA verification
 ```
 
-### Ưu tiên 6 — Product & Business package
+### Ưu tiên 5 — Product & Business package
 
 Chuẩn bị song song:
 
@@ -674,14 +698,12 @@ Không nên tiếp tục dành nhiều thời gian chỉnh landing nếu không 
 Thứ tự nên là:
 
 ```text
-1. document upload + OCR/LLM extraction
-2. AI normalize/compare evidence
-3. PostgreSQL/Supabase adapter
-4. organization auth + wallet/Phantom signing
-5. PDA-backed revoke/supersede UI
-6. local QR renderer
-7. final demo polish
-8. pitch/submission package cho 2 track
+1. provision Supabase thật + apply migration + migrate/seed demo data
+2. organization auth + wallet/Phantom signing
+3. PDA-backed revoke/supersede UI
+4. private object storage/local QR renderer
+5. final demo polish
+6. pitch/submission package cho 2 track
 ```
 
 ---
@@ -711,9 +733,10 @@ Thứ tự nên là:
 05. feat: hoàn thiện vertical slice truy xuất và xác minh chuỗi
 06. feat: triển khai workflow quản lý lô và persistence
 07. feat: tích hợp integrity anchor trên Solana Devnet
+08. feat: hoàn thiện custom Solana registry và xác minh PDA trên Devnet
 ```
 
-Phase 5 custom registry hiện đang là thay đổi chưa commit tiếp theo sau commit `07`.
+Working tree sau commit `08` hiện chứa Phase 6 document AI và Phase 7A database adapter/schema; chưa commit trong trạng thái tài liệu này.
 
 ---
 
@@ -726,7 +749,8 @@ Nó đã có một vertical slice có thể thao tác:
 ```text
 Create Batch
   -> Add Draft Event
-  -> AI Check
+  -> Upload PDF/image + document SHA-256
+  -> deterministic AI demo extraction + cross-check
   -> Organization Confirmation
   -> SHA-256
   -> Ed25519
@@ -735,4 +759,4 @@ Create Batch
   -> Public Verify đọc live Devnet RPC
 ```
 
-Custom Solana vertical slice đã hoàn tất. Bước tiếp theo có giá trị sản phẩm/kỹ thuật cao nhất là đưa **chứng từ thật vào AI extraction/check flow**, nhưng vẫn giữ nguyên nguyên tắc AI chỉ hỗ trợ đối chiếu và organization là bên quyết định xác nhận.
+Custom Solana vertical slice, document demo flow và PostgreSQL/Supabase adapter foundation đều đã hoàn tất ở code/test. Bước tiếp theo là apply migration lên Supabase project thật + migrate demo data, sau đó làm organization identity/wallet signing. OCR/LLM thật có thể nâng cấp sau hackathon; AI demo hiện chỉ hỗ trợ đối chiếu và organization vẫn là bên quyết định xác nhận.

@@ -13,6 +13,8 @@ out/
 dist/
 coverage/
 *.tsbuildinfo
+*.bin
+supabase/.temp/
 
 # Rust / Anchor
 target/

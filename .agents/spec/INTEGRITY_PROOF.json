@@ -1,0 +1,118 @@
+{
+  "ok": true,
+  "batch": {
+    "id": "batch-0a1c26ca-a6e4-4c58-b896-9999b1055249",
+    "publicId": "CO-DAK-FARM-DURIAN",
+    "productName": "Sầu riêng Ri6 (Co Dak)",
+    "origin": "Krông Pắc, Đắk Lắk",
+    "events": [
+      {
+        "id": "evt-255c5a44-6e38-47d9-8fbe-8944a7ef3bea",
+        "batchId": "batch-0a1c26ca-a6e4-4c58-b896-9999b1055249",
+        "stage": "production",
+        "organizationId": "org-htx-dak-farm",
+        "organizationName": "HTX Dak Farm",
+        "location": "Krông Pắc, Đắk Lắk",
+        "occurredAt": "2026-08-30T01:00:00+00:00",
+        "summary": "Thu hoạch sầu riêng Ri6 tiêu chuẩn.",
+        "documents": [
+          "CO-01",
+          "co_dak_farm_durian.pdf"
+        ],
+        "documentEvidence": [
+          {
+            "id": "doc-8e11311e-6387-40e6-97fd-10405ff337ab",
+            "filename": "co_dak_farm_durian.pdf",
+            "mimeType": "application/pdf",
+            "sizeBytes": 144,
+            "sha256": "0f1bdaaa8388bede22a501615b98833a78030f5a0e3f6dc073e1b81f1bc72285",
+            "uploadedAt": "2026-08-31T06:50:50.432+00:00",
+            "extraction": {
+              "model": "deterministic-v1",
+              "notes": [
+                "DEMO: extraction mô phỏng từ tên file + metadata chặng; không phải OCR/LLM.",
+                "MIME dùng cho demo extraction: application/pdf."
+              ]
+            },
+            "status": "completed",
+            "batchId": "CO-DAK-FARM-DURIAN",
+            "provider": "demo",
+            "simulated": true,
+            "confidence": 0.4,
+            "documentType": "Nhật ký sản xuất / thu hoạch"
+          }
+        ],
+        "metrics": {},
+        "aiValidations": [
+          {
+            "status": "matched",
+            "message": "co_dak_farm_durian.pdf: mã lô demo nhận diện khớp CO-DAK-FARM-DURIAN.",
+            "fields": [
+              "batchId"
+            ],
+            "sourceDocumentId": "doc-8e11311e-6387-40e6-97fd-10405ff337ab"
+          }
+        ],
+        "previousEventHash": "GENESIS",
+        "eventHash": "b9be747c326ba5d5436a85851a9cd25efb976a7fb20900dc84b89f6aa25bb1a5",
+        "signerPublicKey": "MCowBQYDK2VwAyEAqWpq3_SLe7WXzR1n_idRwowYKlYXoQi8lMUDxGaP3Ro",
+        "signature": "MlsG5aItGEC0s5GVRbYD24CXeDotffyh9JWSvzJWIPGqWi0fmLdiYMJmhatYz722IWRZMgjvV8MTedMmvtyqCw",
+        "solanaProof": {
+          "network": "devnet",
+          "kind": "check-di-registry",
+          "programId": "9sNDitEeYSFQ7LxmNuaiZPoCLVdrzhdR8P5zmoEW78Yi",
+          "status": "confirmed",
+          "transactionSignature": "5UfjfUf6E8YwzSYtoy23EtxDycWpbpXkZC9kMSFzu4398bvvB3bvE82PBDEynWgNXq7JwYVhwbU4uCt2S6CPSmTK",
+          "payerPublicKey": "g83EX9BBPEmjv1fRwdeRcZVvA8EdhMsqDe3W1Cta8ai",
+          "organizationPublicKey": "CQL1zTZWwc8CzHHSKSCVbYNSBoUG33m3nDdPz633a6r5",
+          "registryAddress": "9hNiScGhbSEMfKjKknMKmBqqoWDqHGXLdfuBswcA1Kpy",
+          "eventPda": "EM9tU7AoBet7DaMiJPcadYujM7fjcVcqwXgya4h8ey5C",
+          "explorerUrl": "https://explorer.solana.com/tx/5UfjfUf6E8YwzSYtoy23EtxDycWpbpXkZC9kMSFzu4398bvvB3bvE82PBDEynWgNXq7JwYVhwbU4uCt2S6CPSmTK?cluster=devnet",
+          "registryExplorerUrl": "https://explorer.solana.com/address/9hNiScGhbSEMfKjKknMKmBqqoWDqHGXLdfuBswcA1Kpy?cluster=devnet",
+          "eventExplorerUrl": "https://explorer.solana.com/address/EM9tU7AoBet7DaMiJPcadYujM7fjcVcqwXgya4h8ey5C?cluster=devnet",
+          "anchoredAt": "2026-08-31T06:51:25+00:00",
+          "attemptedAt": "2026-08-31T06:51:25.389+00:00"
+        },
+        "status": "confirmed"
+      }
+    ],
+    "createdAt": "2026-08-31T06:50:25.113+00:00",
+    "updatedAt": "2026-08-31T06:50:25.113+00:00",
+    "chainVerification": {
+      "valid": true,
+      "checks": [
+        {
+          "eventId": "evt-255c5a44-6e38-47d9-8fbe-8944a7ef3bea",
+          "stage": "production",
+          "linkValid": true,
+          "hashValid": true,
+          "signatureValid": true,
+          "valid": true
+        }
+      ]
+    }
+  },
+  "proof": {
+    "type": "off-chain-ed25519-hash-chain+check-di-registry-pda",
+    "persistence": "local-file",
+    "solanaAnchored": true,
+    "allConfirmedEventsAnchored": true,
+    "anchoredEvents": 1,
+    "registryAnchoredEvents": 1,
+    "memoFallbackEvents": 0,
+    "confirmedEvents": 1,
+    "solanaChecks": [
+      {
+        "eventId": "evt-255c5a44-6e38-47d9-8fbe-8944a7ef3bea",
+        "valid": true,
+        "kind": "check-di-registry",
+        "registryAddress": "9hNiScGhbSEMfKjKknMKmBqqoWDqHGXLdfuBswcA1Kpy",
+        "eventPda": "EM9tU7AoBet7DaMiJPcadYujM7fjcVcqwXgya4h8ey5C",
+        "organizationPublicKey": "CQL1zTZWwc8CzHHSKSCVbYNSBoUG33m3nDdPz633a6r5",
+        "proofKind": "check-di-registry",
+        "transactionSignature": "5UfjfUf6E8YwzSYtoy23EtxDycWpbpXkZC9kMSFzu4398bvvB3bvE82PBDEynWgNXq7JwYVhwbU4uCt2S6CPSmTK",
+        "explorerUrl": "https://explorer.solana.com/tx/5UfjfUf6E8YwzSYtoy23EtxDycWpbpXkZC9kMSFzu4398bvvB3bvE82PBDEynWgNXq7JwYVhwbU4uCt2S6CPSmTK?cluster=devnet"
+      }
+    ]
+  }
+}
