@@ -8,6 +8,7 @@ import {
   MapPin,
   PackageCheck,
   QrCode,
+  ShieldAlert,
   ShieldCheck,
   Signature,
   Sprout,
@@ -16,7 +17,7 @@ import {
 } from "lucide-react";
 import { notFound } from "next/navigation";
 
-import { batchRepository } from "@/lib/db/persistent-store";
+import { batchRepository } from "@/lib/db";
 import {
   verifyTraceEventSolanaProof,
   type SolanaProofVerification,
@@ -60,6 +61,9 @@ export default async function VerifyBatchPage({
   const destination = batch.events.at(-1)?.location ?? batch.origin;
   const aiChecks = batch.events.flatMap((event) => event.aiValidations ?? []);
   const warnings = aiChecks.filter((check) => check.status !== "matched");
+  const extractedDocuments = batch.events
+    .flatMap((event) => event.documentEvidence ?? [])
+    .filter((document) => document.extraction.status === "completed").length;
   const solanaChecks = await Promise.all(
     batch.events.map((event) =>
       verifyTraceEventSolanaProof(batch.publicId, event),
@@ -108,27 +112,49 @@ export default async function VerifyBatchPage({
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
-                <div className="flex items-center gap-2 text-emerald-300">
-                  <ShieldCheck className="size-4" />
-                  <p className="text-sm font-bold">Chuỗi hash & chữ ký hợp lệ</p>
+              <div
+                className={`rounded-2xl border p-4 ${
+                  batch.chainVerification.valid
+                    ? "border-emerald-500/20 bg-emerald-500/[0.06]"
+                    : "border-amber-500/20 bg-amber-500/[0.06]"
+                }`}
+              >
+                <div
+                  className={`flex items-center gap-2 ${
+                    batch.chainVerification.valid
+                      ? "text-emerald-300"
+                      : "text-amber-300"
+                  }`}
+                >
+                  {batch.chainVerification.valid ? (
+                    <ShieldCheck className="size-4" />
+                  ) : (
+                    <ShieldAlert className="size-4" />
+                  )}
+                  <p className="text-sm font-bold">
+                    {batch.chainVerification.valid
+                      ? "Chuỗi hash & chữ ký hợp lệ"
+                      : "Cảnh báo chuỗi integrity"}
+                  </p>
                 </div>
                 <p className="mt-1 text-xs leading-relaxed text-slate-400">
                   {batch.chainVerification.valid
                     ? `${batch.events.length}/${batch.events.length} chặng nối đúng previous hash và chữ ký Ed25519 kiểm tra được.`
-                    : "Phát hiện chặng không khớp chuỗi integrity."}
+                    : "Phát hiện chặng không khớp chuỗi integrity hoặc dữ liệu đã bị chỉnh sửa."}
                 </p>
               </div>
 
               <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.06] p-4">
                 <div className="flex items-center gap-2 text-cyan-300">
                   <Bot className="size-4" />
-                  <p className="text-sm font-bold">AI check fixture</p>
+                  <p className="text-sm font-bold">AI demo document check</p>
                 </div>
                 <p className="mt-1 text-xs leading-relaxed text-slate-400">
-                  {warnings.length === 0
-                    ? `${aiChecks.length} kiểm tra dữ liệu mẫu đều khớp.`
-                    : `${warnings.length} cảnh báo cần xem lại.`}
+                  {extractedDocuments > 0
+                    ? `${extractedDocuments} chứng từ đã chạy extraction demo; ${warnings.length} cảnh báo cần xem lại.`
+                    : warnings.length === 0
+                      ? `${aiChecks.length} kiểm tra dữ liệu hiện có đều khớp.`
+                      : `${warnings.length} cảnh báo cần xem lại.`}
                 </p>
               </div>
             </div>
@@ -185,7 +211,7 @@ export default async function VerifyBatchPage({
         </section>
 
         <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-500">
-          Ed25519 organization key và Solana fee-payer hiện vẫn là key demo, chưa phải production identity/key management. Check-Di ưu tiên xác minh Batch/Event PDA trực tiếp từ custom registry trên Devnet; SPL Memo chỉ còn là fallback.
+          Document extraction hiện là mô phỏng deterministic cho hackathon, không phải OCR/LLM production. SHA-256 file, Ed25519 integrity và Check-Di Registry PDA trên Solana Devnet vẫn là proof kỹ thuật thật.
         </p>
       </div>
     </main>
@@ -204,17 +230,29 @@ function TraceEventCard({
   const meta = stageMeta[event.stage];
   const Icon = meta.icon;
   const aiChecks = event.aiValidations ?? [];
+  const isRevoked = event.status === "revoked";
+  const isSuperseded = event.status === "superseded";
+  const isTerminal = isRevoked || isSuperseded;
 
   return (
-    <details className="group rounded-2xl border border-white/8 bg-slate-900/45 open:border-cyan-500/20 open:bg-cyan-950/10">
+    <details className={`group rounded-2xl border bg-slate-900/45 ${isTerminal ? "border-red-500/20 open:border-red-500/30" : "border-white/8 open:border-cyan-500/20 open:bg-cyan-950/10"}`}>
       <summary className="flex cursor-pointer list-none items-center gap-3 p-4">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
+        <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl border ${isTerminal ? "border-red-500/25 bg-red-500/10 text-red-300" : "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"}`}>
           <Icon className="size-4" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <p className="font-display truncate text-sm font-bold text-white">{index + 1}. {meta.label}</p>
-            <CheckCircle2 className="size-3.5 shrink-0 text-emerald-400" />
+            {isTerminal ? (
+              <ShieldAlert className="size-3.5 shrink-0 text-red-400" />
+            ) : (
+              <CheckCircle2 className="size-3.5 shrink-0 text-emerald-400" />
+            )}
+            {isTerminal && (
+              <span className="rounded-full border border-red-500/20 bg-red-500/10 px-2 py-0.5 font-mono text-[8px] font-bold text-red-300">
+                {isRevoked ? "REVOKED" : "SUPERSEDED"}
+              </span>
+            )}
           </div>
           <p className="mt-0.5 truncate text-[11px] text-slate-400">{event.organizationName} · {event.location}</p>
         </div>
@@ -224,6 +262,38 @@ function TraceEventCard({
 
       <div className="border-t border-white/8 px-4 pb-4 pt-3">
         <p className="text-xs leading-relaxed text-slate-300">{event.summary}</p>
+
+        {event.documentEvidence && event.documentEvidence.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {event.documentEvidence.map((document) => {
+              const extracted = [
+                document.extraction.documentType,
+                document.extraction.documentNumber,
+                document.extraction.batchId
+                  ? `Lô ${document.extraction.batchId}`
+                  : undefined,
+                document.extraction.quantity !== undefined
+                  ? `${document.extraction.quantity}${document.extraction.unit ? ` ${document.extraction.unit}` : ""}`
+                  : undefined,
+              ].filter(Boolean);
+
+              return (
+                <div key={document.id} className="rounded-xl border border-white/8 bg-slate-950/55 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold text-slate-200">{document.filename}</p>
+                      <p className="mt-1 font-mono text-[9px] text-slate-600">SHA-256 {shorten(document.sha256, 10, 8)}</p>
+                    </div>
+                    <span className="shrink-0 text-[9px] font-bold text-cyan-300">
+                      DEMO EXTRACTION
+                    </span>
+                  </div>
+                  {extracted.length > 0 && <p className="mt-2 text-[10px] text-slate-400">{extracted.join(" · ")}</p>}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {aiChecks.length > 0 && (
           <div className="mt-3 space-y-2">
@@ -253,7 +323,7 @@ function TraceEventCard({
             <span className="flex min-w-0 items-center gap-2 font-semibold">
               <ShieldCheck className="size-3.5 shrink-0" />
               {solanaCheck.kind === "check-di-registry"
-                ? `Check-Di Registry · Event PDA ${shorten(event.solanaProof.eventPda, 10, 8)}`
+                ? `Check-Di Registry · Event PDA ${shorten(event.solanaProof.eventPda, 10, 8)}${isTerminal ? ` · ${event.status.toUpperCase()}` : ""}`
                 : `SPL Memo fallback · slot ${solanaCheck.slot ?? event.solanaProof.slot ?? "—"}`}
             </span>
             <ExternalLink className="size-3.5 shrink-0" />

@@ -154,6 +154,22 @@ async function getOrganizationSigner(organizationId: string) {
   return createKeyPairSignerFromPrivateKeyBytes(getOrganizationSignerSeed(organizationId));
 }
 
+function getExternalOrganizationAddress(event: TraceEvent): Address | null {
+  if (!event.signerPublicKey) return null;
+  try {
+    return address(event.signerPublicKey);
+  } catch {
+    return null;
+  }
+}
+
+async function getExpectedOrganizationAddress(event: TraceEvent) {
+  return (
+    getExternalOrganizationAddress(event) ??
+    (await getOrganizationSigner(event.organizationId)).address
+  );
+}
+
 export async function deriveBatchRegistryAddress(publicId: string, authority: Address) {
   const [registry, bump] = await getProgramDerivedAddress({
     programAddress: PROGRAM_ADDRESS,
@@ -304,6 +320,9 @@ export async function appendEventRegistryOnDevnet(
   if (event.status !== "confirmed") throw new Error("event_not_confirmed");
 
   const feePayer = await getFeePayerSigner();
+  if (getExternalOrganizationAddress(event)) {
+    throw new Error("organization_wallet_transaction_required");
+  }
   const organization = await getOrganizationSigner(event.organizationId);
   const { registry } = await deriveBatchRegistryAddress(publicId, feePayer.address);
   const eventHash = eventHashBytes(event);
@@ -379,6 +398,71 @@ export async function appendEventRegistryOnDevnet(
   };
 }
 
+export async function setEventRegistryStatusOnDevnet(
+  publicId: string,
+  event: TraceEvent,
+  newStatus: Extract<RegistryStatus, "revoked" | "superseded">,
+) {
+  if (event.status !== "confirmed") {
+    throw new Error("event_status_transition_invalid");
+  }
+
+  const feePayer = await getFeePayerSigner();
+  const { registry } = await deriveBatchRegistryAddress(publicId, feePayer.address);
+  const { event: eventAddress } = await deriveEventRegistryAddress(
+    registry,
+    eventHashBytes(event),
+  );
+  const existing = await fetchRawAccount(eventAddress);
+  if (!existing) throw new Error("registry_event_missing");
+  const current = decodeEventRegistry(eventAddress, existing);
+  if (current.status === newStatus) {
+    return {
+      registry,
+      event: eventAddress,
+      transactionSignature: undefined,
+      reused: true as const,
+      state: current,
+    };
+  }
+  if (current.status !== "active") throw new Error("registry_event_not_active");
+
+  const authorityMeta: AccountSignerMeta = {
+    address: feePayer.address,
+    role: AccountRole.READONLY_SIGNER,
+    signer: feePayer,
+  };
+  const statusByte = newStatus === "revoked" ? 1 : 2;
+  const instruction: Instruction & InstructionWithSigners = {
+    programAddress: PROGRAM_ADDRESS,
+    accounts: [
+      { address: registry, role: AccountRole.READONLY },
+      { address: eventAddress, role: AccountRole.WRITABLE },
+      authorityMeta,
+    ],
+    data: Buffer.concat([
+      instructionDiscriminator("set_event_status"),
+      Buffer.from([statusByte]),
+    ]),
+  };
+
+  const transactionSignature = await sendInstruction(instruction, feePayer);
+  const updated = await fetchRawAccount(eventAddress);
+  if (!updated) throw new Error("registry_event_missing_after_status_update");
+  const state = decodeEventRegistry(eventAddress, updated);
+  if (state.status !== newStatus) {
+    throw new Error("registry_event_status_mismatch");
+  }
+
+  return {
+    registry,
+    event: eventAddress,
+    transactionSignature,
+    reused: false as const,
+    state,
+  };
+}
+
 export async function getBatchRegistryStateOnDevnet(publicId: string) {
   const feePayer = await getFeePayerSigner();
   const { registry } = await deriveBatchRegistryAddress(publicId, feePayer.address);
@@ -415,7 +499,7 @@ export async function verifyEventRegistryOnDevnet(
     const expectedEventHash = eventHashBytes(event).toString("hex");
     const expectedPreviousHash = normalizePreviousHash(event.previousEventHash).toString("hex");
     const expectedOrganizationHash = getOrganizationHash(event.organizationId).toString("hex");
-    const organization = await getOrganizationSigner(event.organizationId);
+    const organization = await getExpectedOrganizationAddress(event);
     const { registry } = await deriveBatchRegistryAddress(publicId, authority);
     const { event: eventAddress } = await deriveEventRegistryAddress(
       registry,
@@ -437,23 +521,27 @@ export async function verifyEventRegistryOnDevnet(
 
     const registryState = decodeBatchRegistry(registry, registryAccount);
     const eventState = decodeEventRegistry(eventAddress, eventAccount);
+    const expectedLifecycleStatus: RegistryStatus =
+      event.status === "revoked" || event.status === "superseded"
+        ? event.status
+        : "active";
     const checks = {
       authority: registryState.authority === authority,
       batchHash: registryState.batchHash === expectedBatchHash,
       registryLink: eventState.registry === registry,
       eventAuthority: eventState.authority === authority,
-      organization: eventState.organization === organization.address,
+      organization: eventState.organization === organization,
       eventHash: eventState.eventHash === expectedEventHash,
       previousEventHash: eventState.previousEventHash === expectedPreviousHash,
       organizationHash: eventState.organizationHash === expectedOrganizationHash,
-      active: eventState.status === "active",
+      lifecycleStatus: eventState.status === expectedLifecycleStatus,
     };
 
     return {
       valid: Object.values(checks).every(Boolean),
       registry,
       eventPda: eventAddress,
-      organization: organization.address,
+      organization,
       checks,
       registryState,
       eventState,

@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { batchRepository } from "@/lib/db/persistent-store";
+import {
+  CheckDiAuthError,
+  organizationActorCanAccessBatch,
+  resolveCheckDiOrganizationActor,
+} from "@/lib/auth/server";
+import { batchRepository } from "@/lib/db";
 import type { TraceEvent } from "@/types/evidence";
 
 const VALID_STAGES: TraceEvent["stage"][] = [
@@ -17,6 +22,22 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    const actor = await resolveCheckDiOrganizationActor(request, [
+      "owner",
+      "operator",
+      "inspector",
+    ]);
+    const batch = await batchRepository.getBatchById(id);
+    if (!batch) {
+      return NextResponse.json({ ok: false, error: "batch_not_found" }, { status: 404 });
+    }
+    if (actor.context && !organizationActorCanAccessBatch(actor, batch)) {
+      return NextResponse.json(
+        { ok: false, error: "organization_forbidden" },
+        { status: 403 },
+      );
+    }
+
     const body = (await request.json()) as {
       stage?: TraceEvent["stage"];
       organizationName?: string;
@@ -33,7 +54,8 @@ export async function POST(
 
     const event = await batchRepository.addDraftEvent(id, {
       stage: body.stage,
-      organizationName: body.organizationName ?? "",
+      organizationId: actor.membership?.organizationId,
+      organizationName: actor.membership?.organizationName ?? body.organizationName ?? "",
       location: body.location ?? "",
       occurredAt: body.occurredAt ?? "",
       summary: body.summary ?? "",
@@ -43,6 +65,12 @@ export async function POST(
 
     return NextResponse.json({ ok: true, event }, { status: 201 });
   } catch (error) {
+    if (error instanceof CheckDiAuthError) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: error.status },
+      );
+    }
     const message = error instanceof Error ? error.message : "unknown_error";
     const status = message === "batch_not_found" ? 404 : message === "draft_event_exists" ? 409 : 400;
     return NextResponse.json({ ok: false, error: message }, { status });

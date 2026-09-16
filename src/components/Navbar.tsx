@@ -13,6 +13,7 @@ export function Navbar() {
     { href: "#participants", label: dict.nav.participants },
     { href: "#technology", label: dict.nav.technology },
     { href: "#safety", label: dict.nav.safety },
+    { href: "/judge", label: "Judge demo" },
   ];
 
   return (

@@ -54,9 +54,9 @@ Mỗi trace event gồm tối thiểu:
 - TypeScript
 - Tailwind CSS
 - Bun
-- PostgreSQL/Supabase-compatible persistence khi bắt đầu data layer
+- PostgreSQL/Supabase cho dữ liệu nghiệp vụ và private document storage
 - Solana Devnet + Anchor/Rust cho integrity registry
-- `@solana/kit` + `@solana/react` khi triển khai on-chain client
+- Phantom organization signing + `@solana/kit` / `@solana/web3.js` bridge
 
 ## Project structure
 
@@ -103,8 +103,14 @@ bun run typecheck
 bun run build
 ```
 
+## Public demo
+
+- App: `https://check-di.promptmarketcap.net/`
+- Judge Console: `https://check-di.promptmarketcap.net/judge`
+- Consumer Verify: `https://check-di.promptmarketcap.net/verify/DUR-260830-01`
+
 ## Current phase
 
-**Phase 1 — Product foundation & traceability demo**
+**UniHackfest 2026 demo-ready**
 
-Mục tiêu tiếp theo: build vertical slice thật `create batch -> add trace event -> AI document check -> confirm -> public QR verify`.
+Vertical slice hiện đã chạy end-to-end: `create batch -> add trace event -> document check -> organization confirmation -> hash chain -> Solana Devnet proof -> public QR verify`. Custom `check_di_registry` đã deploy trên Devnet, hỗ trợ Batch/Event PDA, Phantom organization signing và lifecycle `active -> revoked|superseded`.

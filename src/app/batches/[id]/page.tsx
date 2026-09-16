@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { BatchManagementClient } from "@/components/BatchManagementClient";
-import { batchRepository } from "@/lib/db/persistent-store";
+import { batchRepository } from "@/lib/db";
 import {
   getDevnetFeePayerStatus,
   getDevnetRegistryProgramStatus,

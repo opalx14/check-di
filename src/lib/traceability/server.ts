@@ -6,9 +6,12 @@ import {
   verify,
 } from "node:crypto";
 
+import { getBase58Encoder } from "@solana/kit";
+
 import type { TraceEvent, TraceEventStatus } from "@/types/evidence";
 
 const ED25519_PKCS8_PREFIX = Buffer.from("302e020100300506032b657004220420", "hex");
+const ED25519_SPKI_PREFIX = Buffer.from("302a300506032b6570032100", "hex");
 
 function normalize(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(normalize);
@@ -70,7 +73,7 @@ export type ConfirmTraceEventInput = Omit<
   status?: TraceEventStatus;
 };
 
-function canonicalEventPayload(input: ConfirmTraceEventInput) {
+export function canonicalEventPayload(input: ConfirmTraceEventInput) {
   return {
     id: input.id,
     batchId: input.batchId,
@@ -81,22 +84,31 @@ function canonicalEventPayload(input: ConfirmTraceEventInput) {
     occurredAt: input.occurredAt,
     summary: input.summary,
     documents: input.documents ?? [],
+    ...(input.documentEvidence
+      ? { documentEvidence: input.documentEvidence }
+      : {}),
     metrics: input.metrics ?? {},
     aiValidations: input.aiValidations ?? [],
   };
+}
+
+export function buildTraceEventHash(
+  input: ConfirmTraceEventInput,
+  previousEventHash: string,
+) {
+  return sha256Hex(
+    canonicalize({
+      previousEventHash,
+      payload: canonicalEventPayload(input),
+    }),
+  );
 }
 
 export function confirmTraceEvent(
   input: ConfirmTraceEventInput,
   previousEventHash: string,
 ): TraceEvent {
-  const payload = canonicalEventPayload(input);
-  const eventHash = sha256Hex(
-    canonicalize({
-      previousEventHash,
-      payload,
-    }),
-  );
+  const eventHash = buildTraceEventHash(input, previousEventHash);
 
   return {
     ...input,
@@ -108,12 +120,44 @@ export function confirmTraceEvent(
   };
 }
 
-function importPublicKey(publicKeyBase64Url: string) {
-  return createPublicKey({
-    key: Buffer.from(publicKeyBase64Url, "base64url"),
-    format: "der",
-    type: "spki",
-  });
+export function confirmTraceEventWithExternalSignature(
+  input: ConfirmTraceEventInput,
+  previousEventHash: string,
+  signerPublicKey: string,
+  signature: string,
+): TraceEvent {
+  const eventHash = buildTraceEventHash(input, previousEventHash);
+  const candidate: TraceEvent = {
+    ...input,
+    previousEventHash,
+    eventHash,
+    signerPublicKey,
+    signature,
+    status: input.status ?? "confirmed",
+  };
+  const verification = verifyTraceEvent(candidate);
+  if (!verification.signatureValid) {
+    throw new Error("external_event_signature_invalid");
+  }
+  return candidate;
+}
+
+function importPublicKey(publicKeyValue: string) {
+  try {
+    return createPublicKey({
+      key: Buffer.from(publicKeyValue, "base64url"),
+      format: "der",
+      type: "spki",
+    });
+  } catch {
+    const raw = Buffer.from(getBase58Encoder().encode(publicKeyValue));
+    if (raw.length !== 32) throw new Error("invalid_ed25519_public_key");
+    return createPublicKey({
+      key: Buffer.concat([ED25519_SPKI_PREFIX, raw]),
+      format: "der",
+      type: "spki",
+    });
+  }
 }
 
 export function verifyTraceEvent(event: TraceEvent): {
@@ -140,6 +184,7 @@ export function verifyTraceEvent(event: TraceEvent): {
     occurredAt: event.occurredAt,
     summary: event.summary,
     documents: event.documents,
+    documentEvidence: event.documentEvidence,
     metrics: event.metrics,
     aiValidations: event.aiValidations,
   });
@@ -151,12 +196,17 @@ export function verifyTraceEvent(event: TraceEvent): {
     }),
   );
 
-  const signatureValid = verify(
-    null,
-    Buffer.from(event.eventHash, "hex"),
-    importPublicKey(event.signerPublicKey),
-    Buffer.from(event.signature, "base64url"),
-  );
+  let signatureValid = false;
+  try {
+    signatureValid = verify(
+      null,
+      Buffer.from(event.eventHash, "hex"),
+      importPublicKey(event.signerPublicKey),
+      Buffer.from(event.signature, "base64url"),
+    );
+  } catch {
+    signatureValid = false;
+  }
 
   return {
     hashValid: recomputedHash === event.eventHash,

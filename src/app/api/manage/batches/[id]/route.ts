@@ -1,19 +1,34 @@
 import { NextResponse } from "next/server";
 
-import { batchRepository } from "@/lib/db/persistent-store";
+import { authorizeManagedBatchRequest } from "@/lib/auth/authorization";
+import { CheckDiAuthError } from "@/lib/auth/server";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-  const batch = await batchRepository.getBatchById(id);
-
-  if (!batch) {
-    return NextResponse.json({ ok: false, error: "batch_not_found" }, { status: 404 });
+  try {
+    const { id } = await params;
+    const { batch } = await authorizeManagedBatchRequest(request, id, [
+      "owner",
+      "operator",
+      "inspector",
+      "viewer",
+    ]);
+    return NextResponse.json({ ok: true, batch });
+  } catch (error) {
+    if (error instanceof CheckDiAuthError) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: error.status },
+      );
+    }
+    const message = error instanceof Error ? error.message : "unknown_error";
+    return NextResponse.json(
+      { ok: false, error: message },
+      { status: message === "batch_not_found" ? 404 : 400 },
+    );
   }
-
-  return NextResponse.json({ ok: true, batch });
 }

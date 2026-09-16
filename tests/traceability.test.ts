@@ -1,7 +1,15 @@
+import { generateKeyPairSync, sign } from "node:crypto";
+
 import { describe, expect, test } from "bun:test";
+import { PublicKey } from "@solana/web3.js";
 
 import { getSampleBatch } from "@/lib/db/sample-batch";
-import { verifyTraceChain } from "@/lib/traceability/server";
+import {
+  buildTraceEventHash,
+  confirmTraceEventWithExternalSignature,
+  verifyTraceChain,
+  verifyTraceEvent,
+} from "@/lib/traceability/server";
 
 describe("Check-Di traceability vertical slice", () => {
   test("builds a five-stage batch with a valid hash/signature chain", () => {
@@ -42,6 +50,49 @@ describe("Check-Di traceability vertical slice", () => {
 
     expect(verification.valid).toBe(false);
     expect(verification.checks[1]?.hashValid).toBe(false);
+  });
+
+  test("accepts a Phantom-style Solana base58 Ed25519 signer", () => {
+    const batch = getSampleBatch("DUR-260830-01");
+    const source = batch?.events[0];
+    expect(source).toBeDefined();
+
+    const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+    const rawPublicKey = Buffer.from(
+      publicKey.export({ format: "der", type: "spki" }),
+    ).subarray(-32);
+    const signerPublicKey = new PublicKey(rawPublicKey).toBase58();
+    const input = {
+      id: "evt-phantom-test",
+      batchId: source!.batchId,
+      stage: source!.stage,
+      organizationId: source!.organizationId,
+      organizationName: source!.organizationName,
+      location: source!.location,
+      occurredAt: source!.occurredAt,
+      summary: "Phantom signer verification test",
+      documents: [],
+      metrics: {},
+      aiValidations: [],
+    };
+    const eventHash = buildTraceEventHash(input, "GENESIS");
+    const signature = sign(
+      null,
+      Buffer.from(eventHash, "hex"),
+      privateKey,
+    ).toString("base64url");
+    const event = confirmTraceEventWithExternalSignature(
+      input,
+      "GENESIS",
+      signerPublicKey,
+      signature,
+    );
+
+    expect(event.signerPublicKey).toBe(signerPublicKey);
+    expect(verifyTraceEvent(event)).toEqual({
+      hashValid: true,
+      signatureValid: true,
+    });
   });
 
   test("runs deterministic AI checks for packing and chronology", () => {

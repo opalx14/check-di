@@ -1,4 +1,4 @@
-import { batchRepository } from "@/lib/db/persistent-store";
+import { batchRepository } from "@/lib/db";
 import { CHECK_DI_REGISTRY_PROGRAM_ID } from "@/lib/solana/config";
 import {
   appendEventRegistryOnDevnet,
@@ -62,6 +62,16 @@ async function anchorConfirmedChainThroughTarget(
   let targetReused = false;
 
   for (const event of events.slice(0, targetIndex + 1)) {
+    if (event.status === "revoked" || event.status === "superseded") {
+      const verification = await verifyEventRegistryOnDevnet(publicId, event);
+      if (!verification.valid) {
+        throw new Error(
+          verification.error ?? "registry_terminal_event_verification_failed",
+        );
+      }
+      continue;
+    }
+
     const attemptedAt = new Date().toISOString();
     const appendResult = await appendEventRegistryOnDevnet(publicId, event);
     const verification = await verifyEventRegistryOnDevnet(publicId, event);
@@ -113,7 +123,7 @@ export async function anchorPersistedTraceEvent(batchId: string, eventId: string
   }
 
   const confirmedEvents = batch.events.filter(
-    (item) => item.status === "confirmed",
+    (item) => item.status !== "draft",
   );
 
   try {

@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
 
 import { createFileBatchRepository } from "@/lib/db/persistent-store";
+import { verifyTraceEvent } from "@/lib/traceability/server";
 
 async function withRepository(
   callback: (repo: ReturnType<typeof createFileBatchRepository>, filePath: string) => Promise<void>,
@@ -64,6 +65,115 @@ describe("Check-Di persistent batch workflow", () => {
 
       const proof = await repository.getPublicProof(batch.publicId);
       expect(proof?.events[0]?.solanaProof?.transactionSignature).toBe("demo-devnet-signature");
+    });
+  });
+
+  test("persists document evidence on draft and includes it in the signed event", async () => {
+    await withRepository(async (repository) => {
+      const batch = await repository.createBatch({
+        productName: "Sầu riêng Ri6",
+        origin: "Đắk Lắk",
+        publicId: "DOC-TEST-001",
+      });
+      const draft = await repository.addDraftEvent(batch.id, {
+        stage: "production",
+        organizationName: "Vườn Test",
+        location: "Krông Pắc, Đắk Lắk",
+        occurredAt: "2026-08-30T06:00:00+07:00",
+        summary: "Thu hoạch lô test có chứng từ.",
+      });
+
+      const withDocument = await repository.attachDocumentEvidence(
+        batch.id,
+        draft.id,
+        {
+          id: "doc-test-001",
+          filename: "nhat-ky.pdf",
+          mimeType: "application/pdf",
+          sizeBytes: 2048,
+          sha256: "b".repeat(64),
+          uploadedAt: "2026-08-30T06:05:00.000Z",
+          extraction: {
+            status: "completed",
+            provider: "demo",
+            model: "deterministic-v1",
+            simulated: true,
+            documentType: "Nhật ký thu hoạch",
+            batchId: "DOC-TEST-001",
+            confidence: 0.5,
+          },
+        },
+        [
+          {
+            status: "matched",
+            message: "Mã lô trên chứng từ khớp.",
+            fields: ["batchId"],
+            sourceDocumentId: "doc-test-001",
+          },
+        ],
+      );
+
+      expect(withDocument.documentEvidence?.[0]?.sha256).toBe("b".repeat(64));
+      expect(withDocument.aiValidations?.[0]?.sourceDocumentId).toBe("doc-test-001");
+
+      const confirmed = await repository.confirmEvent(batch.id, draft.id);
+      expect(confirmed.documentEvidence?.[0]?.extraction.status).toBe("completed");
+      expect(confirmed.eventHash).toHaveLength(64);
+
+      const tampered = structuredClone(confirmed);
+      if (!tampered.documentEvidence?.[0]) throw new Error("document_evidence_missing");
+      tampered.documentEvidence[0].sha256 = "c".repeat(64);
+      expect(verifyTraceEvent(tampered).hashValid).toBe(false);
+
+      const proof = await repository.getPublicProof(batch.publicId);
+      expect(proof?.chainVerification.valid).toBe(true);
+      expect(proof?.events[0]?.documentEvidence?.[0]?.filename).toBe("nhat-ky.pdf");
+    });
+  });
+
+  test("keeps terminal events in the hash chain when a correction is added", async () => {
+    await withRepository(async (repository) => {
+      const batch = await repository.createBatch({
+        productName: "Cà phê",
+        origin: "Lâm Đồng",
+        publicId: "COF-LIFECYCLE-001",
+      });
+      const original = await repository.addDraftEvent(batch.id, {
+        stage: "production",
+        organizationName: "Trang trại Lifecycle",
+        location: "Lâm Đồng",
+        occurredAt: "2026-08-31T08:00:00+07:00",
+        summary: "Bản ghi ban đầu cần được thay thế.",
+      });
+      const signedOriginal = await repository.confirmEvent(batch.id, original.id);
+      const superseded = await repository.setEventStatus(
+        batch.id,
+        original.id,
+        "superseded",
+      );
+      expect(superseded.status).toBe("superseded");
+
+      const correction = await repository.addDraftEvent(batch.id, {
+        stage: "production",
+        organizationName: "Trang trại Lifecycle",
+        location: "Lâm Đồng",
+        occurredAt: "2026-08-31T08:05:00+07:00",
+        summary: "Bản ghi thay thế đã hiệu chỉnh.",
+      });
+      const signedCorrection = await repository.confirmEvent(
+        batch.id,
+        correction.id,
+      );
+      expect(signedCorrection.previousEventHash).toBe(
+        signedOriginal.eventHash,
+      );
+
+      const proof = await repository.getPublicProof(batch.publicId);
+      expect(proof?.events.map((event) => event.status)).toEqual([
+        "superseded",
+        "confirmed",
+      ]);
+      expect(proof?.chainVerification.valid).toBe(true);
     });
   });
 

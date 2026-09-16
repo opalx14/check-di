@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { batchRepository } from "@/lib/db/persistent-store";
+import { batchRepository } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 

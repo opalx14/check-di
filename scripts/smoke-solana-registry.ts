@@ -1,4 +1,4 @@
-import { batchRepository } from "@/lib/db/persistent-store";
+import { batchRepository } from "@/lib/db";
 import {
   appendEventRegistryOnDevnet,
   getBatchRegistryHash,

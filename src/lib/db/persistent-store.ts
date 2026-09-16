@@ -2,36 +2,36 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-import { checkChronology, checkPackingLoss } from "@/lib/ai/trace-checks";
+import {
+  buildAiValidations,
+  generatePublicId,
+  normalizePublicId,
+  slugOrganization,
+  type BatchRepository,
+  type CreateBatchInput,
+  type CreateDraftTraceEventInput,
+  type ExternalEventSignature,
+  type ManagedProductBatch,
+} from "@/lib/db/contracts";
 import { getSampleBatch } from "@/lib/db/sample-batch";
-import { confirmTraceEvent, verifyTraceChain } from "@/lib/traceability/server";
+import {
+  buildTraceEventHash,
+  confirmTraceEvent,
+  confirmTraceEventWithExternalSignature,
+  verifyTraceChain,
+} from "@/lib/traceability/server";
 import type {
   AIValidation,
-  ProductBatch,
+  DocumentEvidence,
   SolanaIntegrityProof,
   TraceEvent,
 } from "@/types/evidence";
 
-export type ManagedProductBatch = ProductBatch & {
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type CreateBatchInput = {
-  productName: string;
-  origin: string;
-  publicId?: string;
-};
-
-export type CreateDraftTraceEventInput = {
-  stage: TraceEvent["stage"];
-  organizationName: string;
-  location: string;
-  occurredAt: string;
-  summary: string;
-  documents?: string[];
-  metrics?: Record<string, string | number | boolean>;
-};
+export type {
+  CreateBatchInput,
+  CreateDraftTraceEventInput,
+  ManagedProductBatch,
+} from "@/lib/db/contracts";
 
 type StoreData = {
   version: 1;
@@ -40,27 +40,6 @@ type StoreData = {
 
 const DEFAULT_DATA_FILE = join(process.cwd(), ".data", "check-di-store.json");
 const SAMPLE_PUBLIC_ID = "DUR-260830-01";
-
-function normalizePublicId(value: string) {
-  return value.trim().toUpperCase().replace(/[^A-Z0-9-]/g, "-").replace(/-+/g, "-");
-}
-
-function slugOrganization(value: string) {
-  const slug = value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 48);
-
-  return `org-${slug || "demo"}`;
-}
-
-function generatePublicId() {
-  const date = new Date().toISOString().slice(2, 10).replaceAll("-", "");
-  return `CD-${date}-${randomUUID().slice(0, 6).toUpperCase()}`;
-}
 
 function toSeedBatch(): ManagedProductBatch {
   const sample = getSampleBatch(SAMPLE_PUBLIC_ID);
@@ -81,62 +60,9 @@ function clone<T>(value: T): T {
   return structuredClone(value);
 }
 
-function buildAiValidations(
-  input: CreateDraftTraceEventInput,
-  existingEvents: TraceEvent[],
-): AIValidation[] {
-  if (input.stage === "packing") {
-    const inputWeightKg = Number(input.metrics?.inputWeightKg);
-    const outputWeightKg = Number(input.metrics?.outputWeightKg);
-    const declaredLossPercent = Number(input.metrics?.declaredLossPercent);
-
-    if (
-      Number.isFinite(inputWeightKg) &&
-      inputWeightKg > 0 &&
-      Number.isFinite(outputWeightKg) &&
-      outputWeightKg >= 0 &&
-      Number.isFinite(declaredLossPercent)
-    ) {
-      return [
-        checkPackingLoss({ inputWeightKg, outputWeightKg, declaredLossPercent }),
-      ];
-    }
-
-    return [
-      {
-        status: "needs_review",
-        message: "Thiếu dữ liệu khối lượng để đối chiếu hao hụt đóng gói.",
-        fields: ["inputWeightKg", "outputWeightKg", "declaredLossPercent"],
-      },
-    ];
-  }
-
-  if (input.stage === "inspection") {
-    const harvest = existingEvents.find(
-      (event) => event.stage === "production" && event.status === "confirmed",
-    );
-
-    if (!harvest) {
-      return [
-        {
-          status: "needs_review",
-          message: "Chưa có chặng thu hoạch đã xác nhận để đối chiếu thời gian kiểm định.",
-          fields: ["harvestAt", "inspectionAt"],
-        },
-      ];
-    }
-
-    return [
-      checkChronology({ harvestAt: harvest.occurredAt, inspectionAt: input.occurredAt }),
-    ];
-  }
-
-  return [];
-}
-
 export function createFileBatchRepository(
   filePath = process.env.CHECK_DI_DATA_FILE || DEFAULT_DATA_FILE,
-) {
+): BatchRepository {
   let writeQueue = Promise.resolve();
 
   async function writeStore(store: StoreData) {
@@ -224,6 +150,7 @@ export function createFileBatchRepository(
           publicId,
           productName,
           origin,
+          createdByOrganizationId: input.createdByOrganizationId,
           events: [],
           createdAt: now,
           updatedAt: now,
@@ -254,7 +181,7 @@ export function createFileBatchRepository(
           id: `evt-${randomUUID()}`,
           batchId: batch.id,
           stage: input.stage,
-          organizationId: slugOrganization(organizationName),
+          organizationId: input.organizationId ?? slugOrganization(organizationName),
           organizationName,
           location,
           occurredAt,
@@ -271,7 +198,112 @@ export function createFileBatchRepository(
       });
     },
 
-    async confirmEvent(batchId: string, eventId: string) {
+    async attachDocumentEvidence(
+      batchId: string,
+      eventId: string,
+      evidence: DocumentEvidence,
+      validations: AIValidation[],
+    ) {
+      return mutate((store) => {
+        const batch = store.batches.find((item) => item.id === batchId);
+        if (!batch) throw new Error("batch_not_found");
+
+        const event = batch.events.find((item) => item.id === eventId);
+        if (!event) throw new Error("event_not_found");
+        if (event.status !== "draft") throw new Error("event_not_draft");
+
+        const existingEvidence = event.documentEvidence ?? [];
+        if (existingEvidence.length >= 5) throw new Error("document_limit_reached");
+        if (existingEvidence.some((item) => item.id === evidence.id)) {
+          throw new Error("document_exists");
+        }
+
+        event.documentEvidence = [...existingEvidence, evidence];
+        event.documents = Array.from(
+          new Set([...(event.documents ?? []), evidence.filename]),
+        );
+        event.aiValidations = [
+          ...(event.aiValidations ?? []).filter(
+            (validation) => validation.sourceDocumentId !== evidence.id,
+          ),
+          ...validations,
+        ];
+        batch.updatedAt = new Date().toISOString();
+        return clone(event);
+      });
+    },
+
+    async updateDocumentEvidenceAnalysis(
+      batchId: string,
+      eventId: string,
+      evidence: DocumentEvidence,
+      validations: AIValidation[],
+    ) {
+      return mutate((store) => {
+        const batch = store.batches.find((item) => item.id === batchId);
+        if (!batch) throw new Error("batch_not_found");
+
+        const event = batch.events.find((item) => item.id === eventId);
+        if (!event) throw new Error("event_not_found");
+        if (event.status !== "draft") throw new Error("event_not_draft");
+
+        const documentIndex = (event.documentEvidence ?? []).findIndex(
+          (item) => item.id === evidence.id,
+        );
+        if (documentIndex < 0) throw new Error("document_not_found");
+
+        event.documentEvidence![documentIndex] = evidence;
+        event.aiValidations = [
+          ...(event.aiValidations ?? []).filter(
+            (validation) => validation.sourceDocumentId !== evidence.id,
+          ),
+          ...validations,
+        ];
+        batch.updatedAt = new Date().toISOString();
+        return clone(event);
+      });
+    },
+
+    async prepareEventConfirmation(batchId: string, eventId: string) {
+      const store = await readStore();
+      const batch = store.batches.find((item) => item.id === batchId);
+      if (!batch) throw new Error("batch_not_found");
+      const eventIndex = batch.events.findIndex((event) => event.id === eventId);
+      if (eventIndex < 0) throw new Error("event_not_found");
+      const draft = batch.events[eventIndex];
+      if (draft.status !== "draft") throw new Error("event_not_draft");
+      const previousEventHash =
+        batch.events
+          .slice(0, eventIndex)
+          .filter((event) => event.status !== "draft")
+          .at(-1)?.eventHash ?? "GENESIS";
+      const input = {
+        id: draft.id,
+        batchId: draft.batchId,
+        stage: draft.stage,
+        organizationId: draft.organizationId,
+        organizationName: draft.organizationName,
+        location: draft.location,
+        occurredAt: draft.occurredAt,
+        summary: draft.summary,
+        documents: draft.documents,
+        documentEvidence: draft.documentEvidence,
+        metrics: draft.metrics,
+        aiValidations: draft.aiValidations,
+      };
+      return {
+        eventId,
+        organizationId: draft.organizationId,
+        previousEventHash,
+        eventHash: buildTraceEventHash(input, previousEventHash),
+      };
+    },
+
+    async confirmEvent(
+      batchId: string,
+      eventId: string,
+      externalSignature?: ExternalEventSignature,
+    ) {
       return mutate((store) => {
         const batch = store.batches.find((item) => item.id === batchId);
         if (!batch) throw new Error("batch_not_found");
@@ -283,31 +315,51 @@ export function createFileBatchRepository(
         if (draft.status !== "draft") throw new Error("event_not_draft");
 
         const confirmedEvents = batch.events.filter(
-          (event, index) => index < eventIndex && event.status === "confirmed",
+          (event, index) => index < eventIndex && event.status !== "draft",
         );
         const previousEventHash =
           confirmedEvents.at(-1)?.eventHash ?? "GENESIS";
-
-        const confirmed = confirmTraceEvent(
-          {
-            id: draft.id,
-            batchId: draft.batchId,
-            stage: draft.stage,
-            organizationId: draft.organizationId,
-            organizationName: draft.organizationName,
-            location: draft.location,
-            occurredAt: draft.occurredAt,
-            summary: draft.summary,
-            documents: draft.documents,
-            metrics: draft.metrics,
-            aiValidations: draft.aiValidations,
-          },
-          previousEventHash,
-        );
+        const input = {
+          id: draft.id,
+          batchId: draft.batchId,
+          stage: draft.stage,
+          organizationId: draft.organizationId,
+          organizationName: draft.organizationName,
+          location: draft.location,
+          occurredAt: draft.occurredAt,
+          summary: draft.summary,
+          documents: draft.documents,
+          documentEvidence: draft.documentEvidence,
+          metrics: draft.metrics,
+          aiValidations: draft.aiValidations,
+        };
+        const confirmed = externalSignature
+          ? confirmTraceEventWithExternalSignature(
+              input,
+              previousEventHash,
+              externalSignature.signerPublicKey,
+              externalSignature.signature,
+            )
+          : confirmTraceEvent(input, previousEventHash);
 
         batch.events[eventIndex] = confirmed;
         batch.updatedAt = new Date().toISOString();
         return clone(confirmed);
+      });
+    },
+
+    async setEventStatus(batchId, eventId, status) {
+      return mutate((store) => {
+        const batch = store.batches.find((item) => item.id === batchId);
+        if (!batch) throw new Error("batch_not_found");
+        const event = batch.events.find((item) => item.id === eventId);
+        if (!event) throw new Error("event_not_found");
+        if (event.status !== "confirmed") {
+          throw new Error("event_status_transition_invalid");
+        }
+        event.status = status;
+        batch.updatedAt = new Date().toISOString();
+        return clone(event);
       });
     },
 
@@ -338,7 +390,7 @@ export function createFileBatchRepository(
       if (!storedBatch) return null;
 
       const batch = clone(storedBatch);
-      const events = batch.events.filter((event) => event.status === "confirmed");
+      const events = batch.events.filter((event) => event.status !== "draft");
       const chainVerification = verifyTraceChain(events);
 
       return {
@@ -352,5 +404,3 @@ export function createFileBatchRepository(
     },
   };
 }
-
-export const batchRepository = createFileBatchRepository();

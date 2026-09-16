@@ -1,4 +1,4 @@
-import { batchRepository } from "../src/lib/db/persistent-store";
+import { batchRepository } from "../src/lib/db";
 import { anchorPersistedTraceEvent } from "../src/lib/solana/anchor-service";
 import { verifyTraceEventSolanaProof } from "../src/lib/solana/verification";
 
