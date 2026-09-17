@@ -32,6 +32,7 @@ Batch / QR
 - Mobile UX ưu tiên `QR -> AI quick check -> Map`; chi tiết mở theo yêu cầu.
 - UI ghi rõ dữ liệu demo và không trình bày Devnet proof giả như dữ liệu thật.
 - i18n Việt/Anh và typography hiện tại đã tích hợp trong landing.
+- Landing có onboarding `Bắt đầu tại đây` cho người mới: tự đọc trạng thái session/wallet để chỉ bước tiếp theo `đăng nhập -> liên kết Phantom -> tạo lô -> xác nhận & chia sẻ QR`, đồng thời tách luồng consumer công khai `quét QR -> xem hành trình/proof` không yêu cầu tài khoản hoặc ví.
 
 ### Real off-chain integrity slice
 

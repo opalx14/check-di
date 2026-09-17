@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
+import { GettingStartedSection } from "@/components/GettingStartedSection";
 import { InteractiveSandbox } from "@/components/InteractiveSandbox";
 import { CoreFlowSection } from "@/components/CoreFlowSection";
 import { DualTrackSection } from "@/components/DualTrackSection";
@@ -18,6 +19,7 @@ export default function Home() {
 
       <main className="relative z-10">
         <HeroSection />
+        <GettingStartedSection />
         <CoreFlowSection />
         <InteractiveSandbox />
         <DualTrackSection />

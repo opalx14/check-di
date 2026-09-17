@@ -42,6 +42,33 @@ export type HeroDictionary = {
   };
 };
 
+export type GettingStartedDictionary = {
+  badge: string;
+  title: string;
+  description: string;
+  organizationTitle: string;
+  organizationHint: string;
+  signedInAs: string;
+  loadingStatus: string;
+  completedLabel: string;
+  nextLabel: string;
+  laterLabel: string;
+  steps: [
+    { title: string; text: string },
+    { title: string; text: string },
+    { title: string; text: string },
+    { title: string; text: string },
+  ];
+  ctaAnonymous: string;
+  ctaWallet: string;
+  ctaCreateBatch: string;
+  consumerTitle: string;
+  consumerText: string;
+  consumerSteps: [string, string, string];
+  consumerCta: string;
+  consumerNote: string;
+};
+
 export type CoreFlowDictionary = {
   badge: string;
   title: string;
@@ -231,6 +258,7 @@ export type Dictionary = {
   };
   nav: NavDictionary;
   hero: HeroDictionary;
+  gettingStarted: GettingStartedDictionary;
   coreFlow: CoreFlowDictionary;
   sandbox: SandboxDictionary;
   dualTrack: DualTrackDictionary;
