@@ -43,30 +43,17 @@ export type HeroDictionary = {
 };
 
 export type GettingStartedDictionary = {
-  badge: string;
-  title: string;
-  description: string;
-  organizationTitle: string;
-  organizationHint: string;
-  signedInAs: string;
-  loadingStatus: string;
-  completedLabel: string;
-  nextLabel: string;
-  laterLabel: string;
-  steps: [
-    { title: string; text: string },
+  tourWelcomeTitle: string;
+  tourWelcomeText: string;
+  tourSkip: string;
+  tourBack: string;
+  tourNext: string;
+  tourDone: string;
+  tourSteps: [
     { title: string; text: string },
     { title: string; text: string },
     { title: string; text: string },
   ];
-  ctaAnonymous: string;
-  ctaWallet: string;
-  ctaCreateBatch: string;
-  consumerTitle: string;
-  consumerText: string;
-  consumerSteps: [string, string, string];
-  consumerCta: string;
-  consumerNote: string;
 };
 
 export type CoreFlowDictionary = {

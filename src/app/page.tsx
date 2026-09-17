@@ -16,9 +16,9 @@ export default function Home() {
 
       {/* Main App Layout */}
       <Navbar />
+      <GettingStartedSection />
 
       <main className="relative z-10">
-        <GettingStartedSection />
         <HeroSection />
         <CoreFlowSection />
         <InteractiveSandbox />

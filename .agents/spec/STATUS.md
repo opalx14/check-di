@@ -32,7 +32,7 @@ Batch / QR
 - Mobile UX ưu tiên `QR -> AI quick check -> Map`; chi tiết mở theo yêu cầu.
 - UI ghi rõ dữ liệu demo và không trình bày Devnet proof giả như dữ liệu thật.
 - i18n Việt/Anh và typography hiện tại đã tích hợp trong landing.
-- Landing có onboarding `Bắt đầu tại đây` đặt ngay đầu nội dung (trước Hero) để người mới thấy step ngay khi tải trang; section tự đọc trạng thái session/wallet để chỉ bước tiếp theo `đăng nhập -> liên kết Phantom -> tạo lô -> xác nhận & chia sẻ QR`, đồng thời tách luồng consumer công khai `quét QR -> xem hành trình/proof` không yêu cầu tài khoản hoặc ví.
+- Landing dùng onboarding dạng popup/coach-mark cho người mới: chỉ hiện lần đầu bằng localStorage, có overlay spotlight + `Bỏ qua / Quay lại / Tiếp theo`, lần lượt chỉ vào đăng nhập/liên kết ví, tạo lô và quét thử sản phẩm; Hero vẫn là nội dung chính của trang và tour không chiếm layout.
 
 ### Real off-chain integrity slice
 

@@ -44,46 +44,26 @@
     }
   },
   "gettingStarted": {
-    "badge": "Start here",
-    "title": "New to Check-Di? Follow the right next step.",
-    "description": "You do not need to understand blockchain first. Organizations can complete sign-in, wallet linking and batch creation in order. Consumers can scan a QR immediately without an account.",
-    "organizationTitle": "Organization setup",
-    "organizationHint": "Check-Di detects your current state and highlights the next action you should take.",
-    "signedInAs": "Using organization",
-    "loadingStatus": "Checking account status...",
-    "completedLabel": "Done",
-    "nextLabel": "Next",
-    "laterLabel": "Later",
-    "steps": [
+    "tourWelcomeTitle": "Welcome to Check-Di",
+    "tourWelcomeText": "Here is a quick tour of the key actions. It only appears for new visitors, and you can skip it at any time.",
+    "tourSkip": "Skip",
+    "tourBack": "Back",
+    "tourNext": "Next",
+    "tourDone": "Got it",
+    "tourSteps": [
       {
-        "title": "Sign in to your organization",
-        "text": "Use an account with an organization membership to enter the correct workspace."
+        "title": "Sign in and link your wallet",
+        "text": "If you represent an organization, start here to sign in and link Phantom for confirmation signatures."
       },
       {
-        "title": "Link a Phantom wallet",
-        "text": "Verify the wallet representing your organization so it can sign data and Registry transactions on Solana Devnet."
+        "title": "Create a product batch",
+        "text": "Once inside your organization, create a batch and add each stage, document and related data."
       },
       {
-        "title": "Create your first batch",
-        "text": "Enter the batch code, product and origin, then add each supply-chain stage with its supporting documents."
-      },
-      {
-        "title": "Confirm and share the QR",
-        "text": "AI cross-checks the data, the organization signs the stage, and consumers can then review the journey and proof from the QR."
+        "title": "Try product verification",
+        "text": "If you only want to verify provenance, use this button to explore the public QR journey without an account."
       }
-    ],
-    "ctaAnonymous": "Sign in to get started",
-    "ctaWallet": "Link Phantom",
-    "ctaCreateBatch": "Create your first batch",
-    "consumerTitle": "Just want to verify a product?",
-    "consumerText": "No sign-in and no wallet required. Consumers can scan a QR or open the sample batch to review the full trace.",
-    "consumerSteps": [
-      "Scan the QR or open a batch code",
-      "Review timeline, locations and AI checks",
-      "Check the confirming organization, hash and proof"
-    ],
-    "consumerCta": "Try the sample batch",
-    "consumerNote": "The public verification flow does not require Phantom."
+    ]
   },
   "coreFlow": {
     "badge": "One Batch · One Verified Journey",

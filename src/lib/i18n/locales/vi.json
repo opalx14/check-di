@@ -44,46 +44,26 @@
     }
   },
   "gettingStarted": {
-    "badge": "Bắt đầu tại đây",
-    "title": "Mới vào Check-Di? Đi theo đúng bước tiếp theo.",
-    "description": "Bạn không cần hiểu blockchain trước. Nếu là tổ chức, hãy hoàn tất lần lượt đăng nhập, liên kết ví và tạo lô. Nếu chỉ muốn kiểm tra sản phẩm, có thể quét QR ngay mà không cần tài khoản.",
-    "organizationTitle": "Thiết lập cho tổ chức",
-    "organizationHint": "Check-Di tự nhận trạng thái hiện tại và làm nổi bật bước bạn nên làm tiếp theo.",
-    "signedInAs": "Đang dùng tổ chức",
-    "loadingStatus": "Đang kiểm tra trạng thái tài khoản...",
-    "completedLabel": "Đã xong",
-    "nextLabel": "Tiếp theo",
-    "laterLabel": "Sau đó",
-    "steps": [
+    "tourWelcomeTitle": "Chào mừng đến Check-Di",
+    "tourWelcomeText": "Mình sẽ chỉ nhanh những chỗ quan trọng. Hướng dẫn này chỉ hiện cho người mới và bạn có thể bỏ qua bất cứ lúc nào.",
+    "tourSkip": "Bỏ qua",
+    "tourBack": "Quay lại",
+    "tourNext": "Tiếp theo",
+    "tourDone": "Đã hiểu",
+    "tourSteps": [
       {
-        "title": "Đăng nhập tổ chức",
-        "text": "Dùng tài khoản đã có membership để vào đúng không gian làm việc của đơn vị."
+        "title": "Đăng nhập và liên kết ví",
+        "text": "Nếu bạn là tổ chức, bắt đầu ở đây để đăng nhập và liên kết Phantom dùng cho việc ký xác nhận."
       },
       {
-        "title": "Liên kết ví Phantom",
-        "text": "Xác minh ví đại diện cho tổ chức để ký dữ liệu và giao dịch Registry trên Solana Devnet."
+        "title": "Tạo lô sản phẩm",
+        "text": "Sau khi vào tổ chức, tạo lô mới rồi thêm từng chặng, chứng từ và dữ liệu liên quan."
       },
       {
-        "title": "Tạo lô đầu tiên",
-        "text": "Nhập mã lô, sản phẩm và nguồn gốc; sau đó thêm từng chặng cùng chứng từ liên quan."
-      },
-      {
-        "title": "Xác nhận và chia sẻ QR",
-        "text": "AI đối chiếu dữ liệu, tổ chức ký xác nhận, sau đó người mua có thể xem hành trình và proof qua QR."
+        "title": "Quét thử sản phẩm",
+        "text": "Nếu bạn chỉ muốn kiểm tra nguồn gốc, dùng nút này để xem luồng QR và hành trình công khai mà không cần tài khoản."
       }
-    ],
-    "ctaAnonymous": "Đăng nhập để bắt đầu",
-    "ctaWallet": "Liên kết Phantom",
-    "ctaCreateBatch": "Tạo lô đầu tiên",
-    "consumerTitle": "Chỉ muốn kiểm tra sản phẩm?",
-    "consumerText": "Không cần đăng nhập, không cần ví. Người mua chỉ cần quét QR hoặc mở lô mẫu để xem toàn bộ dấu vết.",
-    "consumerSteps": [
-      "Quét QR hoặc mở mã lô",
-      "Xem timeline, địa điểm và AI đối chiếu",
-      "Kiểm tra đơn vị xác nhận, hash và proof"
-    ],
-    "consumerCta": "Thử với lô hàng mẫu",
-    "consumerNote": "Luồng xem công khai không yêu cầu kết nối Phantom."
+    ]
   },
   "coreFlow": {
     "badge": "Một lô hàng · Một hành trình",
