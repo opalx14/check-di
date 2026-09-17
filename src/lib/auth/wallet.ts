@@ -8,6 +8,7 @@ import {
   membershipAllows,
   type CheckDiOrganizationMembership,
 } from "@/lib/auth/server";
+import { setDemoOrganizationWalletPublicKey } from "@/lib/auth/demo";
 
 export const CHECK_DI_WALLET_CHALLENGE_COOKIE = "check_di_wallet_challenge";
 export const CHECK_DI_WALLET_CHALLENGE_MAX_AGE_SECONDS = 5 * 60;
@@ -117,6 +118,10 @@ export async function setOrganizationWalletPublicKey(
   organizationId: string,
   walletPublicKey: string,
 ) {
+  if (await setDemoOrganizationWalletPublicKey(organizationId, walletPublicKey)) {
+    return;
+  }
+
   const { url, serviceRoleKey } = requireSupabaseServerConfig();
   const response = await fetch(
     `${url}/rest/v1/check_di_organizations?id=eq.${encodeURIComponent(organizationId)}`,

@@ -1,3 +1,9 @@
+import {
+  CHECK_DI_DEMO_SESSION_COOKIE,
+  getDemoAuthContextFromToken,
+  getDemoMembershipForUser,
+} from "@/lib/auth/demo";
+
 export const CHECK_DI_ORGANIZATION_ROLES = [
   "owner",
   "operator",
@@ -197,6 +203,11 @@ export async function signInCheckDiWithPassword(
 export async function getAuthenticatedCheckDiUser(
   request: Request,
 ): Promise<AuthenticatedCheckDiUser | null> {
+  const demoContext = await getDemoAuthContextFromToken(
+    cookieValue(request, CHECK_DI_DEMO_SESSION_COOKIE),
+  );
+  if (demoContext) return demoContext.user;
+
   const accessToken = getCheckDiAccessToken(request);
   if (!accessToken) {
     return null;
@@ -233,6 +244,9 @@ export async function getAuthenticatedCheckDiUser(
 export async function getOrganizationMemberships(
   userId: string,
 ): Promise<CheckDiOrganizationMembership[]> {
+  const demoMembership = await getDemoMembershipForUser(userId);
+  if (demoMembership) return [demoMembership];
+
   const { url, serviceRoleKey } = requireSupabaseServerConfig();
   const query = new URLSearchParams({
     select: "organization_id,role,check_di_organizations(name,slug,wallet_public_key)",
@@ -280,6 +294,11 @@ export async function getOrganizationMemberships(
 export async function getCheckDiAuthContext(
   request: Request,
 ): Promise<CheckDiAuthContext | null> {
+  const demoContext = await getDemoAuthContextFromToken(
+    cookieValue(request, CHECK_DI_DEMO_SESSION_COOKIE),
+  );
+  if (demoContext) return demoContext;
+
   const user = await getAuthenticatedCheckDiUser(request);
   if (!user) {
     return null;

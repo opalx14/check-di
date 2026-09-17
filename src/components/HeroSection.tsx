@@ -1,13 +1,13 @@
 "use client";
 
 import { useI18n } from "@/lib/i18n";
+import { productVisualForName } from "@/lib/product-visuals";
 import { ArrowRight, CheckCircle2, MapPin, PackageCheck, QrCode, Sprout, Truck } from "lucide-react";
-
-const DURIAN_ORCHARD_IMAGE =
-  "https://images.unsplash.com/photo-1764232288881-a9293b590410?auto=format&fit=crop&w=1600&q=82";
 
 export function HeroSection() {
   const { dict } = useI18n();
+
+  const sampleVisual = productVisualForName(dict.hero.productName);
 
   const journeyStages = [
     { icon: Sprout, label: dict.hero.journeyStages.farm.label },
@@ -73,8 +73,8 @@ export function HeroSection() {
             <div className="absolute -inset-3 rounded-[32px] bg-gradient-to-br from-cyan-500/15 via-transparent to-emerald-500/15 blur-2xl" />
             <div className="relative min-h-[520px] overflow-hidden rounded-[30px] border border-white/10 bg-slate-950 shadow-2xl shadow-black/40">
               <img
-                src={DURIAN_ORCHARD_IMAGE}
-                alt="Sầu riêng trên cây tại vườn"
+                src={sampleVisual.imageUrl}
+                alt={dict.hero.productName}
                 className="absolute inset-0 size-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#07101a] via-[#07101a]/30 to-black/10" />
@@ -92,8 +92,12 @@ export function HeroSection() {
                     <CheckCircle2 className="size-3.5" />
                     {dict.hero.sampleDataBadge}
                   </span>
-                  <a href="/verify/DUR-260830-01" className="rounded-xl bg-white p-1.5 shadow-lg" aria-label="Mở lô mẫu bằng QR">
-                    <img src="/api/qr/DUR-260830-01" alt="QR lô DUR-260830-01" className="size-14" />
+                  <a
+                    href="/scan"
+                    className="flex size-14 items-center justify-center rounded-xl bg-white text-slate-950 shadow-lg"
+                    aria-label="Mở máy quét QR"
+                  >
+                    <QrCode className="size-7" />
                   </a>
                 </div>
               </div>
@@ -122,8 +126,8 @@ export function HeroSection() {
                     <p className="mt-0.5 text-[10px] text-slate-500">đã ghi nhận</p>
                   </div>
                   <div>
-                    <p className="font-display text-sm font-bold text-white">354 km</p>
-                    <p className="mt-0.5 text-[10px] text-slate-500">Đắk Lắk → TP.HCM</p>
+                    <p className="font-display text-sm font-bold text-white">Long An</p>
+                    <p className="mt-0.5 text-[10px] text-slate-500">nguồn gốc minh họa</p>
                   </div>
                   <div>
                     <p className="font-display text-sm font-bold text-emerald-300">QR ready</p>

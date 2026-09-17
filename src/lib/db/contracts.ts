@@ -66,6 +66,11 @@ export type BatchRepository = {
     evidence: DocumentEvidence,
     validations: AIValidation[],
   ): Promise<TraceEvent>;
+  removeDocumentEvidence(
+    batchId: string,
+    eventId: string,
+    documentId: string,
+  ): Promise<TraceEvent>;
   prepareEventConfirmation(
     batchId: string,
     eventId: string,

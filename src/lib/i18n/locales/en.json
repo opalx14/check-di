@@ -26,9 +26,9 @@
     "mobileScanHint": "Open the full journey in one scan.",
     "journeyCta": "I'm a supplier",
     "sampleBatch": "Sample Batch",
-    "productName": "Ri6 Durian · DUR-260830-01",
-    "routeSummary": "Journey from Dak Lak to Ho Chi Minh City",
-    "sampleDataBadge": "Simulated Data",
+    "productName": "Black Diamond Watermelon · WM-260917-01",
+    "routeSummary": "Journey from Long An to Ho Chi Minh City",
+    "sampleDataBadge": "UI preview",
     "latestStageLabel": "Latest Stage",
     "latestStageValue": "Received at Retail Store",
     "latestStageTime": "HCMC · Sep 03, 2026",
@@ -36,10 +36,10 @@
     "qrActionValue": "View Full Journey Timeline",
     "qrActionDetail": "Location · Documents · Hash · Verifier",
     "journeyStages": {
-      "farm": { "label": "Farm Origin", "place": "Dak Lak" },
-      "packing": { "label": "Packaging", "place": "Buon Ma Thuot" },
+      "farm": { "label": "Farm Origin", "place": "Long An" },
+      "packing": { "label": "Packaging", "place": "Tan An" },
       "inspection": { "label": "Inspection", "place": "QC Station" },
-      "logistics": { "label": "Transit", "place": "Dak Lak → HCMC" },
+      "logistics": { "label": "Transit", "place": "Long An → HCMC" },
       "retail": { "label": "Retail", "place": "Ho Chi Minh City" }
     }
   },

@@ -1,4 +1,5 @@
 import {
+  deleteManagedDocument,
   detectDocumentMimeType,
   documentSha256,
   readManagedDocument,
@@ -32,6 +33,18 @@ export async function saveConfiguredDocument(input: {
     return createSupabaseDocumentStorage().save(input);
   }
   return saveManagedDocument(input);
+}
+
+export async function deleteConfiguredDocument(input: {
+  batchId: string;
+  eventId: string;
+  documentId: string;
+  mimeType: string;
+}) {
+  if (resolveDocumentStorageDriver() === "supabase") {
+    return createSupabaseDocumentStorage().delete(input);
+  }
+  return deleteManagedDocument(input);
 }
 
 export async function readConfiguredDocumentVerified({

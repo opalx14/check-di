@@ -65,8 +65,13 @@ export default function LoginPage() {
               Đăng nhập nhà cung cấp
             </h1>
             <p className="mt-2 text-sm text-slate-400">
-              Vào kho sản phẩm và quản lý các lô của tổ chức.
+              Email xác định tài khoản nhà sản xuất; Phantom dùng để ký dữ liệu của lô.
             </p>
+            <div className="mt-4 rounded-2xl border border-emerald-500/15 bg-emerald-500/[0.05] p-3 text-xs text-slate-300">
+              <p className="font-semibold text-emerald-300">Tài khoản demo nhà sản xuất</p>
+              <p className="mt-1 font-mono text-[11px]">producer.demo@check-di.local</p>
+              <p className="font-mono text-[11px]">CheckDiDemo2026!</p>
+            </div>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-5 p-5 sm:p-7">
@@ -80,8 +85,9 @@ export default function LoginPage() {
                 type="email"
                 autoComplete="email"
                 required
+                defaultValue="producer.demo@check-di.local"
                 className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-500/50"
-                placeholder="operator@example.com"
+                placeholder="producer@example.com"
               />
             </div>
 
@@ -95,6 +101,7 @@ export default function LoginPage() {
                 type="password"
                 autoComplete="current-password"
                 required
+                defaultValue="CheckDiDemo2026!"
                 className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-500/50"
                 placeholder="••••••••"
               />

@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import {
@@ -93,6 +93,27 @@ export async function readManagedDocument({
   return readFile(
     documentPath({ batchId, eventId, documentId, mimeType, rootDir }),
   );
+}
+
+export async function deleteManagedDocument({
+  batchId,
+  eventId,
+  documentId,
+  mimeType,
+  rootDir = process.env.CHECK_DI_DOCUMENT_ROOT || DEFAULT_DOCUMENT_ROOT,
+}: {
+  batchId: string;
+  eventId: string;
+  documentId: string;
+  mimeType: string;
+  rootDir?: string;
+}) {
+  try {
+    await unlink(documentPath({ batchId, eventId, documentId, mimeType, rootDir }));
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code !== "ENOENT") throw error;
+  }
 }
 
 export async function readManagedDocumentVerified({

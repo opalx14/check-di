@@ -131,6 +131,65 @@ describe("Check-Di persistent batch workflow", () => {
     });
   });
 
+  test("allows retaking a product photo before signing and locks it after confirmation", async () => {
+    await withRepository(async (repository) => {
+      const batch = await repository.createBatch({
+        productName: "Dưa hấu Hắc Mỹ Nhân",
+        origin: "Long An",
+        publicId: "WM-CAPTURE-001",
+      });
+      const draft = await repository.addDraftEvent(batch.id, {
+        stage: "production",
+        organizationName: "Nông trại Demo",
+        location: "Long An",
+        occurredAt: "2026-09-17T08:00:00+07:00",
+        summary: "Ghi nhận ảnh sản phẩm tại nguồn.",
+      });
+      const makeEvidence = (id: string, hash: string) => ({
+        id,
+        filename: `${id}.jpg`,
+        mimeType: "image/jpeg",
+        sizeBytes: 1024,
+        sha256: hash.repeat(64),
+        uploadedAt: "2026-09-17T08:01:00.000Z",
+        extraction: {
+          status: "completed" as const,
+          provider: "demo" as const,
+          model: "deterministic-v1" as const,
+          simulated: true as const,
+          confidence: 0.5,
+        },
+      });
+
+      await repository.attachDocumentEvidence(
+        batch.id,
+        draft.id,
+        makeEvidence("photo-wrong", "a"),
+        [],
+      );
+      const cleared = await repository.removeDocumentEvidence(
+        batch.id,
+        draft.id,
+        "photo-wrong",
+      );
+      expect(cleared.documentEvidence).toEqual([]);
+
+      await repository.attachDocumentEvidence(
+        batch.id,
+        draft.id,
+        makeEvidence("photo-final", "b"),
+        [],
+      );
+      const confirmed = await repository.confirmEvent(batch.id, draft.id);
+      expect(confirmed.documentEvidence?.[0]?.id).toBe("photo-final");
+      expect(confirmed.eventHash).toHaveLength(64);
+
+      await expect(
+        repository.removeDocumentEvidence(batch.id, draft.id, "photo-final"),
+      ).rejects.toThrow("event_not_draft");
+    });
+  });
+
   test("keeps terminal events in the hash chain when a correction is added", async () => {
     await withRepository(async (repository) => {
       const batch = await repository.createBatch({

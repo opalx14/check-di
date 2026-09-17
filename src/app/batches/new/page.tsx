@@ -4,12 +4,17 @@ import { ArrowLeft, Loader2, PackagePlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { productVisualForName } from "@/lib/product-visuals";
+import {
+  DEFAULT_PRODUCT,
+  PRODUCT_CATALOG,
+  productVisualForName,
+} from "@/lib/product-visuals";
 
 function messageFor(error: string) {
   if (error === "public_id_exists") return "Mã lô này đã tồn tại.";
   if (error === "invalid_public_id") return "Mã lô chưa hợp lệ.";
   if (error === "unauthorized") return "Bạn cần đăng nhập nhà cung cấp.";
+  if (error === "organization_wallet_required") return "Hãy liên kết Phantom trước khi tạo lô.";
   return "Không thể tạo lô. Vui lòng thử lại.";
 }
 
@@ -17,7 +22,7 @@ export default function NewBatchPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [productName, setProductName] = useState("Sầu riêng Ri6");
+  const [productName, setProductName] = useState(DEFAULT_PRODUCT.name);
   const visual = productVisualForName(productName);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -82,20 +87,39 @@ export default function NewBatchPage() {
 
             <form onSubmit={onSubmit} className="mt-6 space-y-5">
               <div>
-                <label htmlFor="productName" className="text-xs font-semibold text-slate-300">Tên sản phẩm</label>
+                <div className="flex items-center justify-between gap-3">
+                  <label htmlFor="productName" className="text-xs font-semibold text-slate-300">Chọn sản phẩm</label>
+                  <span className="text-[10px] text-slate-500">26 loại trái cây + nông/hải sản</span>
+                </div>
+                <div className="mt-2 grid max-h-48 grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3">
+                  {PRODUCT_CATALOG.map((item) => (
+                    <button
+                      key={item.name}
+                      type="button"
+                      onClick={() => setProductName(item.name)}
+                      className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-xs transition ${
+                        productName === item.name
+                          ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-100"
+                          : "border-white/8 bg-white/[0.025] text-slate-300 hover:border-white/15"
+                      }`}
+                    >
+                      <span className="text-base">{item.emoji}</span>
+                      <span className="line-clamp-1">{item.name}</span>
+                    </button>
+                  ))}
+                </div>
                 <input
                   id="productName"
                   name="productName"
                   required
                   value={productName}
                   onChange={(event) => setProductName(event.target.value)}
-                  placeholder="Sầu riêng Ri6"
-                  className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-500/50"
+                  className="mt-3 w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-500/50"
                 />
               </div>
 
-              <Field label="Nguồn gốc" name="origin" placeholder="Krông Pắc, Đắk Lắk" required />
-              <Field label="Mã lô công khai" name="publicId" placeholder="DUR-260830-02 · để trống sẽ tự sinh" mono />
+              <Field label="Nguồn gốc" name="origin" placeholder="Châu Thành, Long An" required />
+              <Field label="Mã lô công khai" name="publicId" placeholder="WM-260917-01 · để trống sẽ tự sinh" mono />
 
               {error && <p className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">{error}</p>}
 

@@ -15,6 +15,13 @@ export async function POST(request: Request) {
       publicId?: string;
     };
 
+    if (actor.context && !actor.membership?.walletPublicKey) {
+      return NextResponse.json(
+        { ok: false, error: "organization_wallet_required" },
+        { status: 409 },
+      );
+    }
+
     const batch = await batchRepository.createBatch({
       productName: body.productName ?? "",
       origin: body.origin ?? "",

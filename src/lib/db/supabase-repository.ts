@@ -597,6 +597,41 @@ export function createSupabaseBatchRepository(
       return hydrateEvent(batchId, eventId);
     },
 
+    async removeDocumentEvidence(batchId, eventId, documentId) {
+      const event = await hydrateEvent(batchId, eventId);
+      if (event.status !== "draft") throw new Error("event_not_draft");
+      const target = event.documentEvidence?.find((item) => item.id === documentId);
+      if (!target) throw new Error("document_not_found");
+
+      await request("ai_checks", {
+        method: "DELETE",
+        query: { source_document_id: `eq.${documentId}` },
+        prefer: "return=minimal",
+      });
+      await request("document_extractions", {
+        method: "DELETE",
+        query: { document_id: `eq.${documentId}` },
+        prefer: "return=minimal",
+      });
+      await request("documents", {
+        method: "DELETE",
+        query: { id: `eq.${documentId}` },
+        prefer: "return=minimal",
+      });
+
+      const nextDocuments = (event.documentEvidence ?? [])
+        .filter((item) => item.id !== documentId)
+        .map((item) => item.filename);
+      await request("trace_events", {
+        method: "PATCH",
+        query: { id: `eq.${eventId}`, status: "eq.draft" },
+        body: { documents: nextDocuments },
+        prefer: "return=minimal",
+      });
+
+      return hydrateEvent(batchId, eventId);
+    },
+
     async prepareEventConfirmation(batchId, eventId) {
       const batch = await repository.getBatchById(batchId);
       if (!batch) throw new Error("batch_not_found");

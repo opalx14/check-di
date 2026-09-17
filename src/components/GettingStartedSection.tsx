@@ -2,10 +2,12 @@
 
 import {
   Boxes,
+  Camera,
   ChevronLeft,
   ChevronRight,
   QrCode,
   ShoppingBag,
+  Signature,
   Sparkles,
   Wallet,
   X,
@@ -14,7 +16,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useI18n } from "@/lib/i18n";
 
-const STORAGE_KEY = "check_di_onboarding_v2";
+const STORAGE_KEY = "check_di_onboarding_v3";
 const ROLE_KEY = "check_di_role_v1";
 
 type Role = "supplier" | "client";
@@ -77,6 +79,11 @@ export function GettingStartedSection() {
           icon: Boxes,
         },
         {
+          title: vi ? "Email mở đúng kho của nhà sản xuất" : "Email opens the producer workspace",
+          text: vi ? "Bản demo có sẵn tài khoản producer.demo@check-di.local để vào đúng kho sản phẩm." : "The demo account producer.demo@check-di.local opens its own product inventory.",
+          icon: ShoppingBag,
+        },
+        {
           target: '[data-tour="wallet"]',
           mobileTarget: '[data-tour="wallet-mobile"]',
           title: vi ? "Ví tổ chức" : "Organization wallet",
@@ -84,9 +91,19 @@ export function GettingStartedSection() {
           icon: Wallet,
         },
         {
-          title: vi ? "Tạo sản phẩm và bắt đầu hành trình" : "Create a product and start its journey",
-          text: vi ? "Vào kho, tạo lô mới rồi thêm chặng, chứng từ và xác nhận." : "Open inventory, create a batch, then add stages, documents and confirmations.",
+          title: vi ? "Tạo một lô sản phẩm" : "Create a product batch",
+          text: vi ? "Chọn dưa hấu, thanh long hoặc hơn 20 loại trái cây rồi nhập vùng sản xuất." : "Choose a product and origin; more than 20 fruit types are ready for the demo.",
           icon: ShoppingBag,
+        },
+        {
+          title: vi ? "Chụp ảnh thật trước khi ký" : "Capture the real product before signing",
+          text: vi ? "Ảnh nháp được chụp lại hoặc bỏ. Khi đã ký thì ảnh + SHA-256 trở thành lịch sử." : "Draft photos can be retaken. After signing, the photo hash becomes immutable history.",
+          icon: Camera,
+        },
+        {
+          title: vi ? "Phantom ký và tạo TXID thật" : "Phantom signs and creates a real TXID",
+          text: vi ? "Phantom ký eventHash rồi ký Registry transaction trên Solana Devnet; QR mở hành trình cho người mua." : "Phantom signs the event hash and Registry transaction on Solana Devnet, then the QR becomes public.",
+          icon: Signature,
           finalHref: "/supplier",
         },
       ];

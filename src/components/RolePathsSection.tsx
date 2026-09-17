@@ -2,10 +2,10 @@
 
 import { ArrowRight, Boxes, QrCode } from "lucide-react";
 
-const SUPPLIER_IMAGE =
-  "https://images.unsplash.com/photo-1764232288881-a9293b590410?auto=format&fit=crop&w=1200&q=82";
-const CLIENT_IMAGE =
-  "https://images.unsplash.com/photo-1756364084889-9a8d9ece6112?auto=format&fit=crop&w=1200&q=82";
+import { productVisualForName } from "@/lib/product-visuals";
+
+const SUPPLIER_IMAGE = productVisualForName("Dưa hấu Hắc Mỹ Nhân").imageUrl;
+const CLIENT_IMAGE = productVisualForName("Thanh long ruột đỏ").imageUrl;
 
 export function RolePathsSection() {
   return (

@@ -13,7 +13,10 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { parseCheckDiScanValue } from "@/lib/client-scan";
-import { PRODUCT_VISUAL_EXAMPLES } from "@/lib/product-visuals";
+import {
+  PRODUCT_CATALOG,
+  PRODUCT_VISUAL_EXAMPLES,
+} from "@/lib/product-visuals";
 
 type Detector = {
   detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string }>>;
@@ -170,7 +173,7 @@ export function ClientScanner() {
                   <input
                     value={code}
                     onChange={(event) => setCode(event.target.value)}
-                    placeholder="Ví dụ: DUR-260830-01"
+                    placeholder="Ví dụ: DUR-260830-01 hoặc mã trên tem"
                     className="w-full rounded-xl border border-white/10 bg-slate-950/70 py-3 pl-10 pr-4 font-mono text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-500/40"
                   />
                 </div>
@@ -188,26 +191,37 @@ export function ClientScanner() {
             <ShieldCheck className="size-4" />
             <p className="font-mono text-[10px] uppercase tracking-[0.18em]">Sản phẩm có thể truy xuất</p>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            {PRODUCT_VISUAL_EXAMPLES.map((product, index) => (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {PRODUCT_VISUAL_EXAMPLES.map((product) => (
               <article key={product.name} className="overflow-hidden rounded-2xl border border-white/8 bg-[#0b111c]">
                 <img src={product.visual.imageUrl} alt={product.name} className="h-32 w-full object-cover" />
                 <div className="p-3">
                   <p className="text-sm font-bold text-white">{product.name}</p>
                   <p className="mt-1 text-xs text-slate-500">{product.origin}</p>
-                  {index === 0 && (
+                  {product.name.includes("Sầu riêng") && (
                     <button
                       type="button"
                       onClick={() => openPublicId("DUR-260830-01")}
                       className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300"
                     >
-                      Mở lô mẫu
+                      Mở lô thật đang có
                       <ArrowRight className="size-3.5" />
                     </button>
                   )}
                 </div>
               </article>
             ))}
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-white/8 bg-white/[0.02] p-4">
+            <p className="text-xs font-semibold text-slate-300">Danh mục mẫu · {PRODUCT_CATALOG.filter((item) => item.category === "fruit").length} loại trái cây</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {PRODUCT_CATALOG.filter((item) => item.category === "fruit").map((item) => (
+                <span key={item.name} className="rounded-full border border-white/8 bg-slate-950/60 px-2.5 py-1 text-[10px] text-slate-400">
+                  {item.emoji} {item.name}
+                </span>
+              ))}
+            </div>
           </div>
         </section>
       </div>

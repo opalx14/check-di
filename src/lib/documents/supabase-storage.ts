@@ -116,6 +116,26 @@ export function createSupabaseDocumentStorage(
       };
     },
 
+    async delete({
+      batchId,
+      eventId,
+      documentId,
+      mimeType,
+    }: {
+      batchId: string;
+      eventId: string;
+      documentId: string;
+      mimeType: string;
+    }) {
+      const key = managedDocumentStorageKey({
+        batchId,
+        eventId,
+        documentId,
+        mimeType,
+      });
+      await storageRequest(key, { method: "DELETE" });
+    },
+
     async read({
       batchId,
       eventId,

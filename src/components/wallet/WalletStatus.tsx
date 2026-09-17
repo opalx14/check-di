@@ -258,6 +258,17 @@ export function WalletStatus({ mobile = false }: { mobile?: boolean }) {
               <span>Quản lý ví</span>
               <Settings className="size-3 text-slate-500" />
             </a>
+            <button
+              type="button"
+              onClick={async () => {
+                await fetch("/api/auth/logout", { method: "POST" });
+                window.location.href = "/";
+              }}
+              className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-rose-300 transition hover:bg-rose-500/5 hover:text-rose-200"
+            >
+              <span>Đăng xuất</span>
+              <span aria-hidden>↗</span>
+            </button>
           </div>
         </div>
       )}

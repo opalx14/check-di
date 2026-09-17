@@ -3,6 +3,7 @@
 import {
   AlertTriangle,
   Bot,
+  Camera,
   Check,
   CheckCircle2,
   Clock3,
@@ -15,10 +16,11 @@ import {
   QrCode,
   ShieldCheck,
   Signature,
+  Trash2,
 } from "lucide-react";
 import { Transaction } from "@solana/web3.js";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { ManagedProductBatch } from "@/lib/db";
 import { productVisualForName } from "@/lib/product-visuals";
@@ -81,6 +83,7 @@ function errorMessage(value: string) {
   if (value === "wallet_public_key_mismatch") return "Ví Phantom đang mở không khớp ví đã liên kết với organization.";
   if (value === "external_event_signature_invalid") return "Chữ ký Phantom không hợp lệ với eventHash hiện tại.";
   if (value === "phantom_not_available") return "Không tìm thấy Phantom trên trình duyệt này.";
+  if (value === "product_photo_required") return "Hãy chụp hoặc tải ảnh sản phẩm thật trước khi ký chặng đầu tiên.";
   return "Không thể lưu thay đổi. Vui lòng thử lại.";
 }
 
@@ -171,10 +174,14 @@ export function BatchManagementClient({
   const [replacementSource, setReplacementSource] = useState<TraceEvent | null>(null);
   const [uploadingDocument, setUploadingDocument] = useState(false);
   const [reanalyzingDocumentId, setReanalyzingDocumentId] = useState<string | null>(null);
+  const [removingDocumentId, setRemovingDocumentId] = useState<string | null>(null);
   const [confirmProgress, setConfirmProgress] = useState<ConfirmProgressModal | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const draft = batch.events.find((event) => event.status === "draft");
+  const draftHasProductPhoto = Boolean(
+    draft?.documentEvidence?.some((document) => document.mimeType.startsWith("image/")),
+  );
   const finalized = batch.events.filter((event) => event.status !== "draft");
   const anchored = finalized.filter((event) => event.solanaProof?.status === "confirmed");
   const registryAnchored = anchored.filter(
@@ -183,6 +190,39 @@ export function BatchManagementClient({
   const memoFallback = anchored.filter(
     (event) => event.solanaProof?.kind === "spl-memo",
   );
+  const signedProductPhoto = finalized.some((event) =>
+    event.documentEvidence?.some((document) => document.mimeType.startsWith("image/")),
+  );
+
+  async function createSourceDraft() {
+    setSaving(true);
+    setError(null);
+    const response = await fetch(
+      `/api/manage/batches/${encodeURIComponent(batch.id)}/events`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          stage: "production",
+          organizationName: "Nhà sản xuất",
+          location: batch.origin,
+          occurredAt: new Date().toISOString(),
+          summary: `Ghi nhận ảnh ${batch.productName} tại nguồn.`,
+          documents: [],
+          metrics: {},
+        }),
+      },
+    );
+    const payload = (await response.json()) as { ok: boolean; error?: string };
+    if (!response.ok) {
+      setError(errorMessage(payload.error ?? "unknown_error"));
+      setSaving(false);
+      return;
+    }
+    setStage("production");
+    setSaving(false);
+    router.refresh();
+  }
 
   async function addEvent(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -266,6 +306,27 @@ export function BatchManagementClient({
     router.refresh();
   }
 
+  async function removeDocument(documentId: string) {
+    if (!draft) return;
+    if (!window.confirm("Bỏ ảnh/file nháp này để chụp hoặc chọn lại?")) return;
+
+    setRemovingDocumentId(documentId);
+    setError(null);
+    const response = await fetch(
+      `/api/manage/batches/${encodeURIComponent(batch.id)}/events/${encodeURIComponent(draft.id)}/documents/${encodeURIComponent(documentId)}`,
+      { method: "DELETE" },
+    );
+    const payload = (await response.json()) as { ok: boolean; error?: string };
+    if (!response.ok) {
+      setError(documentErrorMessage(payload.error ?? "unknown_error"));
+      setRemovingDocumentId(null);
+      return;
+    }
+
+    setRemovingDocumentId(null);
+    router.refresh();
+  }
+
   async function reanalyzeDocument(documentId: string) {
     if (!draft) return;
 
@@ -288,6 +349,16 @@ export function BatchManagementClient({
   }
 
   async function confirmEvent(eventId: string) {
+    const targetEvent = batch.events.find((event) => event.id === eventId);
+    if (
+      targetEvent?.stage === "production" &&
+      !window.confirm(
+        "Ký chặng nguồn ngay? Sau khi Phantom ký, SHA-256 ảnh nằm trong event hash và bản ghi này không thể sửa hoặc xóa. Nếu ảnh chưa đúng, hãy bấm Hủy và chụp lại trước.",
+      )
+    ) {
+      return;
+    }
+
     setConfirmingId(eventId);
     setError(null);
 
@@ -711,7 +782,11 @@ export function BatchManagementClient({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-center gap-4">
               <img
-                src={productVisualForName(batch.productName).imageUrl}
+                src={
+                  signedProductPhoto
+                    ? `/api/batches/${encodeURIComponent(batch.publicId)}/photo`
+                    : productVisualForName(batch.productName).imageUrl
+                }
                 alt={batch.productName}
                 className="size-16 rounded-2xl border border-white/10 object-cover sm:size-20"
               />
@@ -820,17 +895,52 @@ export function BatchManagementClient({
                   event={draft}
                   uploading={uploadingDocument}
                   reanalyzingDocumentId={reanalyzingDocumentId}
+                  removingDocumentId={removingDocumentId}
                   onSubmit={uploadDocument}
                   onReanalyze={reanalyzeDocument}
+                  onRemove={removeDocument}
                 />
                 <button
                   type="button"
                   onClick={() => confirmEvent(draft.id)}
-                  disabled={confirmingId === draft.id}
-                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-emerald-300 disabled:opacity-60"
+                  disabled={
+                    confirmingId === draft.id ||
+                    (draft.stage === "production" && !draftHasProductPhoto)
+                  }
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {confirmingId === draft.id ? <Loader2 className="size-4 animate-spin" /> : <Signature className="size-4" />}
-                  {confirmingId === draft.id ? "Đang ký chặng..." : "Xác nhận chặng & tạo hash"}
+                  {confirmingId === draft.id
+                    ? "Đang ký & ghi Devnet..."
+                    : draft.stage === "production"
+                      ? draftHasProductPhoto
+                        ? "Ký ảnh + chặng & ghi Devnet"
+                        : "Chụp ảnh trước khi ký"
+                      : "Xác nhận chặng & tạo hash"}
+                </button>
+              </div>
+            ) : batch.events.length === 0 ? (
+              <div>
+                <div className="flex size-10 items-center justify-center rounded-xl border border-cyan-500/25 bg-cyan-500/10 text-cyan-300">
+                  <Camera className="size-4" />
+                </div>
+                <h2 className="font-display mt-4 text-lg font-bold text-white">Chụp sản phẩm đầu tiên</h2>
+                <p className="mt-2 text-sm text-slate-400">
+                  Tạo chặng nguồn trước, sau đó chụp ảnh bằng điện thoại và xem lại trước khi ký.
+                </p>
+                <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[10px] text-slate-400">
+                  <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3"><span className="font-bold text-cyan-300">1</span><br />Chụp & xem lại</div>
+                  <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3"><span className="font-bold text-violet-300">2</span><br />Phantom ký</div>
+                  <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3"><span className="font-bold text-emerald-300">3</span><br />Devnet TXID</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={createSourceDraft}
+                  disabled={saving}
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-400 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-cyan-300 disabled:opacity-60"
+                >
+                  {saving ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
+                  {saving ? "Đang tạo chặng nguồn..." : "Bắt đầu chụp sản phẩm"}
                 </button>
               </div>
             ) : (
@@ -866,28 +976,67 @@ function DocumentUploadPanel({
   event,
   uploading,
   reanalyzingDocumentId,
+  removingDocumentId,
   onSubmit,
   onReanalyze,
+  onRemove,
 }: {
   event: TraceEvent;
   uploading: boolean;
   reanalyzingDocumentId: string | null;
+  removingDocumentId: string | null;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   onReanalyze: (documentId: string) => void;
+  onRemove: (documentId: string) => void;
 }) {
   const evidence = event.documentEvidence ?? [];
+  const isProductCapture = event.stage === "production";
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (evidence.length > 0 && previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+  }, [evidence.length, previewUrl]);
 
   return (
     <div className="mt-5 rounded-2xl border border-cyan-500/15 bg-cyan-500/[0.04] p-4">
       <div className="flex items-start gap-2">
-        <Bot className="mt-0.5 size-4 shrink-0 text-cyan-300" />
+        {isProductCapture ? (
+          <Camera className="mt-0.5 size-4 shrink-0 text-cyan-300" />
+        ) : (
+          <Bot className="mt-0.5 size-4 shrink-0 text-cyan-300" />
+        )}
         <div>
-          <p className="text-xs font-bold text-cyan-300">Chứng từ thật + AI demo check</p>
+          <p className="text-xs font-bold text-cyan-300">
+            {isProductCapture ? "Ảnh sản phẩm tại nguồn" : "Chứng từ + AI demo check"}
+          </p>
           <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-            PDF/ảnh được giữ off-chain và tính SHA-256 thật. Phần extraction là mô phỏng deterministic từ tên file/metadata để demo flow, không cần API key. Tối đa 5 file, 10 MB/file.
+            {isProductCapture
+              ? "Chụp trực tiếp bằng điện thoại hoặc chọn ảnh thật. Ảnh được SHA-256 và đi vào payload trước khi Phantom ký."
+              : "PDF/ảnh giữ off-chain, SHA-256 thật; extraction hiện là demo deterministic."}
           </p>
         </div>
       </div>
+
+      {isProductCapture && (
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/[0.05] p-3 text-[10px] leading-relaxed text-emerald-100/80">
+            <span className="font-bold text-emerald-300">CHƯA KÝ:</span> có thể bỏ ảnh và chụp lại.
+          </div>
+          <div className="rounded-xl border border-violet-500/15 bg-violet-500/[0.05] p-3 text-[10px] leading-relaxed text-violet-100/80">
+            <span className="font-bold text-violet-300">ĐÃ KÝ:</span> ảnh/hash trở thành lịch sử, không sửa hoặc xóa.
+          </div>
+        </div>
+      )}
+
+      {previewUrl && (
+        <div className="mt-3 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/60">
+          <img src={previewUrl} alt="Ảnh vừa chụp" className="h-48 w-full object-cover" />
+          <p className="px-3 py-2 text-[10px] text-slate-500">Preview trên máy · chưa upload · chưa ký</p>
+        </div>
+      )}
 
       {evidence.length > 0 && (
         <div className="mt-3 space-y-2">
@@ -896,23 +1045,27 @@ function DocumentUploadPanel({
               key={document.id}
               evidence={document}
               reanalyzing={reanalyzingDocumentId === document.id}
+              removing={removingDocumentId === document.id}
               onReanalyze={() => onReanalyze(document.id)}
+              onRemove={() => onRemove(document.id)}
             />
           ))}
         </div>
       )}
-
-      <p className="mt-3 rounded-xl border border-white/8 bg-slate-950/40 p-2.5 text-[10px] leading-relaxed text-slate-500">
-        Demo dễ thấy cross-check: đặt tên file kiểu <span className="font-mono text-cyan-300">DUR-260830-01_HTX-Dak-Farm_1080kg_PK-0830.pdf</span>.
-      </p>
 
       <form onSubmit={onSubmit} className="mt-3 space-y-2">
         <input
           type="file"
           name="file"
           required
-          accept="application/pdf,image/jpeg,image/png,image/webp"
+          accept={isProductCapture ? "image/jpeg,image/png,image/webp" : "application/pdf,image/jpeg,image/png,image/webp"}
+          capture={isProductCapture ? "environment" : undefined}
           disabled={uploading || evidence.length >= 5}
+          onChange={(changeEvent) => {
+            const file = changeEvent.currentTarget.files?.[0];
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(file?.type.startsWith("image/") ? URL.createObjectURL(file) : null);
+          }}
           className="block w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2.5 text-xs text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-cyan-500/15 file:px-2.5 file:py-1.5 file:text-[11px] file:font-bold file:text-cyan-300 disabled:opacity-50"
         />
         <button
@@ -920,8 +1073,12 @@ function DocumentUploadPanel({
           disabled={uploading || evidence.length >= 5}
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-500/25 bg-cyan-500/10 px-3 py-2.5 text-xs font-bold text-cyan-300 hover:bg-cyan-500/15 disabled:opacity-50"
         >
-          {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <FileText className="size-3.5" />}
-          {uploading ? "Đang lưu file & chạy demo check..." : "Tải chứng từ & chạy AI demo"}
+          {uploading ? <Loader2 className="size-3.5 animate-spin" /> : isProductCapture ? <Camera className="size-3.5" /> : <FileText className="size-3.5" />}
+          {uploading
+            ? "Đang lưu & tạo SHA-256..."
+            : isProductCapture
+              ? "Lưu ảnh nháp (chưa ký)"
+              : "Tải chứng từ"}
         </button>
       </form>
     </div>
@@ -931,11 +1088,15 @@ function DocumentUploadPanel({
 function DocumentEvidenceCard({
   evidence,
   reanalyzing = false,
+  removing = false,
   onReanalyze,
+  onRemove,
 }: {
   evidence: DocumentEvidence;
   reanalyzing?: boolean;
+  removing?: boolean;
   onReanalyze?: () => void;
+  onRemove?: () => void;
 }) {
   const extraction = evidence.extraction;
   const statusClass = "text-cyan-300";
@@ -968,16 +1129,31 @@ function DocumentEvidenceCard({
         {extraction.provider} · {extraction.model} · simulated
         {extraction.confidence !== undefined ? ` · confidence ${(extraction.confidence * 100).toFixed(0)}%` : ""}
       </p>
-      {onReanalyze && (
-        <button
-          type="button"
-          onClick={onReanalyze}
-          disabled={reanalyzing}
-          className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-semibold text-cyan-300 hover:text-cyan-200 disabled:opacity-50"
-        >
-          {reanalyzing && <Loader2 className="size-3 animate-spin" />}
-          {reanalyzing ? "Đang chạy demo lại..." : "Chạy demo check lại"}
-        </button>
+      {(onReanalyze || onRemove) && (
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          {onReanalyze && (
+            <button
+              type="button"
+              onClick={onReanalyze}
+              disabled={reanalyzing || removing}
+              className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-cyan-300 hover:text-cyan-200 disabled:opacity-50"
+            >
+              {reanalyzing && <Loader2 className="size-3 animate-spin" />}
+              {reanalyzing ? "Đang kiểm tra..." : "Kiểm tra lại"}
+            </button>
+          )}
+          {onRemove && (
+            <button
+              type="button"
+              onClick={onRemove}
+              disabled={removing || reanalyzing}
+              className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-rose-300 hover:text-rose-200 disabled:opacity-50"
+            >
+              {removing ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+              {removing ? "Đang bỏ..." : "Bỏ ảnh/file & chụp lại"}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

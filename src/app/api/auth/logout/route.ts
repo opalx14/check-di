@@ -4,6 +4,7 @@ import {
   CHECK_DI_AUTH_ACCESS_COOKIE,
   CHECK_DI_AUTH_REFRESH_COOKIE,
 } from "@/lib/auth/server";
+import { CHECK_DI_DEMO_SESSION_COOKIE } from "@/lib/auth/demo";
 
 export async function POST() {
   const response = NextResponse.json({ ok: true });
@@ -17,6 +18,13 @@ export async function POST() {
     maxAge: 0,
   });
   response.cookies.set(CHECK_DI_AUTH_REFRESH_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure,
+    path: "/",
+    maxAge: 0,
+  });
+  response.cookies.set(CHECK_DI_DEMO_SESSION_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",
     secure,

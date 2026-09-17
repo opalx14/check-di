@@ -34,7 +34,7 @@ Next.js App Router, landing, API và các route sản phẩm sau này:
 - `/verify/[publicId]` trang người tiêu dùng quét QR — đọc public proof từ persisted repository.
 - `/login` đăng nhập nhà cung cấp bằng Supabase Auth; session giữ bằng HttpOnly access/refresh cookies.
 - `/api/auth/login`, `/api/auth/logout`, `/api/auth/me` xử lý organization session + membership context.
-- `/supplier` là kho sản phẩm của nhà cung cấp: đọc các batch thuộc organization đang đăng nhập, hiển thị ảnh sản phẩm, tiến độ chặng, trạng thái proof và link quản lý/QR; `GET /api/supplier/products` trả inventory theo organization.
+- `/supplier` là kho sản phẩm của nhà cung cấp: đọc các batch thuộc organization đang đăng nhập, hiển thị ảnh sản phẩm, tiến độ chặng, trạng thái proof, Devnet TXID và next-action theo trạng thái ví/lô; `GET /api/supplier/products` trả inventory theo organization.
 - `/scan` là luồng người mua: quét QR bằng camera khi browser hỗ trợ `BarcodeDetector`, hoặc nhập public batch ID để mở `/verify/[publicId]`; không yêu cầu đăng nhập.
 - `/organization/wallet` cho owner liên kết Phantom bằng signed challenge; `/api/auth/wallet/challenge` + `/api/auth/wallet/verify` xác minh Ed25519 ownership trước khi lưu organization wallet public key.
 - `/api/batches` tạo batch mới.
@@ -48,8 +48,8 @@ Next.js App Router, landing, API và các route sản phẩm sau này:
 - `/api/manage/batches/[id]/events/[eventId]/status` đồng bộ lifecycle `confirmed -> revoked|superseded` theo thứ tự Solana PDA trước, DB mirror sau.
 - `/api/creditcoin/readiness` probe read-only Attestcoin Proof API, Sepolia attested height và Creditcoin CC3 chain ID/block height; không expose private key.
 - `/judge/creditcoin` Judge lane riêng cho BUIDL CTC, chỉ hiển thị `Verified` sau khi có source contract + target registry address thật.
-- `/batches/new` form tạo sản phẩm/lô thật trong prototype, có visual preview theo loại nông sản/hải sản và quay về kho nhà cung cấp.
-- `/batches/[id]` quản lý hành trình, AI warning, draft và xác nhận từng chặng; phần kỹ thuật Devnet được thu gọn để không lấn át workflow nghiệp vụ.
+- `/batches/new` form tạo sản phẩm/lô thật trong prototype, mặc định Dưa hấu Hắc Mỹ Nhân, có catalog hơn 20 loại trái cây cùng nông/hải sản, visual preview theo loại và bắt buộc organization đã liên kết Phantom trước khi tạo lô.
+- `/batches/[id]` quản lý hành trình, AI warning, draft và xác nhận từng chặng; chặng nguồn của nhà sản xuất yêu cầu chụp/tải ảnh thật trước khi ký. Khi còn draft, ảnh có thể bỏ và chụp lại; sau khi Phantom ký thì SHA-256 của ảnh nằm trong canonical event hash, event bị khóa và Registry transaction tạo TXID/PDA thật trên Solana Devnet.
 
 ### `src/components`
 UI dùng lại: hero, journey timeline/map preview, document check, QR/public verification.
@@ -61,7 +61,7 @@ AI demo hỗ trợ đối chiếu chứng từ giữa các chặng. `document-ex
 Private off-chain storage cho chứng từ draft với adapter `file|supabase`. Local dùng `.data/documents` mode `0600`; khi `CHECK_DI_DB_DRIVER=supabase`, mặc định dùng private Supabase Storage bucket `check-di-documents`. Cả hai path đều kiểm tra magic bytes, giới hạn size, SHA-256 và bắt buộc raw bytes vẫn khớp hash trước reanalyze; raw file/object path không expose qua public proof.
 
 ### `src/lib/auth`
-Supabase organization identity layer: password login server-side, HttpOnly session, membership role `owner/operator/inspector/viewer`, auth mode `off|optional|required` và route authorization theo batch/event organization. Remote `COIN14` đã apply organization RLS và live Auth/RLS smoke pass. Owner liên kết Phantom bằng signed challenge; membership hydrate `walletPublicKey`. Authenticated organization xác nhận chặng bằng Phantom trên canonical `eventHash`. `bun run auth:demo:provision` hỗ trợ idempotent upsert demo Auth user + organization + owner membership khi credential được truyền ngoài Git.
+Supabase organization identity layer: password login server-side, HttpOnly session, membership role `owner/operator/inspector/viewer`, auth mode `off|optional|required` và route authorization theo batch/event organization. Remote `COIN14` đã apply organization RLS và live Auth/RLS smoke pass. Owner liên kết Phantom bằng signed challenge; membership hydrate `walletPublicKey`. Authenticated organization xác nhận chặng bằng Phantom trên canonical `eventHash`. Ngoài Supabase Auth thật, local/demo có tài khoản nhà sản xuất seed riêng bằng HttpOnly demo session để người dùng trải nghiệm nhanh; organization demo vẫn sync vào configured database để tạo batch/events thật. `bun run auth:demo:provision` vẫn giữ cho luồng Supabase Auth demo có credential ngoài Git.
 
 ### `src/lib/db`
 Repository off-chain dùng contract chung `BatchRepository`. Runtime chọn `file` hoặc `supabase` qua `CHECK_DI_DB_DRIVER`: file-backed adapter tiếp tục lưu `.data/check-di-store.json` cho zero-config local demo; Supabase adapter dùng server-side Data API và hydrate schema normalized về cùng domain model nên UI/API/Solana service không đổi. Schema PostgreSQL/Supabase nằm tại `supabase/migrations/202608300001_check_di_core.sql` với 8 bảng được namespace bằng prefix `check_di_*` để dùng an toàn trong project Supabase dùng chung `coin14`: organizations, membership, batches, trace events, documents, extraction, AI checks và integrity-proof mirror. Confirmed payload/batch identity được khóa bằng DB trigger. `bun run db:migrate-demo` mặc định dry-run hai batch `DUR-260830-01` và `DUR-260830-02`, bảo toàn hash/signature/Solana proof khi remote sẵn sàng.

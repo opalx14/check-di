@@ -5,6 +5,7 @@ import {
   Boxes,
   CheckCircle2,
   Loader2,
+  LogOut,
   Plus,
   QrCode,
   ShieldCheck,
@@ -24,7 +25,12 @@ type Batch = {
   events: Array<{
     id: string;
     status: "draft" | "confirmed" | "revoked" | "superseded";
-    solanaProof?: { status: "confirmed" | "failed" };
+    documentEvidence?: Array<{ mimeType: string }>;
+    solanaProof?: {
+      status: "confirmed" | "failed";
+      transactionSignature?: string;
+      explorerUrl?: string;
+    };
   }>;
 };
 
@@ -107,6 +113,19 @@ export function SupplierDashboardClient() {
   }
 
   const walletLinked = Boolean(payload.organization.walletPublicKey);
+  const newestBatch = batches[0];
+  const nextAction = !walletLinked
+    ? { step: "02", title: "Liên kết Phantom", detail: "Xác minh ví để ký dữ liệu và Registry transaction.", href: "/organization/wallet" }
+    : !newestBatch
+      ? { step: "03", title: "Tạo sản phẩm", detail: "Chọn loại trái cây, vùng sản xuất và mã lô.", href: "/batches/new" }
+      : newestBatch.events.length === 0 || newestBatch.events.every((event) => event.status === "draft")
+        ? { step: "04", title: "Chụp ảnh & ký lô", detail: "Ảnh nháp được chụp lại; sau khi ký thì khóa lịch sử.", href: `/batches/${newestBatch.id}` }
+        : { step: "05", title: "Tiếp tục hành trình", detail: "Thêm chặng tiếp theo hoặc mở QR công khai.", href: `/batches/${newestBatch.id}` };
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/login";
+  }
 
   return (
     <main className="min-h-screen bg-[#07090e] text-slate-100">
@@ -137,6 +156,14 @@ export function SupplierDashboardClient() {
               <Plus className="size-3.5" />
               {walletLinked ? "Tạo sản phẩm" : "Liên kết Phantom"}
             </a>
+            <button
+              type="button"
+              onClick={logout}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-slate-400 hover:text-white"
+            >
+              <LogOut className="size-3.5" />
+              Đăng xuất
+            </button>
           </div>
         </header>
 
@@ -152,6 +179,18 @@ export function SupplierDashboardClient() {
           <Metric label="Có Devnet proof" value={String(stats.verified)} />
           <Metric label="Ví tổ chức" value={walletLinked ? "Đã nối" : "Chưa nối"} />
         </section>
+
+        <a
+          href={nextAction.href}
+          className="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-cyan-500/15 bg-cyan-500/[0.05] px-4 py-3 transition hover:bg-cyan-500/[0.08]"
+        >
+          <div className="min-w-0">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-cyan-300">Bước tiếp theo · {nextAction.step}</p>
+            <p className="mt-1 text-sm font-bold text-white">{nextAction.title}</p>
+            <p className="mt-0.5 text-xs text-slate-500">{nextAction.detail}</p>
+          </div>
+          <ArrowRight className="size-4 shrink-0 text-cyan-300" />
+        </a>
 
         <section className="mt-8">
           <div className="flex items-center justify-between">
@@ -193,12 +232,28 @@ function Metric({ label, value }: { label: string; value: string }) {
 function ProductCard({ batch }: { batch: Batch }) {
   const visual = productVisualForName(batch.productName);
   const confirmed = batch.events.filter((event) => event.status !== "draft").length;
-  const hasProof = batch.events.some((event) => event.solanaProof?.status === "confirmed");
+  const latestProof = [...batch.events]
+    .reverse()
+    .find((event) => event.solanaProof?.status === "confirmed")?.solanaProof;
+  const hasProof = Boolean(latestProof);
+  const hasSignedPhoto = batch.events.some(
+    (event) =>
+      event.status !== "draft" &&
+      event.documentEvidence?.some((document) => document.mimeType.startsWith("image/")),
+  );
 
   return (
     <article className="overflow-hidden rounded-3xl border border-white/10 bg-[#0b111c] shadow-xl shadow-black/15">
       <div className="relative h-44 overflow-hidden">
-        <img src={visual.imageUrl} alt={batch.productName} className="size-full object-cover" />
+        <img
+          src={
+            hasSignedPhoto
+              ? `/api/batches/${encodeURIComponent(batch.publicId)}/photo`
+              : visual.imageUrl
+          }
+          alt={batch.productName}
+          className="size-full object-cover"
+        />
         <div className={`absolute inset-0 bg-gradient-to-t ${visual.accent} via-transparent to-black/10`} />
         <div className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur">
           {visual.label}
@@ -219,6 +274,16 @@ function ProductCard({ batch }: { batch: Batch }) {
           <span className="text-slate-500">{confirmed}/5 chặng</span>
           <span className="text-slate-500">{new Date(batch.updatedAt).toLocaleDateString("vi-VN")}</span>
         </div>
+        {latestProof?.transactionSignature && (
+          <a
+            href={latestProof.explorerUrl || `https://explorer.solana.com/tx/${encodeURIComponent(latestProof.transactionSignature)}?cluster=devnet`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 block truncate font-mono text-[10px] text-emerald-300 hover:text-emerald-200"
+          >
+            Devnet TX · {latestProof.transactionSignature.slice(0, 8)}…{latestProof.transactionSignature.slice(-6)} ↗
+          </a>
+        )}
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           <a

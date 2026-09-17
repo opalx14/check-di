@@ -26,9 +26,9 @@
     "mobileScanHint": "Mở toàn bộ hành trình trong một lần quét.",
     "journeyCta": "Tôi là nhà cung cấp",
     "sampleBatch": "Lô hàng mẫu",
-    "productName": "Sầu riêng Ri6 · DUR-260830-01",
-    "routeSummary": "Hành trình từ Đắk Lắk đến TP.HCM",
-    "sampleDataBadge": "Dữ liệu mẫu",
+    "productName": "Dưa hấu Hắc Mỹ Nhân · WM-260917-01",
+    "routeSummary": "Hành trình từ Long An đến TP.HCM",
+    "sampleDataBadge": "Minh họa giao diện",
     "latestStageLabel": "Chặng gần nhất",
     "latestStageValue": "Đã nhập điểm bán",
     "latestStageTime": "TP.HCM · 03/09/2026",
@@ -36,10 +36,10 @@
     "qrActionValue": "Xem toàn bộ timeline",
     "qrActionDetail": "Địa điểm · chứng từ · hash · đơn vị xác nhận",
     "journeyStages": {
-      "farm": { "label": "Nhà vườn", "place": "Đắk Lắk" },
-      "packing": { "label": "Đóng gói", "place": "Buôn Ma Thuột" },
+      "farm": { "label": "Nhà vườn", "place": "Long An" },
+      "packing": { "label": "Đóng gói", "place": "Tân An" },
       "inspection": { "label": "Kiểm định", "place": "Trạm QC" },
-      "logistics": { "label": "Vận chuyển", "place": "Đắk Lắk → TP.HCM" },
+      "logistics": { "label": "Vận chuyển", "place": "Long An → TP.HCM" },
       "retail": { "label": "Điểm bán", "place": "TP.HCM" }
     }
   },

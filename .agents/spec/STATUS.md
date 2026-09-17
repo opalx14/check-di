@@ -33,7 +33,7 @@ Batch / QR
 - UI ghi rõ dữ liệu demo và không trình bày Devnet proof giả như dữ liệu thật.
 - i18n Việt/Anh và typography hiện tại đã tích hợp trong landing.
 - Landing đã rút gọn theo benchmark Redline/SkillBridge: navbar chỉ giữ tác vụ chính, hero có ảnh sầu riêng thật, hai persona rõ ràng, pipeline 5 chặng, kiến trúc integrity ngắn gọn và ô tra cứu batch nhanh; các section competition/compliance dài đã bỏ khỏi landing public.
-- Landing dùng onboarding dạng popup/coach-mark cho người mới: bước đầu chọn `Nhà cung cấp` hoặc `Người mua`, sau đó tour rẽ nhánh theo đúng mục đích; supplier được dẫn tới kho sản phẩm + ví tổ chức, client được dẫn tới quét QR. Tour chỉ hiện lần đầu bằng localStorage và không chiếm layout.
+- Landing dùng onboarding dạng popup/coach-mark cho người mới: bước đầu chọn `Nhà cung cấp` hoặc `Người mua`, sau đó tour rẽ nhánh theo đúng mục đích. Supplier tour hiện giải thích trọn flow email demo -> Phantom -> chọn hơn 20 loại trái cây -> chụp ảnh thật -> ký -> Devnet TXID; client được dẫn tới quét QR. Tour chỉ hiện lần đầu bằng localStorage và không chiếm layout.
 
 ### Real off-chain integrity slice
 
@@ -116,8 +116,8 @@ canonical payload + previousEventHash
 
 - `POST /api/batches`: tạo batch mới cho organization đang đăng nhập.
 - `GET /api/supplier/products`: trả kho sản phẩm theo organization, gồm batch đã tạo/tham gia, trạng thái chặng và proof.
-- `/supplier`: dashboard nhà cung cấp; anonymous được dẫn về `/login?next=/supplier`, authenticated organization thấy inventory và trạng thái Phantom.
-- `/scan`: luồng người mua không cần đăng nhập; hỗ trợ camera QR qua `BarcodeDetector` khi browser có, fallback nhập public batch ID.
+- `/supplier`: dashboard nhà cung cấp; anonymous được dẫn về `/login?next=/supplier`, authenticated organization thấy inventory, trạng thái Phantom, Devnet TXID và CTA `bước tiếp theo` theo trạng thái hiện tại.
+- `/scan`: luồng người mua không cần đăng nhập; hỗ trợ camera QR qua `BarcodeDetector` khi browser có, fallback nhập public batch ID; gallery demo có dưa hấu/thanh long và nhiều nhóm sản phẩm thay vì chỉ tập trung sầu riêng.
 - `GET /api/batches/[publicId]`: public proof JSON từ persisted confirmed events.
 - `GET /api/manage/batches/[id]`: management projection gồm draft + confirmed events.
 - `POST /api/manage/batches/[id]/events`: thêm event draft.
@@ -237,13 +237,13 @@ canonical payload + previousEventHash
 - Giữ nguyên Solana Devnet lane của UniHackFest; Creditcoin là competition adapter dùng cùng Check-Di `eventHash`/batch lifecycle.
 - Đã thêm `src/lib/creditcoin/config.ts`, `readiness.ts`, `GET /api/creditcoin/readiness` và `scripts/check-creditcoin-readiness.ts`; live probe xác nhận Proof API healthy, Sepolia chainKey `1` đang được attest và CC3 RPC trả đúng chain ID `102031`.
 - Đã thêm `CheckDiSourceRegistry.sol` cho Sepolia và `CheckDiAttestedRegistry.sol` cho CC3. Target contract gọi Native Query Verifier `0x...0FD2`, decode receipt đã được proof bảo vệ, check đúng source emitter/event signature, chống replay và enforce previous hash/sequence.
-- Hai contract compile pass bằng Solidity `0.8.30`. Gate app hiện tại sau UX supplier/client refresh: **46 tests / 0 fail / 154 assertions**, typecheck/build/diff-check pass; build có thêm `/supplier`, `/scan`, `GET /api/supplier/products`, đồng thời giữ `/judge/creditcoin` + readiness API.
+- Hai contract compile pass bằng Solidity `0.8.30`. Gate app hiện tại sau producer capture/sign flow: **49 tests / 0 fail / 167 assertions**, typecheck/build/diff-check pass; build có `/supplier`, `/scan`, public signed-product photo route, draft photo delete route, `GET /api/supplier/products`, đồng thời giữ `/judge/creditcoin` + readiness API.
 - Đã thêm dependency-free `src/lib/creditcoin/proof-builder.ts` + `bun run creditcoin:proof -- <txHash> [--height=<block>]`: gọi current proof-by-tx API, poll attested height khi cần, validate chainKey/txHash/Merkle/continuity fields và map sang `CheckDiAttestedRegistry.ProofInput`.
 - `docs/CHECK-DI-CREDITCOIN-ATTESTCOIN.md` khóa truth gate: chưa được gọi `Verified` cho tới khi có source tx thật, Attestcoin proof thật, CC3 execute tx thật và read-back `eventHash` khớp.
 
 ## Not implemented yet
 
-- Chưa provision persistent demo owner thật vì chưa có email/password demo được cung cấp; vì vậy chưa bật `CHECK_DI_AUTH_MODE=required` mặc định. Local hiện dùng `optional`.
+- Production vẫn chưa bật `CHECK_DI_AUTH_MODE=required` mặc định. Local/demo hiện dùng `optional`; tài khoản producer demo seed nội bộ chỉ phục vụ trải nghiệm nhanh, còn production identity thật vẫn theo Supabase Auth + organization membership.
 - Secure production operational policy cho wallet rotation/recovery; authenticated Phantom path đã có nhưng legacy/demo mode vẫn giữ deterministic signer khi auth context không bật.
 - Edit/cancel draft UI chưa làm; `revoke/supersede` + correction replacement flow đã hoàn tất.
 - OCR/LLM production thật chưa làm; hackathon demo cố ý dùng deterministic extraction để tránh credential/billing/network dependency.

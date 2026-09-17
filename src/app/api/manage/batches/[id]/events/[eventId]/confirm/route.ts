@@ -8,6 +8,18 @@ import { isSolanaAutoAnchorEnabled } from "@/lib/solana/server";
 
 const CONFIRM_ROLES = ["owner", "operator", "inspector"] as const;
 
+function requiresProductPhoto(event: {
+  stage: string;
+  documentEvidence?: { mimeType: string }[];
+}) {
+  return (
+    event.stage === "production" &&
+    !(event.documentEvidence ?? []).some((document) =>
+      document.mimeType.startsWith("image/"),
+    )
+  );
+}
+
 function errorResponse(error: unknown) {
   if (error instanceof CheckDiAuthError) {
     return NextResponse.json(
@@ -20,7 +32,8 @@ function errorResponse(error: unknown) {
     message === "batch_not_found" || message === "event_not_found"
       ? 404
       : message === "organization_wallet_required" ||
-          message === "wallet_public_key_mismatch"
+          message === "wallet_public_key_mismatch" ||
+          message === "product_photo_required"
         ? 409
         : 400;
   return NextResponse.json({ ok: false, error: message }, { status });
@@ -36,12 +49,15 @@ export async function GET(
 ) {
   try {
     const { id, eventId } = await params;
-    const { actor } = await authorizeManagedEventRequest(
+    const { actor, event } = await authorizeManagedEventRequest(
       request,
       id,
       eventId,
       CONFIRM_ROLES,
     );
+    if (actor.context && requiresProductPhoto(event)) {
+      throw new Error("product_photo_required");
+    }
     const prepared = await batchRepository.prepareEventConfirmation(id, eventId);
 
     if (!actor.context) {
@@ -76,12 +92,15 @@ export async function POST(
 ) {
   try {
     const { id, eventId } = await params;
-    const { actor } = await authorizeManagedEventRequest(
+    const { actor, event } = await authorizeManagedEventRequest(
       request,
       id,
       eventId,
       CONFIRM_ROLES,
     );
+    if (actor.context && requiresProductPhoto(event)) {
+      throw new Error("product_photo_required");
+    }
 
     let confirmedEvent;
     if (actor.context) {

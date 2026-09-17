@@ -3,12 +3,11 @@
 import { CheckCircle2, MapPin, PackageCheck, Route, Sprout, Truck, Warehouse } from "lucide-react";
 
 import { useI18n } from "@/lib/i18n";
-
-const PRODUCT_IMAGE =
-  "https://images.unsplash.com/photo-1506212928588-93568581fb14?auto=format&fit=crop&w=1400&q=82";
+import { productVisualForName } from "@/lib/product-visuals";
 
 export function CoreFlowSection() {
   const { dict, locale } = useI18n();
+  const productVisual = productVisualForName(dict.hero.productName);
 
   const stages = [
     { icon: Sprout, label: dict.hero.journeyStages.farm.label },
@@ -39,12 +38,12 @@ export function CoreFlowSection() {
         <div className="mt-7 overflow-hidden rounded-3xl border border-white/10 bg-[#0b111c] shadow-xl shadow-black/20">
           <div className="grid lg:grid-cols-[0.34fr_0.66fr]">
             <div className="relative min-h-[250px] overflow-hidden lg:min-h-[320px]">
-              <img src={PRODUCT_IMAGE} alt={dict.hero.productName} className="absolute inset-0 size-full object-cover" />
+              <img src={productVisual.imageUrl} alt={dict.hero.productName} className="absolute inset-0 size-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#07101a] via-transparent to-black/10" />
               <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/10 bg-black/35 p-4 backdrop-blur-xl">
-                <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-emerald-300">DUR-260830-01</p>
+                <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-emerald-300">WM-260917-01</p>
                 <p className="mt-1 font-display text-lg font-bold text-white">{dict.hero.productName.split(" · ")[0]}</p>
-                <p className="mt-1 text-xs text-slate-300">Đắk Lắk → TP.HCM</p>
+                <p className="mt-1 text-xs text-slate-300">Long An → TP.HCM</p>
               </div>
             </div>
 

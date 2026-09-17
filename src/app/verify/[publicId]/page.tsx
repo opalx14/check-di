@@ -53,6 +53,9 @@ export default async function VerifyBatchPage({ params }: { params: Promise<{ pu
   if (!batch || batch.events.length === 0) notFound();
 
   const visual = productVisualForName(batch.productName);
+  const hasSignedProductPhoto = batch.events.some((event) =>
+    event.documentEvidence?.some((document) => document.mimeType.startsWith("image/")),
+  );
   const destination = batch.events.at(-1)?.location ?? batch.origin;
   const aiChecks = batch.events.flatMap((event) => event.aiValidations ?? []);
   const warnings = aiChecks.filter((check) => check.status !== "matched").length;
@@ -75,7 +78,15 @@ export default async function VerifyBatchPage({ params }: { params: Promise<{ pu
         <section className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-[#0b111c] shadow-2xl shadow-black/25">
           <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
             <div className="relative min-h-[320px] overflow-hidden lg:min-h-[420px]">
-              <img src={visual.imageUrl} alt={batch.productName} className="absolute inset-0 size-full object-cover" />
+              <img
+                src={
+                  hasSignedProductPhoto
+                    ? `/api/batches/${encodeURIComponent(batch.publicId)}/photo`
+                    : visual.imageUrl
+                }
+                alt={batch.productName}
+                className="absolute inset-0 size-full object-cover"
+              />
               <div className={`absolute inset-0 bg-gradient-to-t ${visual.accent} via-transparent to-black/10`} />
               <div className="absolute left-4 top-4 rounded-full border border-white/15 bg-black/40 px-3 py-1 text-[10px] font-semibold text-white backdrop-blur">
                 {visual.label}
@@ -94,7 +105,7 @@ export default async function VerifyBatchPage({ params }: { params: Promise<{ pu
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-2 sm:grid-cols-3">
+              <div className="mt-6 grid gap-2 sm:grid-cols-4">
                 <StatusChip
                   icon={batch.chainVerification.valid ? ShieldCheck : ShieldAlert}
                   label={batch.chainVerification.valid ? "Chuỗi hợp lệ" : "Cần kiểm tra"}
@@ -102,6 +113,7 @@ export default async function VerifyBatchPage({ params }: { params: Promise<{ pu
                 />
                 <StatusChip icon={Bot} label={warnings === 0 ? "AI không cảnh báo" : `${warnings} cảnh báo`} good={warnings === 0} />
                 <StatusChip icon={Hash} label={`${anchoredCount}/${batch.events.length} Devnet proof`} good={anchoredCount > 0} />
+                <StatusChip icon={CheckCircle2} label={hasSignedProductPhoto ? "Ảnh nguồn đã ký" : "Chưa có ảnh ký"} good={hasSignedProductPhoto} />
               </div>
 
               <div className="mt-7 border-t border-white/8 pt-5">
@@ -181,17 +193,22 @@ function TraceEventCard({ event, index, solanaCheck }: { event: TraceEvent; inde
       <div className="border-t border-white/8 px-4 pb-4 pt-3">
         <p className="text-xs leading-relaxed text-slate-300">{event.summary}</p>
 
-        <div className="mt-3 grid gap-2 sm:grid-cols-3">
-          <MiniInfo label="Chứng từ" value={`${documents.length} file`} />
+        <div className="mt-3 grid gap-2 sm:grid-cols-4">
+          <MiniInfo label="Ảnh / chứng từ" value={`${documents.length} file`} />
           <MiniInfo label="Event hash" value={shorten(event.eventHash)} mono />
           <MiniInfo label="Signer" value={shorten(event.signerPublicKey)} mono />
+          <MiniInfo
+            label="Devnet TXID"
+            value={event.solanaProof?.transactionSignature ? shorten(event.solanaProof.transactionSignature) : "Chưa ghi"}
+            mono
+          />
         </div>
 
         {documents.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
             {documents.map((document) => (
               <span key={document.id} className="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-1 text-[10px] text-slate-400">
-                {document.filename}
+                {document.mimeType.startsWith("image/") ? "Ảnh đã ký" : document.filename} · SHA {shorten(document.sha256)}
               </span>
             ))}
           </div>

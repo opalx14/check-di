@@ -264,6 +264,34 @@ export function createFileBatchRepository(
       });
     },
 
+    async removeDocumentEvidence(
+      batchId: string,
+      eventId: string,
+      documentId: string,
+    ) {
+      return mutate((store) => {
+        const batch = store.batches.find((item) => item.id === batchId);
+        if (!batch) throw new Error("batch_not_found");
+        const event = batch.events.find((item) => item.id === eventId);
+        if (!event) throw new Error("event_not_found");
+        if (event.status !== "draft") throw new Error("event_not_draft");
+
+        const evidence = event.documentEvidence ?? [];
+        const target = evidence.find((item) => item.id === documentId);
+        if (!target) throw new Error("document_not_found");
+
+        event.documentEvidence = evidence.filter((item) => item.id !== documentId);
+        event.documents = (event.documents ?? []).filter(
+          (filename) => filename !== target.filename,
+        );
+        event.aiValidations = (event.aiValidations ?? []).filter(
+          (validation) => validation.sourceDocumentId !== documentId,
+        );
+        batch.updatedAt = new Date().toISOString();
+        return clone(event);
+      });
+    },
+
     async prepareEventConfirmation(batchId: string, eventId: string) {
       const store = await readStore();
       const batch = store.batches.find((item) => item.id === batchId);
