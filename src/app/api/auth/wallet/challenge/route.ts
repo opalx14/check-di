@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     const response = NextResponse.json({
       ok: true,
       organizationId,
+      nonce,
       message,
       expiresIn: CHECK_DI_WALLET_CHALLENGE_MAX_AGE_SECONDS,
     });

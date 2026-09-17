@@ -3,6 +3,7 @@
 import {
   AlertTriangle,
   Bot,
+  Check,
   CheckCircle2,
   Clock3,
   ExternalLink,
@@ -36,6 +37,25 @@ type RegistryProgramStatus = {
   executable: boolean;
   owner?: string;
   lamports?: number;
+};
+
+type ConfirmProgressModal = {
+  open: boolean;
+  step: 1 | 2;
+  stepStatus:
+    | "idle"
+    | "preparing_hash"
+    | "waiting_signature"
+    | "signature_verified"
+    | "preparing_tx"
+    | "waiting_tx"
+    | "sending_tx"
+    | "confirmed"
+    | "failed";
+  stageLabel?: string;
+  txSignature?: string;
+  eventPda?: string;
+  error?: string;
 };
 
 const stageLabels: Record<TraceEvent["stage"], string> = {
@@ -150,6 +170,7 @@ export function BatchManagementClient({
   const [replacementSource, setReplacementSource] = useState<TraceEvent | null>(null);
   const [uploadingDocument, setUploadingDocument] = useState(false);
   const [reanalyzingDocumentId, setReanalyzingDocumentId] = useState<string | null>(null);
+  const [confirmProgress, setConfirmProgress] = useState<ConfirmProgressModal | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const draft = batch.events.find((event) => event.status === "draft");
@@ -291,15 +312,29 @@ export function BatchManagementClient({
         }
         const provider = getPhantomProvider();
         if (!provider) throw new Error("phantom_not_available");
+
+        setConfirmProgress({
+          open: true,
+          step: 1,
+          stepStatus: "waiting_signature",
+          stageLabel: stageLabels[draft?.stage ?? "production"],
+        });
+
         const connection = await provider.connect();
         const publicKey =
           connection.publicKey?.toString() ?? provider.publicKey?.toString();
         if (publicKey !== preparation.walletPublicKey) {
           throw new Error("wallet_public_key_mismatch");
         }
+
         const signed = await provider.signMessage(
-          hexToBytes(preparation.eventHash),
+          new TextEncoder().encode(preparation.eventHash),
         );
+
+        setConfirmProgress((prev) =>
+          prev ? { ...prev, stepStatus: "signature_verified" } : null,
+        );
+
         requestInit = {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -308,6 +343,108 @@ export function BatchManagementClient({
             signatureBase64: bytesToBase64(signed.signature),
           }),
         };
+
+        const response = await fetch(confirmUrl, requestInit);
+        const payload = (await response.json()) as {
+          ok: boolean;
+          error?: string;
+          signingMode?: "demo" | "phantom";
+          event?: TraceEvent;
+          solana?: {
+            anchored?: boolean;
+            proofKind?: "check-di-registry" | "spl-memo";
+            fallback?: boolean;
+            registryError?: string;
+            error?: string;
+            requiresWalletTransaction?: boolean;
+          };
+        };
+
+        if (!response.ok) {
+          throw new Error(payload.error ?? "unknown_error");
+        }
+
+        if (payload.solana?.requiresWalletTransaction) {
+          setConfirmProgress((prev) =>
+            prev ? { ...prev, step: 2, stepStatus: "preparing_tx" } : null,
+          );
+
+          const anchorUrl = `/api/manage/batches/${encodeURIComponent(batch.id)}/events/${encodeURIComponent(eventId)}/anchor`;
+          const prepareResponse = await fetch(anchorUrl, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ action: "prepare" }),
+          });
+          const prepared = await prepareResponse.json();
+          if (!prepareResponse.ok) {
+            throw new Error(
+              prepared.solana?.error ?? prepared.error ?? "registry_prepare_failed",
+            );
+          }
+
+          if (prepared.solana?.anchored) {
+            setConfirmProgress({
+              open: true,
+              step: 2,
+              stepStatus: "confirmed",
+              txSignature: prepared.solana?.transactionSignature,
+              eventPda: prepared.event?.solanaProof?.eventPda,
+            });
+            router.refresh();
+            return;
+          }
+
+          const transactionBase64 = prepared.solana?.transactionBase64;
+          const walletPublicKey = prepared.solana?.walletPublicKey;
+          if (!transactionBase64 || !walletPublicKey) {
+            throw new Error("phantom_transaction_prepare_invalid");
+          }
+
+          setConfirmProgress((prev) =>
+            prev ? { ...prev, stepStatus: "waiting_tx" } : null,
+          );
+
+          const transaction = Transaction.from(base64ToBytes(transactionBase64));
+          const signedTx = await provider.signTransaction(transaction);
+          const signedTransactionBase64 = bytesToBase64(
+            signedTx.serialize({
+              requireAllSignatures: true,
+              verifySignatures: true,
+            }),
+          );
+
+          setConfirmProgress((prev) =>
+            prev ? { ...prev, stepStatus: "sending_tx" } : null,
+          );
+
+          const submitResponse = await fetch(anchorUrl, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              action: "submit",
+              signedTransactionBase64,
+            }),
+          });
+          const submitted = await submitResponse.json();
+          if (!submitResponse.ok) {
+            throw new Error(
+              submitted.solana?.error ?? submitted.error ?? "registry_submit_failed",
+            );
+          }
+
+          setConfirmProgress({
+            open: true,
+            step: 2,
+            stepStatus: "confirmed",
+            txSignature: submitted.solana?.transactionSignature,
+            eventPda: submitted.event?.solanaProof?.eventPda,
+          });
+          router.refresh();
+          return;
+        }
+
+        router.refresh();
+        return;
       }
 
       const response = await fetch(confirmUrl, requestInit);
@@ -330,11 +467,7 @@ export function BatchManagementClient({
         return;
       }
 
-      if (payload.solana?.requiresWalletTransaction) {
-        setError(
-          "Chặng đã được organization ký bằng Phantom. Bước tiếp theo là ký transaction Phantom để ghi Event PDA lên Solana Devnet.",
-        );
-      } else if (payload.solana?.anchored === false && payload.solana.error) {
+      if (payload.solana?.anchored === false && payload.solana.error) {
         setError(`Chặng đã ký thành công. ${solanaErrorMessage(payload.solana.error)}`);
       } else if (payload.solana?.fallback) {
         setError(
@@ -345,7 +478,22 @@ export function BatchManagementClient({
       router.refresh();
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "unknown_error";
-      setError(errorMessage(message));
+      const resolvedError =
+        message === "phantom_not_available" ||
+        message === "wallet_public_key_mismatch"
+          ? errorMessage(message)
+          : solanaErrorMessage(message);
+
+      setConfirmProgress((prev) =>
+        prev
+          ? {
+              ...prev,
+              stepStatus: "failed",
+              error: resolvedError,
+            }
+          : null,
+      );
+      setError(resolvedError);
     } finally {
       setConfirmingId(null);
     }
@@ -446,6 +594,13 @@ export function BatchManagementClient({
         }
         const provider = getPhantomProvider();
         if (!provider) throw new Error("phantom_not_available");
+
+        setConfirmProgress({
+          open: true,
+          step: 2,
+          stepStatus: "waiting_tx",
+        });
+
         const connection = await provider.connect();
         const publicKey =
           connection.publicKey?.toString() ?? provider.publicKey?.toString();
@@ -461,6 +616,11 @@ export function BatchManagementClient({
             verifySignatures: true,
           }),
         );
+
+        setConfirmProgress((prev) =>
+          prev ? { ...prev, stepStatus: "sending_tx" } : null,
+        );
+
         const submitResponse = await fetch(anchorUrl, {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -472,16 +632,25 @@ export function BatchManagementClient({
         const submitted = (await submitResponse.json()) as {
           ok: boolean;
           error?: string;
-          solana?: { error?: string };
+          solana?: {
+            error?: string;
+            transactionSignature?: string;
+          };
+          event?: TraceEvent;
         };
         if (!submitResponse.ok) {
-          setError(
-            solanaErrorMessage(
-              submitted.solana?.error ?? submitted.error ?? "unknown_error",
-            ),
+          throw new Error(
+            submitted.solana?.error ?? submitted.error ?? "unknown_error",
           );
-          return;
         }
+
+        setConfirmProgress({
+          open: true,
+          step: 2,
+          stepStatus: "confirmed",
+          txSignature: submitted.solana?.transactionSignature,
+          eventPda: submitted.event?.solanaProof?.eventPda,
+        });
         router.refresh();
         return;
       }
@@ -494,12 +663,22 @@ export function BatchManagementClient({
       router.refresh();
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "unknown_error";
-      setError(
+      const resolvedError =
         message === "phantom_not_available" ||
         message === "wallet_public_key_mismatch"
           ? errorMessage(message)
-          : solanaErrorMessage(message),
+          : solanaErrorMessage(message);
+
+      setConfirmProgress((prev) =>
+        prev
+          ? {
+              ...prev,
+              stepStatus: "failed",
+              error: resolvedError,
+            }
+          : null,
       );
+      setError(resolvedError);
     } finally {
       setAnchoringId(null);
     }
@@ -673,6 +852,16 @@ export function BatchManagementClient({
           </section>
         </div>
       </div>
+
+      {confirmProgress && (
+        <ConfirmProgressModalView
+          progress={confirmProgress}
+          onClose={() => {
+            setConfirmProgress(null);
+            router.refresh();
+          }}
+        />
+      )}
     </main>
   );
 }
@@ -1094,4 +1283,207 @@ function SmallInput({ label, name }: { label: string; name: string }) {
 
 function Proof({ label, value, icon: Icon, accent = false }: { label: string; value: string; icon: typeof Hash; accent?: boolean }) {
   return <div className="rounded-xl border border-white/5 bg-slate-950/60 p-2.5"><div className="flex items-center gap-1 text-slate-500"><Icon className="size-3" /> {label}</div><p className={`mt-1 truncate ${accent ? "text-emerald-300" : "text-slate-300"}`}>{value}</p></div>;
+}
+
+function ConfirmProgressModalView({
+  progress,
+  onClose,
+}: {
+  progress: ConfirmProgressModal;
+  onClose: () => void;
+}) {
+  if (!progress.open) return null;
+
+  const isStep1Done =
+    progress.step === 2 ||
+    progress.stepStatus === "signature_verified" ||
+    progress.stepStatus === "confirmed";
+  const isStep2Done = progress.stepStatus === "confirmed";
+  const isFailed = progress.stepStatus === "failed";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0b111c] p-6 shadow-2xl">
+        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-9 items-center justify-center rounded-xl border border-violet-500/30 bg-violet-500/10 text-violet-300">
+              <ShieldCheck className="size-4" />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-white">Xác nhận chặng & Solana Devnet</h3>
+              <p className="text-[11px] font-mono text-slate-400">Phantom dual-signer pipeline</p>
+            </div>
+          </div>
+          <span className="rounded-full border border-violet-500/25 bg-violet-500/10 px-2 py-0.5 font-mono text-[9px] font-bold text-violet-300">
+            SOLANA DEVNET
+          </span>
+        </div>
+
+        {/* Stepper */}
+        <div className="mt-5 space-y-4">
+          {/* Step 1 */}
+          <div
+            className={`rounded-2xl border p-4 transition ${
+              isStep1Done
+                ? "border-emerald-500/20 bg-emerald-500/[0.04]"
+                : progress.step === 1
+                  ? "border-violet-500/30 bg-violet-500/[0.04]"
+                  : "border-white/5 bg-slate-950/40"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
+                    isStep1Done
+                      ? "bg-emerald-500 text-slate-950"
+                      : "bg-violet-500 text-white"
+                  }`}
+                >
+                  {isStep1Done ? <Check className="size-3.5" /> : "1"}
+                </span>
+                <span className="font-display text-xs font-bold text-white">
+                  Sign event integrity
+                </span>
+              </div>
+              <span className="font-mono text-[10px] text-slate-400">Ed25519 hash</span>
+            </div>
+
+            <div className="mt-3 pl-8 text-xs text-slate-300">
+              {progress.step === 1 && !isStep1Done && (
+                <div className="flex items-center gap-2 text-violet-300">
+                  <Loader2 className="size-3.5 animate-spin" />
+                  {progress.stepStatus === "waiting_signature"
+                    ? "Chờ Phantom ký xác nhận event hash..."
+                    : "Đang chuẩn bị canonical event hash..."}
+                </div>
+              )}
+              {isStep1Done && (
+                <div className="flex items-center gap-1.5 text-emerald-300">
+                  <CheckCircle2 className="size-3.5" />
+                  <span>Chữ ký organization đã xác minh trên server</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div
+            className={`rounded-2xl border p-4 transition ${
+              isStep2Done
+                ? "border-emerald-500/20 bg-emerald-500/[0.04]"
+                : progress.step === 2 && !isFailed
+                  ? "border-violet-500/30 bg-violet-500/[0.04]"
+                  : "border-white/5 bg-slate-950/40"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
+                    isStep2Done
+                      ? "bg-emerald-500 text-slate-950"
+                      : progress.step === 2
+                        ? "bg-violet-500 text-white"
+                        : "bg-slate-800 text-slate-400"
+                  }`}
+                >
+                  {isStep2Done ? <Check className="size-3.5" /> : "2"}
+                </span>
+                <span className="font-display text-xs font-bold text-white">
+                  Write proof to Solana Devnet
+                </span>
+              </div>
+              <span className="font-mono text-[10px] text-slate-400">Event PDA</span>
+            </div>
+
+            <div className="mt-3 pl-8 text-xs text-slate-300">
+              {progress.step === 2 && !isStep2Done && !isFailed && (
+                <div className="flex items-center gap-2 text-violet-300">
+                  <Loader2 className="size-3.5 animate-spin" />
+                  {progress.stepStatus === "waiting_tx"
+                    ? "Chờ Phantom duyệt transaction Registry..."
+                    : progress.stepStatus === "sending_tx"
+                      ? "Đang gửi transaction lên Solana Devnet..."
+                      : "Đang chuẩn bị transaction dual-signer..."}
+                </div>
+              )}
+              {isStep2Done && (
+                <div className="space-y-1 text-emerald-300">
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="size-3.5" />
+                    <span>Solana Devnet transaction confirmed</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="size-3.5" />
+                    <span>Event PDA verified on RPC</span>
+                  </div>
+                </div>
+              )}
+              {progress.step === 1 && (
+                <p className="text-slate-500">Chờ hoàn tất bước 1...</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Success proofs & links */}
+        {isStep2Done && (
+          <div className="mt-4 space-y-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.05] p-3 text-xs">
+            <p className="font-semibold text-emerald-300">Minh chứng on-chain thành công:</p>
+            {progress.txSignature && (
+              <a
+                href={`https://explorer.solana.com/tx/${progress.txSignature}?cluster=devnet`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-between text-slate-300 hover:text-white"
+              >
+                <span>Transaction Explorer</span>
+                <ExternalLink className="size-3 text-slate-500" />
+              </a>
+            )}
+            {progress.eventPda && (
+              <a
+                href={`https://explorer.solana.com/address/${progress.eventPda}?cluster=devnet`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-between text-slate-300 hover:text-white"
+              >
+                <span>Event PDA Explorer</span>
+                <ExternalLink className="size-3 text-slate-500" />
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* Failed error notice */}
+        {isFailed && (
+          <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200">
+            <p className="font-bold text-red-300">Giao dịch Devnet chưa hoàn tất:</p>
+            <p className="mt-1">{progress.error}</p>
+            <p className="mt-2 text-slate-400">
+              Dữ liệu chặng đã được ghi nhận off-chain. Bạn có thể bấm nút &quot;Thử ghi Registry lại&quot; bất cứ lúc nào.
+            </p>
+          </div>
+        )}
+
+        {/* Action Button */}
+        <div className="mt-5">
+          {isStep2Done || isFailed ? (
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full rounded-xl bg-slate-800 py-2.5 text-xs font-bold text-white hover:bg-slate-700"
+            >
+              Đóng
+            </button>
+          ) : (
+            <p className="text-center text-[11px] text-slate-500">
+              Vui lòng giữ cửa sổ này và xác nhận trên ví Phantom khi có popup.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }

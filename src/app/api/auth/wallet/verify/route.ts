@@ -16,11 +16,12 @@ export async function POST(request: Request) {
       organizationId?: string;
       publicKey?: string;
       signatureBase64?: string;
+      nonce?: string;
     };
     const organizationId = body.organizationId?.trim();
     const publicKey = body.publicKey?.trim();
     const signatureBase64 = body.signatureBase64?.trim();
-    const nonce = getWalletChallengeNonce(request);
+    const nonce = body.nonce?.trim() || getWalletChallengeNonce(request);
 
     if (!organizationId || !publicKey || !signatureBase64 || !nonce) {
       return NextResponse.json(

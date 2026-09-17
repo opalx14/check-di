@@ -198,12 +198,31 @@ export function verifyTraceEvent(event: TraceEvent): {
 
   let signatureValid = false;
   try {
-    signatureValid = verify(
-      null,
-      Buffer.from(event.eventHash, "hex"),
-      importPublicKey(event.signerPublicKey),
-      Buffer.from(event.signature, "base64url"),
-    );
+    const key = importPublicKey(event.signerPublicKey);
+    const signatureBytes = Buffer.from(event.signature, "base64url");
+    try {
+      signatureValid = verify(
+        null,
+        Buffer.from(event.eventHash, "hex"),
+        key,
+        signatureBytes,
+      );
+    } catch {
+      signatureValid = false;
+    }
+
+    if (!signatureValid) {
+      try {
+        signatureValid = verify(
+          null,
+          Buffer.from(event.eventHash, "utf8"),
+          key,
+          signatureBytes,
+        );
+      } catch {
+        signatureValid = false;
+      }
+    }
   } catch {
     signatureValid = false;
   }

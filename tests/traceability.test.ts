@@ -7,6 +7,7 @@ import { getSampleBatch } from "@/lib/db/sample-batch";
 import {
   buildTraceEventHash,
   confirmTraceEventWithExternalSignature,
+  type ConfirmTraceEventInput,
   verifyTraceChain,
   verifyTraceEvent,
 } from "@/lib/traceability/server";
@@ -79,6 +80,47 @@ describe("Check-Di traceability vertical slice", () => {
     const signature = sign(
       null,
       Buffer.from(eventHash, "hex"),
+      privateKey,
+    ).toString("base64url");
+    const event = confirmTraceEventWithExternalSignature(
+      input,
+      "GENESIS",
+      signerPublicKey,
+      signature,
+    );
+
+    expect(event.signerPublicKey).toBe(signerPublicKey);
+    expect(verifyTraceEvent(event)).toEqual({
+      hashValid: true,
+      signatureValid: true,
+    });
+  });
+
+  test("confirms and verifies trace event with UTF-8 event hash signature (Phantom wallet format)", () => {
+    const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+    const rawPublicKey = Buffer.from(
+      publicKey.export({ format: "der", type: "spki" }),
+    ).subarray(-32);
+    const signerPublicKey = new PublicKey(rawPublicKey).toBase58();
+
+    const input: ConfirmTraceEventInput = {
+      id: "evt-test-utf8",
+      batchId: "batch-test",
+      stage: "production",
+      organizationId: "org-test",
+      organizationName: "Test Farm",
+      location: "Lam Dong",
+      occurredAt: "2026-03-20T08:00:00Z",
+      summary: "Harvest complete",
+      documents: [],
+      documentEvidence: [],
+      metrics: {},
+      aiValidations: [],
+    };
+    const eventHash = buildTraceEventHash(input, "GENESIS");
+    const signature = sign(
+      null,
+      Buffer.from(eventHash, "utf8"),
       privateKey,
     ).toString("base64url");
     const event = confirmTraceEventWithExternalSignature(

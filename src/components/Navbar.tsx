@@ -3,6 +3,7 @@
 import { useI18n } from "@/lib/i18n";
 import { Plus, QrCode } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { WalletStatus } from "./wallet/WalletStatus";
 
 export function Navbar() {
   const { dict } = useI18n();
@@ -20,8 +21,12 @@ export function Navbar() {
     <header className="sticky top-0 z-50 border-b border-white/5 bg-[#07090e]/85 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
         <a href="#top" className="flex items-center gap-3 group">
-          <div className="flex size-10 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 font-display font-black text-cyan-300 transition group-hover:border-cyan-400/50 group-hover:shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-            CĐ
+          <div className="size-10 overflow-hidden rounded-xl border border-cyan-500/30 bg-slate-950/80 transition group-hover:border-cyan-400/50 group-hover:shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+            <img
+              src="/check-di-logo.svg"
+              alt="Check-Di logo"
+              className="size-full object-cover"
+            />
           </div>
           <div>
             <p className="font-display font-bold tracking-tight text-white">{dict.footer.brandTitle}</p>
@@ -42,6 +47,7 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
+          <WalletStatus />
           <a
             href="/batches/new"
             className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 font-display text-xs font-semibold text-slate-200 transition hover:border-cyan-500/30 hover:text-cyan-200"
@@ -60,6 +66,7 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
+          <WalletStatus mobile />
           <LanguageSwitcher />
           <a
             href="#demo"

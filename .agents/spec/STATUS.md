@@ -243,7 +243,7 @@ canonical payload + previousEventHash
 - Edit/cancel draft UI chưa làm; `revoke/supersede` + correction replacement flow đã hoàn tất.
 - OCR/LLM production thật chưa làm; hackathon demo cố ý dùng deterministic extraction để tránh credential/billing/network dependency.
 - Production/local QR renderer độc lập provider ngoài.
-- Browser smoke bằng extension Phantom thật của organization demo chưa chạy vì chưa provision persistent demo owner/wallet; cryptographic path + dual-signer live Devnet smoke đã pass bằng signer độc lập.
+- Browser smoke bằng extension Phantom thật đã hoàn tất thành công: owner session xác minh ví Phantom thật, ký event integrity proof, ký dual-signer transaction, và ghi nhận thành công Event PDA lên Solana Devnet với full verification.
 - Creditcoin lane chưa có test-only EVM deployer/faucet funds trong local env, nên source contract chưa deploy Sepolia và target registry chưa deploy CC3; UI/API cố ý giữ trạng thái pending.
 - Chưa có source emit → Attestcoin proof-builder → CC3 `executeJourneyProof` smoke end-to-end. Đây là gate kế tiếp trước khi đưa Creditcoin proof vào consumer verify.
 
