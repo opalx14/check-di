@@ -15,16 +15,16 @@
   },
   "hero": {
     "badge": "Dự án UniHackFest 2026",
-    "titleLine1": "Từ nơi sản xuất",
-    "titleLine2": "đến tay người mua.",
-    "description": "Check-Di ghi lại từng chặng của một lô hàng. Người mua chỉ cần quét QR để xem sản phẩm đã đi qua đâu, ai xác nhận và dữ liệu có còn nguyên vẹn hay không.",
+    "titleLine1": "Quét QR. Biết rõ",
+    "titleLine2": "sản phẩm đến từ đâu.",
+    "description": "Theo dõi từng chặng, chứng từ và đơn vị xác nhận của một lô hàng — từ vườn đến điểm bán.",
     "mobileTitle": "Quét QR. Biết nguồn gốc.",
-    "mobileDescription": "AI kiểm tra, map cho bạn thấy hành trình.",
-    "tags": ["Theo dõi từng chặng", "AI kiểm tra chứng từ", "QR cho người tiêu dùng"],
-    "scanCta": "Quét thử một lô hàng",
+    "mobileDescription": "Xem hành trình, chứng từ và người xác nhận.",
+    "tags": ["5 chặng truy xuất", "AI đối chiếu", "Solana proof"],
+    "scanCta": "Quét / tra cứu sản phẩm",
     "mobileScanTitle": "Quét QR để kiểm tra",
-    "mobileScanHint": "AI đối chiếu ngay sau khi quét.",
-    "journeyCta": "Xem hành trình hoạt động",
+    "mobileScanHint": "Mở toàn bộ hành trình trong một lần quét.",
+    "journeyCta": "Tôi là nhà cung cấp",
     "sampleBatch": "Lô hàng mẫu",
     "productName": "Sầu riêng Ri6 · DUR-260830-01",
     "routeSummary": "Hành trình từ Đắk Lắk đến TP.HCM",
@@ -66,25 +66,32 @@
     ]
   },
   "coreFlow": {
-    "badge": "Một lô hàng · Một hành trình",
-    "title": "Giống tracking đơn hàng, nhưng cho nguồn gốc sản phẩm.",
-    "description": "Mỗi chặng để lại một dấu vết có thể kiểm tra thay vì chỉ có một tem QR trỏ tới thông tin tĩnh.",
+    "badge": "Hành trình truy xuất",
+    "title": "Một QR. Toàn bộ hành trình.",
+    "description": "Mỗi bên ghi nhận chặng mình phụ trách. Check-Di nối chúng thành một dấu vết có thể kiểm tra.",
+    "sourceVisualLabel": "Nguồn dữ liệu thật",
+    "sourceVisualTitle": "Từ vườn đến từng lần bàn giao",
+    "sourceVisualText": "Mỗi bên chỉ ghi nhận phần mình chịu trách nhiệm.",
+    "resultLabel": "Kết quả",
+    "resultTitle": "1 QR",
+    "resultText": "Timeline, chứng từ, người xác nhận và proof.",
+    "sampleProductLabel": "Lô DUR-260830-01",
     "steps": [
       {
-        "title": "Mỗi bên ghi nhận chặng của mình",
-        "text": "Nhà vườn, đơn vị đóng gói, kiểm định, logistics và điểm bán cập nhật dữ liệu của lô hàng."
+        "title": "Ghi nhận tại nguồn",
+        "text": "Nhà vườn hoặc đơn vị vận hành thêm dữ liệu và chứng từ."
       },
       {
-        "title": "AI đối chiếu chứng từ",
-        "text": "AI đọc phiếu kiểm nghiệm, packing list, hóa đơn và cảnh báo khi ngày, số lượng hoặc mã lô không khớp."
+        "title": "AI kiểm tra",
+        "text": "Đối chiếu mã lô, ngày, khối lượng và cảnh báo sai lệch."
       },
       {
-        "title": "Dữ liệu được tạo hash",
-        "text": "Sau khi đơn vị xác nhận, dữ liệu của chặng được chuẩn hóa và tạo mã kiểm tra tính toàn vẹn."
+        "title": "Xác nhận & tạo hash",
+        "text": "Đơn vị ký chặng của mình; hệ thống tạo dấu vết toàn vẹn."
       },
       {
         "title": "Người mua quét QR",
-        "text": "Trang truy xuất hiển thị timeline, địa điểm, đơn vị xác nhận và trạng thái dữ liệu của cả hành trình."
+        "text": "Xem hành trình, người xác nhận và proof công khai."
       }
     ]
   },
@@ -239,18 +246,21 @@
     "competitionBanner": "Với UniHackFest, Technical Build chứng minh AI + hash + QR + Solana; Product & Business chứng minh nhu cầu truy xuất nguồn gốc và mô hình triển khai cho các bên trong chuỗi cung ứng. Cả hai dùng cùng một Check-Di."
   },
   "architecture": {
-    "badge": "Hash dùng để kiểm tra dữ liệu đã xác nhận",
-    "title": "Blockchain không thay thế dữ liệu thật. Nó giữ dấu vết của dữ liệu đã được xác nhận.",
-    "description": "Chứng từ và dữ liệu chi tiết vẫn ở off-chain. Mỗi chặng tạo một payload chuẩn hóa và hash; Solana dự kiến dùng làm lớp công khai để kiểm tra hash, đơn vị xác nhận, thời điểm và trạng thái.",
-    "hashChainTitle": "CHUỖI HASH MINH HỌA",
+    "badge": "Integrity proof",
+    "title": "Hồ sơ ở ngoài chuỗi. Bằng chứng ở trên chuỗi.",
+    "description": "Chứng từ chi tiết vẫn riêng tư; blockchain chỉ giữ dữ liệu tối thiểu để đối chiếu.",
+    "hashChainTitle": "Proof chain rút gọn",
     "chainStages": ["Thu hoạch", "Đóng gói", "Kiểm định", "Vận chuyển", "Điểm bán"],
-    "demoDisclaimer": "Các hash trên chỉ là dữ liệu mẫu. Program Solana thật chưa được deploy ở giai đoạn này.",
-    "offChainTitle": "Off-chain giữ dữ liệu chi tiết",
-    "offChainText": "Chứng từ, hình ảnh, địa chỉ chi tiết, hồ sơ doanh nghiệp và dữ liệu cần cập nhật/xóa được lưu ngoài blockchain.",
-    "onChainTitle": "On-chain chỉ giữ proof tối thiểu",
-    "onChainText": "Hash của lô/chặng, đơn vị xác nhận, phiên bản, thời điểm và trạng thái là những dữ liệu dự kiến cần công khai để đối soát.",
-    "immutabilityTitle": "Sửa dữ liệu thì phải tạo phiên bản mới",
-    "immutabilityText": "Nếu nội dung đã xác nhận thay đổi, hash cũ không còn khớp. Hệ thống phải ghi nhận phiên bản mới thay vì âm thầm ghi đè lịch sử."
+    "demoDisclaimer": "Lô mẫu dùng dữ liệu mô phỏng; proof Devnet chỉ hiển thị khi có giao dịch thật.",
+    "offChainTitle": "Hồ sơ chi tiết",
+    "offChainText": "Chứng từ, ảnh và dữ liệu nghiệp vụ lưu off-chain.",
+    "onChainTitle": "Proof tối thiểu",
+    "onChainText": "Hash, signer, phiên bản, thời điểm và trạng thái.",
+    "immutabilityTitle": "Sửa = phiên bản mới",
+    "immutabilityText": "Lịch sử cũ không bị ghi đè; thay đổi tạo bản ghi mới.",
+    "registryLabel": "Check-Di Registry",
+    "registryNetwork": "Solana Devnet",
+    "registryText": "Program + PDA proof có thể kiểm tra công khai."
   },
   "compliance": {
     "badge": "Ranh giới an toàn",

@@ -166,7 +166,7 @@ export function WalletStatus({ mobile = false }: { mobile?: boolean }) {
         className="inline-flex items-center gap-1.5 rounded-xl border border-violet-500/25 bg-violet-500/10 px-3 py-2 font-display text-xs font-semibold text-violet-200 transition hover:border-violet-500/40 hover:bg-violet-500/15"
       >
         <Wallet className="size-3.5 text-violet-300" />
-        Connect Wallet
+        Ví nhà cung cấp
       </a>
     );
   }
@@ -179,7 +179,7 @@ export function WalletStatus({ mobile = false }: { mobile?: boolean }) {
         className="inline-flex items-center gap-1.5 rounded-xl border border-violet-500/30 bg-violet-500/15 px-3 py-2 font-display text-xs font-bold text-violet-200 transition hover:bg-violet-500/25 hover:shadow-[0_0_12px_rgba(139,92,246,0.25)]"
       >
         <Wallet className="size-3.5 text-violet-300" />
-        Connect Phantom
+        Kết nối Phantom
       </a>
     );
   }
@@ -215,7 +215,7 @@ export function WalletStatus({ mobile = false }: { mobile?: boolean }) {
             </div>
             <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
               <span className="size-1.5 rounded-full bg-emerald-400" />
-              Connected
+              Đã kết nối
             </div>
           </div>
 
@@ -248,14 +248,14 @@ export function WalletStatus({ mobile = false }: { mobile?: boolean }) {
               rel="noreferrer"
               className="flex items-center justify-between rounded-lg px-2 py-1.5 text-slate-300 transition hover:bg-white/5 hover:text-white"
             >
-              <span>Open Solana Explorer</span>
+              <span>Mở Solana Explorer</span>
               <ExternalLink className="size-3 text-slate-500" />
             </a>
             <a
               href="/organization/wallet"
               className="flex items-center justify-between rounded-lg px-2 py-1.5 text-slate-300 transition hover:bg-white/5 hover:text-white"
             >
-              <span>Manage wallet</span>
+              <span>Quản lý ví</span>
               <Settings className="size-3 text-slate-500" />
             </a>
           </div>

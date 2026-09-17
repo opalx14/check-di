@@ -32,8 +32,10 @@ Next.js App Router, landing, API và các route sản phẩm sau này:
 
 - `/` landing + demo.
 - `/verify/[publicId]` trang người tiêu dùng quét QR — đọc public proof từ persisted repository.
-- `/login` đăng nhập organization bằng Supabase Auth; session giữ bằng HttpOnly access/refresh cookies.
+- `/login` đăng nhập nhà cung cấp bằng Supabase Auth; session giữ bằng HttpOnly access/refresh cookies.
 - `/api/auth/login`, `/api/auth/logout`, `/api/auth/me` xử lý organization session + membership context.
+- `/supplier` là kho sản phẩm của nhà cung cấp: đọc các batch thuộc organization đang đăng nhập, hiển thị ảnh sản phẩm, tiến độ chặng, trạng thái proof và link quản lý/QR; `GET /api/supplier/products` trả inventory theo organization.
+- `/scan` là luồng người mua: quét QR bằng camera khi browser hỗ trợ `BarcodeDetector`, hoặc nhập public batch ID để mở `/verify/[publicId]`; không yêu cầu đăng nhập.
 - `/organization/wallet` cho owner liên kết Phantom bằng signed challenge; `/api/auth/wallet/challenge` + `/api/auth/wallet/verify` xác minh Ed25519 ownership trước khi lưu organization wallet public key.
 - `/api/batches` tạo batch mới.
 - `/api/batches/[publicId]` public proof JSON từ các event đã xác nhận.
@@ -46,8 +48,8 @@ Next.js App Router, landing, API và các route sản phẩm sau này:
 - `/api/manage/batches/[id]/events/[eventId]/status` đồng bộ lifecycle `confirmed -> revoked|superseded` theo thứ tự Solana PDA trước, DB mirror sau.
 - `/api/creditcoin/readiness` probe read-only Attestcoin Proof API, Sepolia attested height và Creditcoin CC3 chain ID/block height; không expose private key.
 - `/judge/creditcoin` Judge lane riêng cho BUIDL CTC, chỉ hiển thị `Verified` sau khi có source contract + target registry address thật.
-- `/batches/new` form tạo lô thật trong prototype.
-- `/batches/[id]` quản lý hành trình, AI warning, draft và xác nhận từng chặng.
+- `/batches/new` form tạo sản phẩm/lô thật trong prototype, có visual preview theo loại nông sản/hải sản và quay về kho nhà cung cấp.
+- `/batches/[id]` quản lý hành trình, AI warning, draft và xác nhận từng chặng; phần kỹ thuật Devnet được thu gọn để không lấn át workflow nghiệp vụ.
 
 ### `src/components`
 UI dùng lại: hero, journey timeline/map preview, document check, QR/public verification.

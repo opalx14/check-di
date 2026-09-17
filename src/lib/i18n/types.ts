@@ -60,6 +60,13 @@ export type CoreFlowDictionary = {
   badge: string;
   title: string;
   description: string;
+  sourceVisualLabel: string;
+  sourceVisualTitle: string;
+  sourceVisualText: string;
+  resultLabel: string;
+  resultTitle: string;
+  resultText: string;
+  sampleProductLabel: string;
   steps: Array<{
     title: string;
     text: string;
@@ -217,6 +224,9 @@ export type ArchitectureDictionary = {
   onChainText: string;
   immutabilityTitle: string;
   immutabilityText: string;
+  registryLabel: string;
+  registryNetwork: string;
+  registryText: string;
 };
 
 export type ComplianceDictionary = {

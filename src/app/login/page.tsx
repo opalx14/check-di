@@ -43,7 +43,7 @@ export default function LoginPage() {
     }
 
     const next = new URLSearchParams(window.location.search).get("next");
-    router.push(next?.startsWith("/") ? next : "/batches/new");
+    router.push(next?.startsWith("/") ? next : "/supplier");
     router.refresh();
   }
 
@@ -62,10 +62,10 @@ export default function LoginPage() {
               <Building2 className="size-5" />
             </div>
             <h1 className="font-display mt-4 text-2xl font-extrabold text-white sm:text-3xl">
-              Đăng nhập tổ chức
+              Đăng nhập nhà cung cấp
             </h1>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">
-              Dùng tài khoản Supabase Auth đã được gắn membership để ghi nhận và xác nhận chặng thuộc đơn vị của bạn.
+            <p className="mt-2 text-sm text-slate-400">
+              Vào kho sản phẩm và quản lý các lô của tổ chức.
             </p>
           </div>
 
@@ -100,9 +100,9 @@ export default function LoginPage() {
               />
             </div>
 
-            <div className="flex items-start gap-2 rounded-2xl border border-cyan-500/15 bg-cyan-500/[0.05] p-3 text-xs leading-relaxed text-slate-300">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-cyan-300" />
-              Session được giữ bằng HttpOnly cookie. Quyền thực tế vẫn lấy từ membership `owner / operator / inspector / viewer` trong database.
+            <div className="flex items-center gap-2 rounded-2xl border border-cyan-500/15 bg-cyan-500/[0.05] p-3 text-xs text-slate-300">
+              <ShieldCheck className="size-4 shrink-0 text-cyan-300" />
+              Phiên đăng nhập được bảo vệ bằng HttpOnly cookie.
             </div>
 
             {error && (

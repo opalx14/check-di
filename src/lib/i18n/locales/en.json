@@ -15,16 +15,16 @@
   },
   "hero": {
     "badge": "UniHackFest 2026 Project",
-    "titleLine1": "From farm origin",
-    "titleLine2": "to the consumer's hands.",
-    "description": "Check-Di records each stage of a product batch. Buyers simply scan a QR code to see where the product has traveled, who verified it, and verify that the data remains intact.",
+    "titleLine1": "Scan the QR. Know",
+    "titleLine2": "where the product came from.",
+    "description": "Track every handoff, document and confirming organization in one product journey — from farm to retail.",
     "mobileTitle": "Scan QR. Know the origin.",
-    "mobileDescription": "AI checks it. The map shows the journey.",
-    "tags": ["Multi-stage Tracking", "AI Document Checks", "Consumer QR Verification"],
-    "scanCta": "Try Scanning a Batch",
+    "mobileDescription": "See the journey, documents and confirming parties.",
+    "tags": ["5 trace stages", "AI cross-checks", "Solana proof"],
+    "scanCta": "Scan / verify a product",
     "mobileScanTitle": "Scan QR to check",
-    "mobileScanHint": "AI cross-checks the batch right after the scan.",
-    "journeyCta": "Explore the Journey Flow",
+    "mobileScanHint": "Open the full journey in one scan.",
+    "journeyCta": "I'm a supplier",
     "sampleBatch": "Sample Batch",
     "productName": "Ri6 Durian · DUR-260830-01",
     "routeSummary": "Journey from Dak Lak to Ho Chi Minh City",
@@ -66,25 +66,32 @@
     ]
   },
   "coreFlow": {
-    "badge": "One Batch · One Verified Journey",
-    "title": "Like parcel tracking, but for product authenticity.",
-    "description": "Each stage leaves an independently verifiable trace instead of a single static QR label linking to unverified claims.",
+    "badge": "Traceable journey",
+    "title": "One QR. The whole journey.",
+    "description": "Each participant records the stage they own. Check-Di links those handoffs into one verifiable trace.",
+    "sourceVisualLabel": "Real-world source",
+    "sourceVisualTitle": "From the farm to every handoff",
+    "sourceVisualText": "Each participant only records the stage they are responsible for.",
+    "resultLabel": "Result",
+    "resultTitle": "1 QR",
+    "resultText": "Timeline, documents, confirming parties and proof.",
+    "sampleProductLabel": "Batch DUR-260830-01",
     "steps": [
       {
-        "title": "Each party records their stage",
-        "text": "Growers, packaging facilities, inspection hubs, logistics carriers, and retailers update batch data at handoff points."
+        "title": "Record at the source",
+        "text": "Growers or operators add the stage data and supporting documents."
       },
       {
-        "title": "AI cross-checks documents",
-        "text": "AI parses inspection sheets, packing lists, invoices and flags discrepancies in dates, weights, or batch IDs."
+        "title": "AI checks the data",
+        "text": "Cross-check batch IDs, dates, quantities and highlight mismatches."
       },
       {
-        "title": "Data is hashed for integrity",
-        "text": "Once the stakeholder confirms, the stage payload is canonicalized and hashed to ensure tamper-evident records."
+        "title": "Confirm & hash",
+        "text": "The organization signs its stage and creates an integrity record."
       },
       {
-        "title": "Consumers scan the QR code",
-        "text": "The verification page displays the full timeline, geo-locations, certifying parties, and integrity status."
+        "title": "Consumers scan QR",
+        "text": "Review the journey, confirming parties and public proof."
       }
     ]
   },
@@ -239,18 +246,21 @@
     "competitionBanner": "For UniHackFest, Technical Build proves AI document verification + hash integrity + QR scanning + Solana anchoring; Product & Business demonstrates real-world supply chain feasibility and stakeholder adoption. Both tracks share the same Check-Di core."
   },
   "architecture": {
-    "badge": "Cryptographic Hashes for Verified Integrity",
-    "title": "Blockchain does not replace real data. It guarantees historical integrity.",
-    "description": "Detailed documents and high-volume data remain off-chain. Each stage produces a canonicalized hash; Solana serves as the public layer verifying the hash, signing entity, timestamp, and status.",
-    "hashChainTitle": "SAMPLE HASH CHAIN",
+    "badge": "Integrity proof",
+    "title": "Records stay off-chain. Proof stays on-chain.",
+    "description": "Detailed documents remain private; blockchain only keeps the minimum data needed for verification.",
+    "hashChainTitle": "Condensed proof chain",
     "chainStages": ["Harvest", "Packaging", "Inspection", "Transit", "Retail"],
-    "demoDisclaimer": "The hashes shown above are sample data. The Solana program is not yet deployed on-chain in this milestone.",
-    "offChainTitle": "Off-Chain Holds Detailed Records",
-    "offChainText": "Certificates, high-res photos, exact warehouse addresses, and editable enterprise files remain stored off-chain.",
-    "onChainTitle": "On-Chain Stores Minimal Proofs",
-    "onChainText": "Batch/stage hashes, certifier public keys, schema versions, timestamps, and active status are anchored on-chain.",
-    "immutabilityTitle": "Modifications Require New Versions",
-    "immutabilityText": "If confirmed data is altered, existing hashes no longer match. The system must register a superseded version rather than quietly overwriting history."
+    "demoDisclaimer": "The sample batch uses simulated data; Devnet proof only appears when a real transaction exists.",
+    "offChainTitle": "Detailed records",
+    "offChainText": "Documents, photos and operational data stay off-chain.",
+    "onChainTitle": "Minimal proof",
+    "onChainText": "Hash, signer, version, timestamp and status.",
+    "immutabilityTitle": "Edit = new version",
+    "immutabilityText": "History is never overwritten; changes create a new record.",
+    "registryLabel": "Check-Di Registry",
+    "registryNetwork": "Solana Devnet",
+    "registryText": "Program + PDA proofs can be verified publicly."
   },
   "compliance": {
     "badge": "Safety Boundaries",

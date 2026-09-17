@@ -1,72 +1,88 @@
 "use client";
 
 import { useI18n } from "@/lib/i18n";
-import { Database, FileLock2, Hash, Link2, ShieldCheck } from "lucide-react";
+import { Database, FileClock, Hash, ShieldCheck } from "lucide-react";
 
-const HASH_SAMPLES = ["a81c...92fa", "bf21...4ac8", "c902...e113", "d710...33bd", "e445...81cc"];
+const PROOF_STAGES = [
+  { labelIndex: 0, hash: "a81c...92fa" },
+  { labelIndex: 2, hash: "c902...e113" },
+  { labelIndex: 4, hash: "e445...81cc" },
+];
 
 export function OnChainArchitectureSection() {
   const { dict } = useI18n();
 
+  const infoCards = [
+    { icon: Database, title: dict.architecture.offChainTitle, text: dict.architecture.offChainText, tone: "text-emerald-300" },
+    { icon: ShieldCheck, title: dict.architecture.onChainTitle, text: dict.architecture.onChainText, tone: "text-cyan-300" },
+    { icon: FileClock, title: dict.architecture.immutabilityTitle, text: dict.architecture.immutabilityText, tone: "text-violet-300" },
+  ];
+
   return (
-    <section id="technology" className="hidden border-t border-white/5 py-20 sm:block sm:py-24">
+    <section id="technology" className="border-t border-white/5 py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-950/30 px-3.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-emerald-300 backdrop-blur-sm">
-            <Hash className="size-3.5" />
-            {dict.architecture.badge}
-          </div>
-          <h2 className="font-display mt-4 text-3xl font-extrabold tracking-[-0.03em] text-white sm:text-5xl">
-            {dict.architecture.title}
-          </h2>
-          <p className="mt-4 text-sm leading-relaxed text-slate-300/90 sm:text-base">
-            {dict.architecture.description}
-          </p>
-        </div>
-
-        <div className="mt-12 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-3xl border border-white/10 bg-[#0a0f1b] p-6 shadow-2xl backdrop-blur-xl">
-            <div className="flex items-center gap-2 text-cyan-300">
-              <Link2 className="size-4" />
-              <p className="font-mono text-xs font-bold uppercase tracking-wider">{dict.architecture.hashChainTitle}</p>
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/[0.07] px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-emerald-300">
+              <Hash className="size-3.5" />
+              {dict.architecture.badge}
             </div>
-            <div className="mt-6 grid gap-3 sm:grid-cols-5">
-              {dict.architecture.chainStages.map((label, index) => (
-                <div key={index} className="relative rounded-xl border border-white/10 bg-slate-900/60 p-3 text-center">
-                  <p className="font-display text-xs font-semibold tracking-tight text-white">{label}</p>
-                  <p className="mt-2 font-mono text-[11px] font-semibold text-cyan-300">{HASH_SAMPLES[index]}</p>
-                  {index < dict.architecture.chainStages.length - 1 && (
-                    <span className="absolute -right-3 top-1/2 hidden -translate-y-1/2 font-mono text-slate-600 sm:block">→</span>
-                  )}
+            <h2 className="font-display mt-4 max-w-2xl text-3xl font-extrabold tracking-[-0.04em] text-white sm:text-5xl">
+              {dict.architecture.title}
+            </h2>
+            <p className="mt-4 max-w-xl text-sm leading-7 text-slate-400 sm:text-base">{dict.architecture.description}</p>
+
+            <div className="mt-8 rounded-3xl border border-white/10 bg-[#0a0f1b] p-5 sm:p-6">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-300">
+                {dict.architecture.hashChainTitle}
+              </p>
+
+              <div className="mt-5 grid grid-cols-3 gap-2 sm:gap-3">
+                {PROOF_STAGES.map((stage, index) => (
+                  <div key={stage.hash} className="relative rounded-2xl border border-white/8 bg-white/[0.025] p-3 text-center sm:p-4">
+                    <div className="mx-auto flex size-8 items-center justify-center rounded-full border border-cyan-500/20 bg-cyan-500/[0.08] text-cyan-300">
+                      <span className="font-mono text-[10px] font-bold">{index + 1}</span>
+                    </div>
+                    <p className="mt-2 text-xs font-semibold text-white">
+                      {dict.architecture.chainStages[stage.labelIndex]}
+                    </p>
+                    <p className="mt-1 font-mono text-[10px] text-cyan-300/80">{stage.hash}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 flex items-center justify-between rounded-2xl border border-amber-500/15 bg-amber-500/[0.05] px-4 py-3 text-xs text-amber-100/80">
+                <span>{dict.architecture.demoDisclaimer}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid content-start gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            {infoCards.map(({ icon: Icon, title, text, tone }) => (
+              <div key={title} className="rounded-2xl border border-white/8 bg-white/[0.025] p-5 sm:p-6">
+                <div className="flex items-start gap-4">
+                  <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/[0.04] ${tone}`}>
+                    <Icon className="size-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-base font-bold text-white">{title}</h3>
+                    <p className="mt-1.5 text-sm leading-6 text-slate-400">{text}</p>
+                  </div>
                 </div>
-              ))}
-            </div>
-            <div className="mt-5 rounded-xl border border-amber-500/20 bg-amber-950/20 p-3 text-xs leading-relaxed text-amber-200/90">
-              {dict.architecture.demoDisclaimer}
-            </div>
-          </div>
+              </div>
+            ))}
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-            <div className="glass-card-hover rounded-2xl border border-white/10 bg-slate-900/55 p-5 backdrop-blur-md">
-              <div className="flex items-center gap-2 text-emerald-300">
-                <Database className="size-4" />
-                <h3 className="font-display text-sm font-bold tracking-tight text-white">{dict.architecture.offChainTitle}</h3>
+            <div className="rounded-3xl border border-emerald-500/15 bg-gradient-to-br from-emerald-500/[0.08] to-cyan-500/[0.03] p-5 sm:p-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-emerald-300">{dict.architecture.registryLabel}</p>
+                  <p className="mt-2 font-display text-lg font-bold text-white">{dict.architecture.registryNetwork}</p>
+                  <p className="mt-1 text-xs text-slate-400">{dict.architecture.registryText}</p>
+                </div>
+                <div className="flex size-12 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-500/10 text-emerald-300">
+                  <ShieldCheck className="size-5" />
+                </div>
               </div>
-              <p className="mt-3 text-xs leading-relaxed text-slate-400">{dict.architecture.offChainText}</p>
-            </div>
-            <div className="glass-card-hover rounded-2xl border border-white/10 bg-slate-900/55 p-5 backdrop-blur-md">
-              <div className="flex items-center gap-2 text-cyan-300">
-                <ShieldCheck className="size-4" />
-                <h3 className="font-display text-sm font-bold tracking-tight text-white">{dict.architecture.onChainTitle}</h3>
-              </div>
-              <p className="mt-3 text-xs leading-relaxed text-slate-400">{dict.architecture.onChainText}</p>
-            </div>
-            <div className="glass-card-hover rounded-2xl border border-white/10 bg-slate-900/55 p-5 backdrop-blur-md sm:col-span-2 lg:col-span-1">
-              <div className="flex items-center gap-2 text-purple-300">
-                <FileLock2 className="size-4" />
-                <h3 className="font-display text-sm font-bold tracking-tight text-white">{dict.architecture.immutabilityTitle}</h3>
-              </div>
-              <p className="mt-3 text-xs leading-relaxed text-slate-400">{dict.architecture.immutabilityText}</p>
             </div>
           </div>
         </div>

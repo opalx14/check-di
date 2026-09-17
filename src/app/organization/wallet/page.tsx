@@ -128,7 +128,7 @@ export default function OrganizationWalletPage() {
       const res = await provider.connect();
       const pubKey = res.publicKey.toString();
       setBrowserConnectedKey(pubKey);
-      setMessage("Đã kết nối Phantom với trình duyệt. Vui lòng bấm 'Verify ownership' để xác minh cho organization.");
+      setMessage("Đã kết nối Phantom. Bấm xác minh để liên kết ví với tổ chức.");
     } catch (err) {
       setError("Người dùng đã hủy hoặc từ chối kết nối Phantom.");
     } finally {
@@ -191,7 +191,7 @@ export default function OrganizationWalletPage() {
         throw new Error(verified.error || "wallet_verification_failed");
       }
 
-      setMessage("Phantom đã được xác minh quyền sở hữu và liên kết thành công với organization!");
+      setMessage("Phantom đã được liên kết với tổ chức.");
       await loadMemberships();
     } catch (reason) {
       const code = reason instanceof Error ? reason.message : "unknown_error";
@@ -219,8 +219,8 @@ export default function OrganizationWalletPage() {
     <main className="min-h-screen bg-[#07090e] px-4 py-8 text-slate-100 sm:px-6">
       <div className="mx-auto max-w-2xl">
         <div className="flex items-center justify-between">
-          <a href="/" className="text-xs font-semibold text-slate-400 hover:text-white">
-            ← Check-Di Home
+          <a href="/supplier" className="text-xs font-semibold text-slate-400 hover:text-white">
+            ← Kho sản phẩm
           </a>
           <div className="flex items-center gap-2">
             <span className="rounded-full border border-violet-500/25 bg-violet-500/10 px-2.5 py-0.5 font-mono text-[10px] font-bold text-violet-300">
@@ -238,14 +238,14 @@ export default function OrganizationWalletPage() {
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1.5 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1 font-mono text-[10px] font-bold text-cyan-300">
                   <span className="size-1.5 rounded-full bg-cyan-400" />
-                  Phantom Identity
+                  Organization wallet
                 </span>
               </div>
             </div>
 
-            <h1 className="mt-4 text-2xl font-extrabold text-white">Connect organization wallet</h1>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">
-              Liên kết ví Phantom làm định danh doanh nghiệp để ký xác thực chặng chuỗi cung ứng và đồng thuận giao dịch Registry trên Solana Devnet.
+            <h1 className="mt-4 text-2xl font-extrabold text-white">Liên kết Phantom</h1>
+            <p className="mt-2 text-sm text-slate-400">
+              Ví này sẽ ký xác nhận các chặng của tổ chức.
             </p>
 
             {/* Network & Program info badges */}
@@ -409,7 +409,7 @@ export default function OrganizationWalletPage() {
                         className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet-500 px-5 py-3 text-sm font-bold text-white hover:bg-violet-400 disabled:opacity-60 shadow-[0_0_20px_rgba(139,92,246,0.3)]"
                       >
                         {linking ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
-                        {linking ? "Đang xác minh chữ ký..." : "Verify ownership"}
+                        {linking ? "Đang xác minh..." : "Xác minh ví"}
                       </button>
                     ) : (
                       /* State 2: Not connected yet */
@@ -435,7 +435,7 @@ export default function OrganizationWalletPage() {
                       Signing this message does not send SOL and does not create a payment transaction.
                     </p>
                     <p className="mt-1 text-[11px] text-slate-400">
-                      Chữ ký Ed25519 chỉ dùng để chứng minh bạn sở hữu khóa công khai của ví đại diện cho tổ chức trên mạng Solana Devnet.
+                      Chữ ký chỉ dùng để xác minh quyền sở hữu ví; không có thanh toán.
                     </p>
                   </div>
                 </div>

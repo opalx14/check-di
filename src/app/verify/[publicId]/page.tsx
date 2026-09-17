@@ -4,13 +4,11 @@ import {
   ChevronRight,
   ExternalLink,
   Hash,
-  KeyRound,
   MapPin,
   PackageCheck,
   QrCode,
   ShieldAlert,
   ShieldCheck,
-  Signature,
   Sprout,
   Truck,
   Warehouse,
@@ -18,6 +16,7 @@ import {
 import { notFound } from "next/navigation";
 
 import { batchRepository } from "@/lib/db";
+import { productVisualForName } from "@/lib/product-visuals";
 import {
   verifyTraceEventSolanaProof,
   type SolanaProofVerification,
@@ -34,7 +33,7 @@ const stageMeta = {
   retail: { label: "Điểm bán", icon: MapPin },
 } as const;
 
-function shorten(value: string | undefined, left = 10, right = 8) {
+function shorten(value?: string, left = 8, right = 6) {
   if (!value) return "—";
   if (value.length <= left + right + 3) return value;
   return `${value.slice(0, left)}…${value.slice(-right)}`;
@@ -48,321 +47,171 @@ function formatTime(value: string) {
   }).format(new Date(value));
 }
 
-export default async function VerifyBatchPage({
-  params,
-}: {
-  params: Promise<{ publicId: string }>;
-}) {
+export default async function VerifyBatchPage({ params }: { params: Promise<{ publicId: string }> }) {
   const { publicId } = await params;
   const batch = await batchRepository.getPublicProof(publicId);
-
   if (!batch || batch.events.length === 0) notFound();
 
+  const visual = productVisualForName(batch.productName);
   const destination = batch.events.at(-1)?.location ?? batch.origin;
   const aiChecks = batch.events.flatMap((event) => event.aiValidations ?? []);
-  const warnings = aiChecks.filter((check) => check.status !== "matched");
-  const extractedDocuments = batch.events
-    .flatMap((event) => event.documentEvidence ?? [])
-    .filter((document) => document.extraction.status === "completed").length;
+  const warnings = aiChecks.filter((check) => check.status !== "matched").length;
   const solanaChecks = await Promise.all(
-    batch.events.map((event) =>
-      verifyTraceEventSolanaProof(batch.publicId, event),
-    ),
+    batch.events.map((event) => verifyTraceEventSolanaProof(batch.publicId, event)),
   );
   const anchoredCount = solanaChecks.filter((check) => check.valid).length;
-  const registryCount = solanaChecks.filter(
-    (check) => check.valid && check.kind === "check-di-registry",
-  ).length;
 
   return (
     <main className="min-h-screen bg-[#07090e] text-slate-100">
-      <div className="pointer-events-none fixed inset-0 bg-grid-pattern opacity-30" />
-
-      <div className="relative mx-auto max-w-3xl px-4 py-5 sm:px-6 sm:py-10">
-        <header className="flex items-center justify-between gap-4">
-          <a href="/" className="font-display text-lg font-black tracking-tight text-white">
-            Check-Di
+      <div className="pointer-events-none fixed inset-0 bg-grid-pattern opacity-20" />
+      <div className="relative mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
+        <header className="flex items-center justify-between border-b border-white/8 pb-5">
+          <a href="/" className="font-display font-bold text-white">Check-Di</a>
+          <a href="/scan" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-300">
+            <QrCode className="size-3.5" /> Quét mã khác
           </a>
-          <span className={`rounded-full border px-3 py-1 font-mono text-[10px] font-bold ${anchoredCount > 0 ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300" : "border-amber-500/25 bg-amber-500/10 text-amber-300"}`}>
-            {registryCount > 0
-              ? `CHECK-DI REGISTRY · ${registryCount}/${batch.events.length} VERIFIED`
-              : anchoredCount > 0
-                ? `SOLANA DEVNET · ${anchoredCount}/${batch.events.length} FALLBACK`
-                : "DEMO · CHƯA GHI DEVNET"}
-          </span>
         </header>
 
-        <section className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-[#0b111c]/95 shadow-2xl shadow-black/40">
-          <div className="border-b border-white/10 p-5 sm:p-7">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-300">Mã lô {batch.publicId}</p>
-                <h1 className="font-display mt-2 text-2xl font-extrabold tracking-tight text-white sm:text-4xl">
-                  {batch.productName}
-                </h1>
-                <p className="mt-1 text-sm text-slate-400">{batch.origin} → {destination}</p>
+        <section className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-[#0b111c] shadow-2xl shadow-black/25">
+          <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="relative min-h-[320px] overflow-hidden lg:min-h-[420px]">
+              <img src={visual.imageUrl} alt={batch.productName} className="absolute inset-0 size-full object-cover" />
+              <div className={`absolute inset-0 bg-gradient-to-t ${visual.accent} via-transparent to-black/10`} />
+              <div className="absolute left-4 top-4 rounded-full border border-white/15 bg-black/40 px-3 py-1 text-[10px] font-semibold text-white backdrop-blur">
+                {visual.label}
               </div>
-              <div className="hidden rounded-2xl bg-white p-2 sm:block">
-                <img
-                  src={`/api/qr/${encodeURIComponent(batch.publicId)}`}
-                  alt={`QR xác minh lô ${batch.publicId}`}
-                  className="size-24"
+            </div>
+
+            <div className="p-5 sm:p-7 lg:p-8">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-300">{batch.publicId}</p>
+                  <h1 className="font-display mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">{batch.productName}</h1>
+                  <p className="mt-2 text-sm text-slate-400">{batch.origin} → {destination}</p>
+                </div>
+                <div className="hidden rounded-2xl bg-white p-2 sm:block">
+                  <img src={`/api/qr/${encodeURIComponent(batch.publicId)}`} alt={`QR ${batch.publicId}`} className="size-20" />
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-2 sm:grid-cols-3">
+                <StatusChip
+                  icon={batch.chainVerification.valid ? ShieldCheck : ShieldAlert}
+                  label={batch.chainVerification.valid ? "Chuỗi hợp lệ" : "Cần kiểm tra"}
+                  good={batch.chainVerification.valid}
                 />
-              </div>
-            </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <div
-                className={`rounded-2xl border p-4 ${
-                  batch.chainVerification.valid
-                    ? "border-emerald-500/20 bg-emerald-500/[0.06]"
-                    : "border-amber-500/20 bg-amber-500/[0.06]"
-                }`}
-              >
-                <div
-                  className={`flex items-center gap-2 ${
-                    batch.chainVerification.valid
-                      ? "text-emerald-300"
-                      : "text-amber-300"
-                  }`}
-                >
-                  {batch.chainVerification.valid ? (
-                    <ShieldCheck className="size-4" />
-                  ) : (
-                    <ShieldAlert className="size-4" />
-                  )}
-                  <p className="text-sm font-bold">
-                    {batch.chainVerification.valid
-                      ? "Chuỗi hash & chữ ký hợp lệ"
-                      : "Cảnh báo chuỗi integrity"}
-                  </p>
-                </div>
-                <p className="mt-1 text-xs leading-relaxed text-slate-400">
-                  {batch.chainVerification.valid
-                    ? `${batch.events.length}/${batch.events.length} chặng nối đúng previous hash và chữ ký Ed25519 kiểm tra được.`
-                    : "Phát hiện chặng không khớp chuỗi integrity hoặc dữ liệu đã bị chỉnh sửa."}
-                </p>
+                <StatusChip icon={Bot} label={warnings === 0 ? "AI không cảnh báo" : `${warnings} cảnh báo`} good={warnings === 0} />
+                <StatusChip icon={Hash} label={`${anchoredCount}/${batch.events.length} Devnet proof`} good={anchoredCount > 0} />
               </div>
 
-              <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.06] p-4">
-                <div className="flex items-center gap-2 text-cyan-300">
-                  <Bot className="size-4" />
-                  <p className="text-sm font-bold">AI demo document check</p>
-                </div>
-                <p className="mt-1 text-xs leading-relaxed text-slate-400">
-                  {extractedDocuments > 0
-                    ? `${extractedDocuments} chứng từ đã chạy extraction demo; ${warnings.length} cảnh báo cần xem lại.`
-                    : warnings.length === 0
-                      ? `${aiChecks.length} kiểm tra dữ liệu hiện có đều khớp.`
-                      : `${warnings.length} cảnh báo cần xem lại.`}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-5 sm:p-7">
-            <div className="flex items-center justify-between gap-3">
-              <div>
+              <div className="mt-7 border-t border-white/8 pt-5">
                 <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">Hành trình</p>
-                <h2 className="font-display mt-1 text-lg font-bold text-white">{batch.events.length} trạm · {batch.events.length} lần xác nhận</h2>
+                <div className="mt-4 flex items-start justify-between gap-1">
+                  {batch.events.map((event, index) => {
+                    const meta = stageMeta[event.stage];
+                    const Icon = meta.icon;
+                    return (
+                      <div key={event.id} className="relative flex min-w-0 flex-1 flex-col items-center text-center">
+                        <div className="relative z-10 flex size-9 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300">
+                          <Icon className="size-4" />
+                        </div>
+                        <p className="mt-2 max-w-[80px] text-[10px] font-semibold text-slate-200 sm:text-[11px]">{meta.label}</p>
+                        {index < batch.events.length - 1 && <span className="absolute left-[62%] top-[18px] h-px w-[76%] bg-gradient-to-r from-emerald-400/45 to-cyan-400/25" />}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <span className="font-mono text-[10px] text-emerald-300">SHA-256 + Ed25519</span>
-            </div>
-
-            <div className="mt-5 space-y-3">
-              {batch.events.map((event, index) => (
-                <TraceEventCard
-                  key={event.id}
-                  event={event}
-                  index={index}
-                  solanaCheck={solanaChecks[index]}
-                />
-              ))}
             </div>
           </div>
         </section>
 
-        <section className="mt-5 rounded-3xl border border-white/10 bg-[#0b111c]/90 p-5 sm:p-6">
-          <div className="flex items-center gap-2 text-slate-200">
-            <QrCode className="size-4 text-cyan-300" />
-            <h2 className="font-display text-base font-bold">QR công khai của lô</h2>
+        <section className="mt-6">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-300">Trace details</p>
+              <h2 className="font-display mt-1 text-2xl font-bold text-white">{batch.events.length} chặng đã xác nhận</h2>
+            </div>
+            <span className="text-[10px] text-slate-500">Nhấn từng chặng để xem proof</span>
           </div>
-          <div className="mt-4 flex items-center gap-4">
-            <div className="rounded-2xl bg-white p-2 sm:hidden">
-              <img
-                src={`/api/qr/${encodeURIComponent(batch.publicId)}`}
-                alt={`QR xác minh lô ${batch.publicId}`}
-                className="size-24"
-              />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs leading-relaxed text-slate-400">
-                QR này mở trực tiếp trang <span className="font-mono text-cyan-300">/verify/{batch.publicId}</span> trên domain đang chạy.
-              </p>
-              <a
-                href={`/api/batches/${encodeURIComponent(batch.publicId)}`}
-                className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-cyan-300 hover:text-cyan-200"
-              >
-                Xem JSON proof
-                <ChevronRight className="size-3.5" />
-              </a>
-            </div>
+
+          <div className="mt-4 space-y-2">
+            {batch.events.map((event, index) => (
+              <TraceEventCard key={event.id} event={event} index={index} solanaCheck={solanaChecks[index]} />
+            ))}
           </div>
         </section>
-
-        <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-500">
-          Document extraction hiện là mô phỏng deterministic cho hackathon, không phải OCR/LLM production. SHA-256 file, Ed25519 integrity và Check-Di Registry PDA trên Solana Devnet vẫn là proof kỹ thuật thật.
-        </p>
       </div>
     </main>
   );
 }
 
-function TraceEventCard({
-  event,
-  index,
-  solanaCheck,
-}: {
-  event: TraceEvent;
-  index: number;
-  solanaCheck: SolanaProofVerification;
-}) {
+function StatusChip({ icon: Icon, label, good }: { icon: typeof ShieldCheck; label: string; good: boolean }) {
+  return (
+    <div className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold ${good ? "border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-300" : "border-amber-500/20 bg-amber-500/[0.06] text-amber-200"}`}>
+      <Icon className="size-3.5 shrink-0" />
+      <span className="truncate">{label}</span>
+    </div>
+  );
+}
+
+function TraceEventCard({ event, index, solanaCheck }: { event: TraceEvent; index: number; solanaCheck: SolanaProofVerification }) {
   const meta = stageMeta[event.stage];
   const Icon = meta.icon;
-  const aiChecks = event.aiValidations ?? [];
-  const isRevoked = event.status === "revoked";
-  const isSuperseded = event.status === "superseded";
-  const isTerminal = isRevoked || isSuperseded;
+  const terminal = event.status === "revoked" || event.status === "superseded";
+  const documents = event.documentEvidence ?? [];
 
   return (
-    <details className={`group rounded-2xl border bg-slate-900/45 ${isTerminal ? "border-red-500/20 open:border-red-500/30" : "border-white/8 open:border-cyan-500/20 open:bg-cyan-950/10"}`}>
+    <details className={`group rounded-2xl border bg-[#0b111c] ${terminal ? "border-red-500/20" : "border-white/8 open:border-cyan-500/20"}`}>
       <summary className="flex cursor-pointer list-none items-center gap-3 p-4">
-        <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl border ${isTerminal ? "border-red-500/25 bg-red-500/10 text-red-300" : "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"}`}>
+        <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl border ${terminal ? "border-red-500/20 bg-red-500/10 text-red-300" : "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"}`}>
           <Icon className="size-4" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="font-display truncate text-sm font-bold text-white">{index + 1}. {meta.label}</p>
-            {isTerminal ? (
-              <ShieldAlert className="size-3.5 shrink-0 text-red-400" />
-            ) : (
-              <CheckCircle2 className="size-3.5 shrink-0 text-emerald-400" />
-            )}
-            {isTerminal && (
-              <span className="rounded-full border border-red-500/20 bg-red-500/10 px-2 py-0.5 font-mono text-[8px] font-bold text-red-300">
-                {isRevoked ? "REVOKED" : "SUPERSEDED"}
-              </span>
-            )}
+            <p className="text-sm font-bold text-white">{index + 1}. {meta.label}</p>
+            {!terminal && <CheckCircle2 className="size-3.5 text-emerald-400" />}
           </div>
           <p className="mt-0.5 truncate text-[11px] text-slate-400">{event.organizationName} · {event.location}</p>
         </div>
-        <span className="hidden font-mono text-[10px] text-slate-500 sm:block">{formatTime(event.occurredAt)}</span>
+        <span className="hidden text-[10px] text-slate-500 sm:block">{formatTime(event.occurredAt)}</span>
         <ChevronRight className="size-4 text-slate-500 transition group-open:rotate-90" />
       </summary>
 
       <div className="border-t border-white/8 px-4 pb-4 pt-3">
         <p className="text-xs leading-relaxed text-slate-300">{event.summary}</p>
 
-        {event.documentEvidence && event.documentEvidence.length > 0 && (
-          <div className="mt-3 space-y-2">
-            {event.documentEvidence.map((document) => {
-              const extracted = [
-                document.extraction.documentType,
-                document.extraction.documentNumber,
-                document.extraction.batchId
-                  ? `Lô ${document.extraction.batchId}`
-                  : undefined,
-                document.extraction.quantity !== undefined
-                  ? `${document.extraction.quantity}${document.extraction.unit ? ` ${document.extraction.unit}` : ""}`
-                  : undefined,
-              ].filter(Boolean);
+        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          <MiniInfo label="Chứng từ" value={`${documents.length} file`} />
+          <MiniInfo label="Event hash" value={shorten(event.eventHash)} mono />
+          <MiniInfo label="Signer" value={shorten(event.signerPublicKey)} mono />
+        </div>
 
-              return (
-                <div key={document.id} className="rounded-xl border border-white/8 bg-slate-950/55 p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-semibold text-slate-200">{document.filename}</p>
-                      <p className="mt-1 font-mono text-[9px] text-slate-600">SHA-256 {shorten(document.sha256, 10, 8)}</p>
-                    </div>
-                    <span className="shrink-0 text-[9px] font-bold text-cyan-300">
-                      DEMO EXTRACTION
-                    </span>
-                  </div>
-                  {extracted.length > 0 && <p className="mt-2 text-[10px] text-slate-400">{extracted.join(" · ")}</p>}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {aiChecks.length > 0 && (
-          <div className="mt-3 space-y-2">
-            {aiChecks.map((check) => (
-              <div key={check.message} className="flex items-start gap-2 rounded-xl border border-cyan-500/15 bg-cyan-500/[0.05] p-3 text-xs text-slate-300">
-                <Bot className="mt-0.5 size-3.5 shrink-0 text-cyan-300" />
-                <span>{check.message}</span>
-              </div>
+        {documents.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {documents.map((document) => (
+              <span key={document.id} className="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-1 text-[10px] text-slate-400">
+                {document.filename}
+              </span>
             ))}
           </div>
         )}
 
-        <div className="mt-3 grid gap-2 font-mono text-[10px] sm:grid-cols-2">
-          <ProofLine icon={Hash} label="Previous hash" value={shorten(event.previousEventHash)} />
-          <ProofLine icon={Hash} label="Event hash" value={shorten(event.eventHash, 14, 10)} accent="emerald" />
-          <ProofLine icon={KeyRound} label="Signer public key" value={shorten(event.signerPublicKey, 14, 10)} accent="cyan" />
-          <ProofLine icon={Signature} label="Ed25519 signature" value={shorten(event.signature, 14, 10)} accent="purple" />
-        </div>
-
-        {solanaCheck.valid && event.solanaProof?.explorerUrl ? (
-          <a
-            href={event.solanaProof.explorerUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3 text-xs text-emerald-300 hover:bg-emerald-500/10"
-          >
-            <span className="flex min-w-0 items-center gap-2 font-semibold">
-              <ShieldCheck className="size-3.5 shrink-0" />
-              {solanaCheck.kind === "check-di-registry"
-                ? `Check-Di Registry · Event PDA ${shorten(event.solanaProof.eventPda, 10, 8)}${isTerminal ? ` · ${event.status.toUpperCase()}` : ""}`
-                : `SPL Memo fallback · slot ${solanaCheck.slot ?? event.solanaProof.slot ?? "—"}`}
-            </span>
-            <ExternalLink className="size-3.5 shrink-0" />
+        {solanaCheck.valid && event.solanaProof?.explorerUrl && (
+          <a href={event.solanaProof.explorerUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300">
+            Xem Solana proof <ExternalLink className="size-3.5" />
           </a>
-        ) : event.solanaProof?.status === "failed" ? (
-          <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-3 text-xs text-amber-200/80">
-            Off-chain proof hợp lệ · Solana anchor chưa thành công.
-          </div>
-        ) : null}
+        )}
       </div>
     </details>
   );
 }
 
-function ProofLine({
-  icon: Icon,
-  label,
-  value,
-  accent = "slate",
-}: {
-  icon: typeof Hash;
-  label: string;
-  value: string;
-  accent?: "slate" | "emerald" | "cyan" | "purple";
-}) {
-  const accentClass = {
-    slate: "text-slate-300",
-    emerald: "text-emerald-300",
-    cyan: "text-cyan-300",
-    purple: "text-purple-300",
-  }[accent];
-
+function MiniInfo({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-slate-950/60 p-3">
-      <div className="flex items-center gap-1.5 text-slate-500">
-        <Icon className="size-3" />
-        <span>{label}</span>
-      </div>
-      <p className={`mt-1 truncate ${accentClass}`}>{value}</p>
+    <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3">
+      <p className="text-[9px] uppercase tracking-[0.15em] text-slate-600">{label}</p>
+      <p className={`mt-1 truncate text-xs text-slate-300 ${mono ? "font-mono" : ""}`}>{value}</p>
     </div>
   );
 }

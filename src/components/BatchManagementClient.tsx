@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { ManagedProductBatch } from "@/lib/db";
+import { productVisualForName } from "@/lib/product-visuals";
 import type { DocumentEvidence, TraceEvent } from "@/types/evidence";
 
 type FeePayerStatus = {
@@ -689,10 +690,10 @@ export function BatchManagementClient({
       <div className="pointer-events-none fixed inset-0 bg-grid-pattern opacity-30" />
       <div className="relative mx-auto max-w-6xl">
         <header className="flex flex-wrap items-center justify-between gap-3">
-          <a href="/" className="font-display text-lg font-black text-white">Check-Di</a>
+          <a href="/supplier" className="font-display text-lg font-black text-white">← Kho sản phẩm</a>
           <div className="flex items-center gap-2">
             <a href="/batches/new" className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/10">
-              + Tạo lô khác
+              + Sản phẩm
             </a>
             {finalized.length > 0 && (
               <a
@@ -708,13 +709,20 @@ export function BatchManagementClient({
 
         <section className="mt-5 rounded-3xl border border-white/10 bg-[#0b111c]/95 p-5 shadow-2xl sm:p-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-300">{batch.publicId}</p>
-              <h1 className="font-display mt-2 text-2xl font-extrabold text-white sm:text-3xl">{batch.productName}</h1>
-              <p className="mt-1 text-sm text-slate-400">Nguồn gốc: {batch.origin}</p>
+            <div className="flex items-center gap-4">
+              <img
+                src={productVisualForName(batch.productName).imageUrl}
+                alt={batch.productName}
+                className="size-16 rounded-2xl border border-white/10 object-cover sm:size-20"
+              />
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-300">{batch.publicId}</p>
+                <h1 className="font-display mt-1 text-2xl font-extrabold text-white sm:text-3xl">{batch.productName}</h1>
+                <p className="mt-1 text-sm text-slate-400">{batch.origin}</p>
+              </div>
             </div>
             <div className={`rounded-2xl border px-4 py-3 text-xs ${anchored.length > 0 ? "border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-100/80" : "border-amber-500/20 bg-amber-500/[0.06] text-amber-100/80"}`}>
-              <p className={`font-bold ${registryAnchored.length > 0 ? "text-emerald-300" : "text-amber-300"}`}>Check-Di Registry · Solana Devnet</p>
+              <p className={`font-bold ${registryAnchored.length > 0 ? "text-emerald-300" : "text-amber-300"}`}>Integrity proof</p>
               <p className="mt-1">
                 {registryAnchored.length > 0
                   ? `${registryAnchored.length}/${finalized.length} chặng có Event PDA · ${memoFallback.length} fallback`
@@ -726,55 +734,43 @@ export function BatchManagementClient({
           </div>
 
           <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <Stat label="Đã ký / terminal" value={`${finalized.length}`} />
-            <Stat label="Draft" value={draft ? "1" : "0"} />
-            <Stat label="Hash chain" value={finalized.length ? "Đang nối" : "Chưa bắt đầu"} />
-            <Stat label="Registry PDA" value={finalized.length ? `${registryAnchored.length}/${finalized.length}` : "Chưa có proof"} />
+            <Stat label="Đã xác nhận" value={`${finalized.length}`} />
+            <Stat label="Bản nháp" value={draft ? "1" : "0"} />
+            <Stat label="Chuỗi hash" value={finalized.length ? "Đang nối" : "Chưa có"} />
+            <Stat label="Devnet proof" value={finalized.length ? `${registryAnchored.length}/${finalized.length}` : "0"} />
           </div>
 
-          <div className="mt-3 grid gap-2 lg:grid-cols-2">
-            {feePayerStatus && (
-              <div className={`flex flex-col gap-3 rounded-2xl border p-3 sm:flex-row sm:items-center sm:justify-between ${feePayerStatus.funded ? "border-emerald-500/15 bg-emerald-500/[0.04]" : "border-amber-500/15 bg-amber-500/[0.04]"}`}>
-                <div className="min-w-0">
-                  <p className={`text-xs font-bold ${feePayerStatus.funded ? "text-emerald-300" : "text-amber-300"}`}>
-                    Fee-payer Devnet · {feePayerStatus.funded ? "đủ phí giao dịch" : "cần nạp test SOL"}
-                  </p>
-                  <p className="mt-1 truncate font-mono text-[10px] text-slate-400">{feePayerStatus.address}</p>
-                  <p className="mt-1 text-[10px] text-slate-500">
-                    Balance {feePayerStatus.balanceSol.toFixed(6)} SOL · cần tối thiểu {(feePayerStatus.minimumLamports / 1_000_000_000).toFixed(6)} SOL
-                  </p>
-                </div>
-                {!feePayerStatus.funded && (
+          {(feePayerStatus || registryProgramStatus) && (
+            <details className="mt-3 rounded-2xl border border-white/8 bg-white/[0.02]">
+              <summary className="cursor-pointer list-none px-4 py-3 text-xs font-semibold text-slate-400 hover:text-white">
+                Thông tin kỹ thuật Devnet
+              </summary>
+              <div className="grid gap-2 border-t border-white/8 p-3 lg:grid-cols-2">
+                {feePayerStatus && (
+                  <div className={`rounded-xl border p-3 ${feePayerStatus.funded ? "border-emerald-500/15 bg-emerald-500/[0.04]" : "border-amber-500/15 bg-amber-500/[0.04]"}`}>
+                    <p className={`text-xs font-bold ${feePayerStatus.funded ? "text-emerald-300" : "text-amber-300"}`}>
+                      Fee payer · {feePayerStatus.funded ? "sẵn sàng" : "cần test SOL"}
+                    </p>
+                    <p className="mt-1 truncate font-mono text-[10px] text-slate-500">{feePayerStatus.address}</p>
+                  </div>
+                )}
+                {registryProgramStatus && (
                   <a
-                    href="https://faucet.solana.com/"
+                    href={`https://explorer.solana.com/address/${encodeURIComponent(registryProgramStatus.programId)}?cluster=devnet`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-200 hover:bg-amber-500/15"
+                    className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/[0.02] p-3"
                   >
-                    Mở Devnet faucet
-                    <ExternalLink className="size-3.5" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-300">Registry · {registryProgramStatus.deployed ? "deployed" : "pending"}</p>
+                      <p className="mt-1 truncate font-mono text-[10px] text-slate-500">{registryProgramStatus.programId}</p>
+                    </div>
+                    <ExternalLink className="size-3.5 shrink-0 text-slate-500" />
                   </a>
                 )}
               </div>
-            )}
-
-            {registryProgramStatus && (
-              <a
-                href={`https://explorer.solana.com/address/${encodeURIComponent(registryProgramStatus.programId)}?cluster=devnet`}
-                target="_blank"
-                rel="noreferrer"
-                className={`flex items-center justify-between gap-3 rounded-2xl border p-3 ${registryProgramStatus.deployed ? "border-emerald-500/15 bg-emerald-500/[0.04]" : "border-slate-700/60 bg-slate-950/35"}`}
-              >
-                <div className="min-w-0">
-                  <p className={`text-xs font-bold ${registryProgramStatus.deployed ? "text-emerald-300" : "text-slate-300"}`}>
-                    check_di_registry · {registryProgramStatus.deployed ? "deployed" : "source ready · chưa deploy"}
-                  </p>
-                  <p className="mt-1 truncate font-mono text-[10px] text-slate-500">{registryProgramStatus.programId}</p>
-                </div>
-                <ExternalLink className="size-3.5 shrink-0 text-slate-500" />
-              </a>
-            )}
-          </div>
+            </details>
+          )}
         </section>
 
         <div className="mt-5 grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
@@ -816,9 +812,9 @@ export function BatchManagementClient({
                 <div className="flex size-10 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/10 text-amber-300">
                   <Clock3 className="size-4" />
                 </div>
-                <h2 className="font-display mt-4 text-lg font-bold text-white">Có chặng đang chờ xác nhận</h2>
-                <p className="mt-2 text-sm leading-relaxed text-slate-400">
-                  Kiểm tra AI warning và dữ liệu chặng bên trái. Khi xác nhận, Check-Di sinh canonical event hash; organization đã đăng nhập sẽ ký bằng Phantom, còn legacy demo dùng signer fallback.
+                <h2 className="font-display mt-4 text-lg font-bold text-white">Chặng đang chờ ký</h2>
+                <p className="mt-2 text-sm text-slate-400">
+                  Kiểm tra chứng từ và cảnh báo trước khi ký.
                 </p>
                 <DocumentUploadPanel
                   event={draft}

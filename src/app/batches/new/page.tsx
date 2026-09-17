@@ -1,19 +1,24 @@
 "use client";
 
-import { ArrowLeft, Loader2, PackagePlus, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Loader2, PackagePlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+
+import { productVisualForName } from "@/lib/product-visuals";
 
 function messageFor(error: string) {
   if (error === "public_id_exists") return "Mã lô này đã tồn tại.";
   if (error === "invalid_public_id") return "Mã lô chưa hợp lệ.";
-  return "Không thể tạo lô. Kiểm tra lại dữ liệu và thử lại.";
+  if (error === "unauthorized") return "Bạn cần đăng nhập nhà cung cấp.";
+  return "Không thể tạo lô. Vui lòng thử lại.";
 }
 
 export default function NewBatchPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [productName, setProductName] = useState("Sầu riêng Ri6");
+  const visual = productVisualForName(productName);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -48,71 +53,69 @@ export default function NewBatchPage() {
 
   return (
     <main className="min-h-screen bg-[#07090e] px-4 py-6 text-slate-100 sm:px-6 sm:py-10">
-      <div className="pointer-events-none fixed inset-0 bg-grid-pattern opacity-30" />
-      <div className="relative mx-auto max-w-2xl">
-        <a href="/" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white">
+      <div className="pointer-events-none fixed inset-0 bg-grid-pattern opacity-20" />
+      <div className="relative mx-auto max-w-5xl">
+        <a href="/supplier" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white">
           <ArrowLeft className="size-4" />
-          Check-Di
+          Kho sản phẩm
         </a>
 
-        <section className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-[#0b111c]/95 shadow-2xl shadow-black/40">
-          <div className="border-b border-white/10 p-5 sm:p-7">
+        <div className="mt-6 grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
+          <section className="relative min-h-[420px] overflow-hidden rounded-3xl border border-white/10 bg-[#0b111c]">
+            <img src={visual.imageUrl} alt={productName || "Sản phẩm"} className="absolute inset-0 size-full object-cover" />
+            <div className={`absolute inset-0 bg-gradient-to-t ${visual.accent} via-black/10 to-black/10`} />
+            <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+              <span className="rounded-full border border-white/15 bg-black/35 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur">
+                {visual.label}
+              </span>
+              <h2 className="font-display mt-3 text-3xl font-extrabold text-white">{productName || "Tên sản phẩm"}</h2>
+              <p className="mt-1 text-sm text-slate-300">Ảnh đại diện được chọn tự động theo loại sản phẩm.</p>
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-white/10 bg-[#0b111c]/95 p-5 shadow-2xl shadow-black/25 sm:p-7">
             <div className="flex size-11 items-center justify-center rounded-2xl border border-cyan-500/25 bg-cyan-500/10 text-cyan-300">
               <PackagePlus className="size-5" />
             </div>
-            <h1 className="font-display mt-4 text-2xl font-extrabold text-white sm:text-3xl">Tạo lô sản phẩm</h1>
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-400">
-              Tạo batch trước, sau đó từng đơn vị mới thêm và xác nhận chặng của mình. Mã hash chỉ sinh khi chặng được xác nhận.
-            </p>
-          </div>
+            <h1 className="font-display mt-4 text-2xl font-extrabold text-white sm:text-3xl">Tạo sản phẩm</h1>
+            <p className="mt-2 text-sm text-slate-400">Mỗi sản phẩm tương ứng một lô có QR và hành trình riêng.</p>
 
-          <form onSubmit={onSubmit} className="space-y-5 p-5 sm:p-7">
-            <Field label="Tên sản phẩm" name="productName" placeholder="Ví dụ: Sầu riêng Ri6" required />
-            <Field label="Nguồn gốc ban đầu" name="origin" placeholder="Ví dụ: Krông Pắc, Đắk Lắk" required />
-            <div>
-              <label htmlFor="publicId" className="text-xs font-semibold text-slate-300">Mã lô công khai <span className="text-slate-500">(không bắt buộc)</span></label>
-              <input
-                id="publicId"
-                name="publicId"
-                placeholder="Ví dụ: DUR-260830-02"
-                className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 font-mono text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-500/50"
-              />
-              <p className="mt-1.5 text-[11px] text-slate-500">Để trống thì Check-Di tự sinh mã.</p>
-            </div>
+            <form onSubmit={onSubmit} className="mt-6 space-y-5">
+              <div>
+                <label htmlFor="productName" className="text-xs font-semibold text-slate-300">Tên sản phẩm</label>
+                <input
+                  id="productName"
+                  name="productName"
+                  required
+                  value={productName}
+                  onChange={(event) => setProductName(event.target.value)}
+                  placeholder="Sầu riêng Ri6"
+                  className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-500/50"
+                />
+              </div>
 
-            <div className="flex items-start gap-2 rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] p-3 text-xs leading-relaxed text-amber-100/80">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-amber-300" />
-              Dữ liệu hiện lưu bền trên local server cho prototype. Chữ ký dùng demo organization key; chưa phải key production và chưa ghi Solana Devnet.
-            </div>
+              <Field label="Nguồn gốc" name="origin" placeholder="Krông Pắc, Đắk Lắk" required />
+              <Field label="Mã lô công khai" name="publicId" placeholder="DUR-260830-02 · để trống sẽ tự sinh" mono />
 
-            {error && <p className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">{error}</p>}
+              {error && <p className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">{error}</p>}
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {submitting ? <Loader2 className="size-4 animate-spin" /> : <PackagePlus className="size-4" />}
-              {submitting ? "Đang tạo lô..." : "Tạo lô và quản lý hành trình"}
-            </button>
-          </form>
-        </section>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-300 disabled:opacity-60"
+              >
+                {submitting ? <Loader2 className="size-4 animate-spin" /> : <PackagePlus className="size-4" />}
+                {submitting ? "Đang tạo..." : "Tạo và thêm hành trình"}
+              </button>
+            </form>
+          </section>
+        </div>
       </div>
     </main>
   );
 }
 
-function Field({
-  label,
-  name,
-  placeholder,
-  required,
-}: {
-  label: string;
-  name: string;
-  placeholder: string;
-  required?: boolean;
-}) {
+function Field({ label, name, placeholder, required, mono }: { label: string; name: string; placeholder: string; required?: boolean; mono?: boolean }) {
   return (
     <div>
       <label htmlFor={name} className="text-xs font-semibold text-slate-300">{label}</label>
@@ -121,7 +124,7 @@ function Field({
         name={name}
         required={required}
         placeholder={placeholder}
-        className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-500/50"
+        className={`mt-2 w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-500/50 ${mono ? "font-mono" : ""}`}
       />
     </div>
   );
