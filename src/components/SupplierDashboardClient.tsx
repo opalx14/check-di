@@ -13,7 +13,40 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import { TourGuide, type TourStep } from "@/components/TourGuide";
 import { productVisualForName } from "@/lib/product-visuals";
+
+const SUPPLIER_DASHBOARD_TOUR: TourStep[] = [
+  {
+    target: '[data-tour="supplier-wallet-status"]',
+    title: "Ví tổ chức Phantom",
+    description: "Kiểm tra ví Phantom của tổ chức. Ví này dùng để xác nhận từng chặng chuỗi cung ứng và gửi transaction ghi nhận Event PDA lên Solana Devnet.",
+    actionLabel: "Mở liên kết ví Phantom",
+    actionHref: "/organization/wallet?tour=1",
+  },
+  {
+    target: '[data-tour="supplier-metrics"]',
+    title: "Chỉ số tổng quan",
+    description: "Thống kê thời gian thực: số sản phẩm trong kho, số lô đã có proof Solana Devnet, và tình trạng kết nối ví doanh nghiệp.",
+  },
+  {
+    target: '[data-tour="supplier-next-action"]',
+    title: "Hành động đề xuất kế tiếp",
+    description: "Hệ thống tự động nhận diện bước tiếp theo trong quy trình: liên kết ví, tạo sản phẩm, chụp ảnh sản phẩm nguồn hay thêm chặng mới.",
+  },
+  {
+    target: '[data-tour="supplier-create-btn"]',
+    title: "Tạo sản phẩm / lô hàng mới",
+    description: "Khởi tạo một lô hàng mới trong kho với danh mục hơn 20 loại nông sản, xuất xứ vùng trồng và mã lô riêng.",
+    actionLabel: "Tạo sản phẩm mới →",
+    actionHref: "/batches/new?tour=1",
+  },
+  {
+    target: '[data-tour="supplier-inventory"]',
+    title: "Kho sản phẩm & Hành trình",
+    description: "Mỗi lô thể hiện ảnh sản phẩm thực tế, tiến độ chặng, TXID Solana Devnet, nút Quản lý chặng và trang QR công khai cho người tiêu dùng.",
+  },
+];
 
 type Batch = {
   id: string;
@@ -131,7 +164,7 @@ export function SupplierDashboardClient() {
     <main className="min-h-screen bg-[#07090e] text-slate-100">
       <div className="pointer-events-none fixed inset-0 bg-grid-pattern opacity-20" />
       <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <header className="flex flex-col gap-4 border-b border-white/8 pb-6 sm:flex-row sm:items-center sm:justify-between">
+        <header className="flex flex-col gap-4 border-b border-white/8 pb-6 sm:flex-row sm:items-center sm:justify-between" data-tour="supplier-header">
           <div>
             <a href="/" className="text-sm font-bold text-cyan-300">Check-Di</a>
             <h1 className="font-display mt-2 text-3xl font-extrabold tracking-tight text-white">Kho sản phẩm</h1>
@@ -140,6 +173,7 @@ export function SupplierDashboardClient() {
           <div className="flex flex-wrap items-center gap-2">
             <a
               href="/organization/wallet"
+              data-tour="supplier-wallet-status"
               className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold ${
                 walletLinked
                   ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
@@ -151,6 +185,7 @@ export function SupplierDashboardClient() {
             </a>
             <a
               href={walletLinked ? "/batches/new" : "/organization/wallet"}
+              data-tour="supplier-create-btn"
               className="inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2 text-xs font-bold text-slate-950"
             >
               <Plus className="size-3.5" />
@@ -174,7 +209,7 @@ export function SupplierDashboardClient() {
           </div>
         )}
 
-        <section className="mt-6 grid gap-3 sm:grid-cols-3">
+        <section className="mt-6 grid gap-3 sm:grid-cols-3" data-tour="supplier-metrics">
           <Metric label="Sản phẩm" value={String(stats.total)} />
           <Metric label="Có Devnet proof" value={String(stats.verified)} />
           <Metric label="Ví tổ chức" value={walletLinked ? "Đã nối" : "Chưa nối"} />
@@ -182,6 +217,7 @@ export function SupplierDashboardClient() {
 
         <a
           href={nextAction.href}
+          data-tour="supplier-next-action"
           className="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-cyan-500/15 bg-cyan-500/[0.05] px-4 py-3 transition hover:bg-cyan-500/[0.08]"
         >
           <div className="min-w-0">
@@ -192,7 +228,7 @@ export function SupplierDashboardClient() {
           <ArrowRight className="size-4 shrink-0 text-cyan-300" />
         </a>
 
-        <section className="mt-8">
+        <section className="mt-8" data-tour="supplier-inventory">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-300">Inventory</p>
@@ -216,6 +252,13 @@ export function SupplierDashboardClient() {
           )}
         </section>
       </div>
+
+      <TourGuide
+        tourKey="supplier_dashboard"
+        flowTitle="Hướng dẫn kho sản phẩm"
+        role="supplier"
+        steps={SUPPLIER_DASHBOARD_TOUR}
+      />
     </main>
   );
 }

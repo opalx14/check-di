@@ -22,6 +22,7 @@ import { Transaction } from "@solana/web3.js";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { TourGuide, type TourStep } from "@/components/TourGuide";
 import type { ManagedProductBatch } from "@/lib/db";
 import { productVisualForName } from "@/lib/product-visuals";
 import type { DocumentEvidence, TraceEvent } from "@/types/evidence";
@@ -68,6 +69,48 @@ const stageLabels: Record<TraceEvent["stage"], string> = {
   logistics: "Vận chuyển / kho",
   retail: "Điểm bán",
 };
+
+function buildBatchManageTourSteps(publicId: string): TourStep[] {
+  return [
+    {
+      target: '[data-tour="batch-management-header"]',
+      title: "Tổng quan lô hàng & Mạng Devnet",
+      description: "Mã lô công khai, ảnh sản phẩm, số chặng đã xác nhận và trạng thái chương trình Anchor check_di_registry trên Solana Devnet.",
+    },
+    {
+      target: '[data-tour="batch-journey-stages"]',
+      title: "5 chặng hành trình",
+      description: "Chuỗi cung ứng gồm 5 chặng: Thu hoạch/sản xuất → Đóng gói → Kiểm định → Vận chuyển → Điểm bán. Mỗi chặng liên kết bằng SHA-256 eventHash.",
+    },
+    {
+      target: '[data-tour="batch-photo-capture"]',
+      title: "Chụp ảnh sản phẩm thật tại nguồn",
+      description: "Ở chặng đầu, bắt buộc chụp hoặc tải ảnh nông sản thật. Khi còn bản nháp có thể chụp lại hoặc xóa; sau khi ký Phantom, SHA-256 ảnh được khóa vào lịch sử.",
+    },
+    {
+      target: '[data-tour="batch-documents-section"]',
+      title: "Chứng từ số & AI Demo Check",
+      description: "Đính kèm chứng từ (PDF/ảnh). AI demo check tự động đối chiếu số lượng, mã lô, ngày tháng và cảnh báo bất thường trước khi ký.",
+    },
+    {
+      target: '[data-tour="batch-confirm-action"]',
+      title: "Ký Phantom & Ghi nhận Solana Devnet",
+      description: "Tổ chức dùng Phantom ký canonical eventHash, sau đó ký Registry transaction để tạo Event PDA và nhận TXID thật trên Solana Explorer.",
+    },
+    {
+      target: '[data-tour="batch-solana-pda"]',
+      title: "Minh chứng On-Chain & Explorer",
+      description: "Các chặng đã xác nhận hiển thị Event PDA, organization signer, TXID và liên kết mở trực tiếp trên Solana Explorer.",
+    },
+    {
+      target: '[data-tour="batch-lifecycle-section"]',
+      title: "Quản lý vòng đời (Revoke / Supersede)",
+      description: "Khi cần hiệu chỉnh, thực hiện chuyển trạng thái on-chain. Lịch sử cũ được bảo toàn trong audit chain, sự kiện mới nối tiếp hash của chặng trước.",
+      actionLabel: "Xem trang QR người mua →",
+      actionHref: `/verify/${encodeURIComponent(publicId)}`,
+    },
+  ];
+}
 
 function short(value?: string, left = 12, right = 8) {
   if (!value) return "—";
@@ -778,7 +821,7 @@ export function BatchManagementClient({
           </div>
         </header>
 
-        <section className="mt-5 rounded-3xl border border-white/10 bg-[#0b111c]/95 p-5 shadow-2xl sm:p-7">
+        <section className="mt-5 rounded-3xl border border-white/10 bg-[#0b111c]/95 p-5 shadow-2xl sm:p-7" data-tour="batch-management-header">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-center gap-4">
               <img
@@ -849,7 +892,7 @@ export function BatchManagementClient({
         </section>
 
         <div className="mt-5 grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-          <section className="rounded-3xl border border-white/10 bg-[#0b111c]/95 p-5 sm:p-6">
+          <section className="rounded-3xl border border-white/10 bg-[#0b111c]/95 p-5 sm:p-6" data-tour="batch-journey-stages">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-300">Hành trình</p>
@@ -881,7 +924,7 @@ export function BatchManagementClient({
             )}
           </section>
 
-          <section className="rounded-3xl border border-white/10 bg-[#0b111c]/95 p-5 sm:p-6">
+          <section className="rounded-3xl border border-white/10 bg-[#0b111c]/95 p-5 sm:p-6" data-tour="batch-photo-capture">
             {draft ? (
               <div>
                 <div className="flex size-10 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/10 text-amber-300">
@@ -891,18 +934,21 @@ export function BatchManagementClient({
                 <p className="mt-2 text-sm text-slate-400">
                   Kiểm tra chứng từ và cảnh báo trước khi ký.
                 </p>
-                <DocumentUploadPanel
-                  event={draft}
-                  uploading={uploadingDocument}
-                  reanalyzingDocumentId={reanalyzingDocumentId}
-                  removingDocumentId={removingDocumentId}
-                  onSubmit={uploadDocument}
-                  onReanalyze={reanalyzeDocument}
-                  onRemove={removeDocument}
-                />
+                <div data-tour="batch-documents-section">
+                  <DocumentUploadPanel
+                    event={draft}
+                    uploading={uploadingDocument}
+                    reanalyzingDocumentId={reanalyzingDocumentId}
+                    removingDocumentId={removingDocumentId}
+                    onSubmit={uploadDocument}
+                    onReanalyze={reanalyzeDocument}
+                    onRemove={removeDocument}
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => confirmEvent(draft.id)}
+                  data-tour="batch-confirm-action"
                   disabled={
                     confirmingId === draft.id ||
                     (draft.stage === "production" && !draftHasProductPhoto)
@@ -968,6 +1014,13 @@ export function BatchManagementClient({
           }}
         />
       )}
+
+      <TourGuide
+        tourKey="supplier_batch_manage"
+        flowTitle="Hướng dẫn quản lý lô"
+        role="supplier"
+        steps={buildBatchManageTourSteps(batch.publicId)}
+      />
     </main>
   );
 }
@@ -1355,6 +1408,7 @@ function EventCard({
               href={event.solanaProof.explorerUrl}
               target="_blank"
               rel="noreferrer"
+              data-tour="batch-solana-pda"
               className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2.5 text-xs font-bold text-emerald-300 hover:bg-emerald-500/15"
             >
               <ShieldCheck className="size-3.5" />
@@ -1368,6 +1422,7 @@ function EventCard({
               type="button"
               onClick={onAnchor}
               disabled={anchoring}
+              data-tour="batch-solana-pda"
               className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-500/25 bg-cyan-500/10 px-3 py-2.5 text-xs font-bold text-cyan-300 hover:bg-cyan-500/15 disabled:opacity-50"
             >
               {anchoring ? <Loader2 className="size-3.5 animate-spin" /> : <ShieldCheck className="size-3.5" />}
@@ -1378,7 +1433,7 @@ function EventCard({
           {event.status === "confirmed" &&
             event.solanaProof?.status === "confirmed" &&
             event.solanaProof.kind === "check-di-registry" && (
-              <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="mt-2 grid grid-cols-2 gap-2" data-tour="batch-lifecycle-section">
                 <button
                   type="button"
                   onClick={() => onLifecycle("revoked")}

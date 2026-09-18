@@ -241,6 +241,36 @@ canonical payload + previousEventHash
 - Đã thêm dependency-free `src/lib/creditcoin/proof-builder.ts` + `bun run creditcoin:proof -- <txHash> [--height=<block>]`: gọi current proof-by-tx API, poll attested height khi cần, validate chainKey/txHash/Merkle/continuity fields và map sang `CheckDiAttestedRegistry.ProofInput`.
 - `docs/CHECK-DI-CREDITCOIN-ATTESTCOIN.md` khóa truth gate: chưa được gọi `Verified` cho tới khi có source tx thật, Attestcoin proof thật, CC3 execute tx thật và read-back `eventHash` khớp.
 
+## Phase 12 — Tour guides on real pages, updated submission screenshots & submission sync
+
+- **Tour hướng dẫn tương tác trên các trang thật**: Đã triển khai engine `TourGuide.tsx` độc lập, non-blocking, responsive desktop/mobile, bám sát DOM thực tế trên toàn bộ các route cốt lõi:
+  - `/login`: Hướng dẫn tài khoản demo một chạm, form đăng nhập doanh nghiệp.
+  - `/supplier`: Thẻ trạng thái ví Phantom của tổ chức, chỉ số thời gian thực, hành động đề xuất kế tiếp, danh mục kho sản phẩm nông sản.
+  - `/organization/wallet`: Hướng dẫn challenge `signMessage` liên kết ví Phantom doanh nghiệp với tổ chức.
+  - `/batches/new`: Trực quan hóa hình ảnh đại diện nông sản tự động, bộ chọn danh mục hơn 20 loại nông sản Việt Nam, form khởi tạo lô.
+  - `/batches/[id]`: Quản lý chặng, tính năng chụp/khóa ảnh nguồn, tải chứng từ số & mã băm SHA-256, kết quả AI demo extraction (Matched / Warning), ký xác nhận Ed25519 & ký Registry transaction (Event PDA), và quản lý vòng đời minh bạch (`Revoke` / `Supersede`).
+  - `/scan`: Chế độ kép quét QR bằng camera hoặc nhập mã lô công khai trực tiếp.
+  - `/verify/[publicId]`: Thẻ sản phẩm với ảnh nguồn đã khóa SHA-256, 4 tiêu chí toàn vẹn độc lập, timeline 5 chặng đã xác nhận với tick xanh verified, và liên kết Event PDA trên Solana Devnet Explorer.
+- **Tiêu chuẩn TourGuide**:
+  - Không che khuất CTA chính (tự động tính toán vị trí phía trên/phía dưới target trên desktop, dock cố định top/bottom trên mobile).
+  - Có đầy đủ các nút Tiếp theo / Quay lại / Bỏ qua / Hoàn tất và nút Action dẫn trực tiếp tới bước tiếp theo của luồng nghiệp vụ.
+  - Lưu trạng thái hoàn thành vào `localStorage`, có nút kích hoạt lại `✨ Hướng dẫn ...` dạng floating pill thanh lịch ở góc dưới màn hình.
+- **Bộ 6 ảnh chụp màn hình Retina lossless mới cho submission Corelia**:
+  - `01-check-di-landing-overview.png` (1.8 MB): Landing mới với Hero Dưa hấu Hắc Mỹ Nhân (`WM-260917-01`), 5 chặng truy xuất, badge UniHackFest 2026.
+  - `02-check-di-supplier-inventory.png` (623 KB): Kho sản phẩm nhà cung cấp, trạng thái ví Phantom doanh nghiệp đã nối (`FHAq...ULsF`), thẻ bước tiếp theo và danh mục lô hàng.
+  - `03-check-di-batch-creation-source.png` (1.9 MB): Khung tạo lô hàng mới với visual preview lớn, bộ chọn danh mục 26 loại trái cây/nông sản Việt Nam.
+  - `04-check-di-document-ai-check.png` (373 KB): Quản lý chặng, chứng từ số, mã băm SHA-256, nhãn DEMO EXTRACTION, kết quả đối chiếu AI (Matched / Warning), và form thêm chặng.
+  - `05-check-di-consumer-verification.png` (1.6 MB): Trải nghiệm người mua với tem QR, ảnh chụp nguồn thực tế, timeline 5 chặng verified và liên kết Solana Devnet Explorer.
+  - `06-check-di-judge-solana-proof.png` (375 KB): Bảng điều khiển Giám khảo (`/judge`) quy tụ 2 track, live readiness badge, Program ID Anchor (`9sNDit...`), Event PDA và chuỗi hash canonical SHA-256.
+  - Đã cập nhật `submission/corelia/screenshots/README.md` với mô tả kỹ thuật chi tiết từng ảnh.
+- **Đồng bộ nội dung submission UniHackfest với code thật**:
+  - Cập nhật `docs/competition/demo-script.md`, `pitch-outline.md`, `product-business.md`, `technical-build.md` bám sát 100% code thực tế: hero dưa hấu Hắc Mỹ Nhân + catalog 26 loại nông sản, cơ chế khóa cứng ảnh nguồn bằng SHA-256, AI demo extraction minh bạch (không claim OCR/LLM quá đà), kiến trúc hai làn dữ liệu một nguồn duy nhất, và Anchor Program live trên Devnet.
+- **Kiểm thử & Triển khai**:
+  - `bun test`: 49/49 passed across 13 test suites (167 assertions).
+  - `bun run typecheck`: 0 errors.
+  - `bun run build`: Compile thành công toàn bộ 16 routes trong < 1s.
+  - Deploy production VPS `/opt/check-di` (`https://check-di.promptmarketcap.net`) và hoàn thành browser-smoke production tự động qua Playwright đạt 100%.
+
 ## Not implemented yet
 
 - Production vẫn chưa bật `CHECK_DI_AUTH_MODE=required` mặc định. Local/demo hiện dùng `optional`; tài khoản producer demo seed nội bộ chỉ phục vụ trải nghiệm nhanh, còn production identity thật vẫn theo Supabase Auth + organization membership.
@@ -272,3 +302,4 @@ Solana Devnet
   -> Batch PDA / Event PDA
   -> lifecycle status proof
 ```
+

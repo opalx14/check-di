@@ -104,7 +104,7 @@ export function GettingStartedSection() {
           title: vi ? "Phantom ký và tạo TXID thật" : "Phantom signs and creates a real TXID",
           text: vi ? "Phantom ký eventHash rồi ký Registry transaction trên Solana Devnet; QR mở hành trình cho người mua." : "Phantom signs the event hash and Registry transaction on Solana Devnet, then the QR becomes public.",
           icon: Signature,
-          finalHref: "/supplier",
+          finalHref: "/supplier?tour=1",
         },
       ];
     }
@@ -122,7 +122,7 @@ export function GettingStartedSection() {
           title: vi ? "Xem toàn bộ hành trình" : "View the full journey",
           text: vi ? "Timeline cho biết nguồn gốc, đơn vị xác nhận, chứng từ và proof." : "The timeline shows origin, confirming parties, documents and proof.",
           icon: ShoppingBag,
-          finalHref: "/scan",
+          finalHref: "/scan?tour=1",
         },
       ];
     }

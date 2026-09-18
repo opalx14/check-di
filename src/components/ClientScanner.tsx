@@ -12,11 +12,32 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { TourGuide, type TourStep } from "@/components/TourGuide";
 import { parseCheckDiScanValue } from "@/lib/client-scan";
 import {
   PRODUCT_CATALOG,
   PRODUCT_VISUAL_EXAMPLES,
 } from "@/lib/product-visuals";
+
+const SCAN_TOUR_STEPS: TourStep[] = [
+  {
+    target: '[data-tour="scan-camera-btn"]',
+    title: "Quét QR bằng Camera",
+    description: "Nhấn 'Mở camera quét QR' để quét trực tiếp tem dán trên bao bì sản phẩm (tự động nhận diện qua BarcodeDetector trên trình duyệt).",
+  },
+  {
+    target: '[data-tour="scan-input-form"]',
+    title: "Tra cứu bằng mã định danh công khai",
+    description: "Bạn có thể nhập trực tiếp mã lô (ví dụ DUR-260830-01) để xem ngay báo cáo hành trình mà không cần bật camera.",
+  },
+  {
+    target: '[data-tour="scan-sample-gallery"]',
+    title: "Lô hàng mẫu thực tế",
+    description: "Nhấn vào các sản phẩm mẫu có sẵn để trải nghiệm đầy đủ giao diện xác thực người tiêu dùng với timeline 5 chặng, AI check và bằng chứng Solana Devnet.",
+    actionLabel: "Mở lô mẫu sầu riêng Ri6 →",
+    actionHref: "/verify/DUR-260830-01?tour=1",
+  },
+];
 
 type Detector = {
   detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string }>>;
@@ -142,6 +163,7 @@ export function ClientScanner() {
               <button
                 type="button"
                 onClick={startCamera}
+                data-tour="scan-camera-btn"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-5 py-4 text-sm font-bold text-slate-950"
               >
                 <Camera className="size-4" />
@@ -166,6 +188,7 @@ export function ClientScanner() {
                   event.preventDefault();
                   openPublicId(code);
                 }}
+                data-tour="scan-input-form"
                 className="flex flex-col gap-2 sm:flex-row"
               >
                 <div className="relative flex-1">
@@ -186,7 +209,7 @@ export function ClientScanner() {
           )}
         </section>
 
-        <section className="mx-auto mt-10 max-w-5xl">
+        <section className="mx-auto mt-10 max-w-5xl" data-tour="scan-sample-gallery">
           <div className="flex items-center gap-2 text-emerald-300">
             <ShieldCheck className="size-4" />
             <p className="font-mono text-[10px] uppercase tracking-[0.18em]">Sản phẩm có thể truy xuất</p>
@@ -225,6 +248,13 @@ export function ClientScanner() {
           </div>
         </section>
       </div>
+
+      <TourGuide
+        tourKey="consumer_scan"
+        flowTitle="Hướng dẫn quét QR"
+        role="consumer"
+        steps={SCAN_TOUR_STEPS}
+      />
     </main>
   );
 }

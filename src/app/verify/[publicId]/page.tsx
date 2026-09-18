@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import { ConsumerVerifyTourGuide } from "@/components/ConsumerVerifyTourGuide";
 import { batchRepository } from "@/lib/db";
 import { productVisualForName } from "@/lib/product-visuals";
 import {
@@ -75,7 +76,7 @@ export default async function VerifyBatchPage({ params }: { params: Promise<{ pu
           </a>
         </header>
 
-        <section className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-[#0b111c] shadow-2xl shadow-black/25">
+        <section className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-[#0b111c] shadow-2xl shadow-black/25" data-tour="verify-product-card">
           <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
             <div className="relative min-h-[320px] overflow-hidden lg:min-h-[420px]">
               <img
@@ -105,7 +106,7 @@ export default async function VerifyBatchPage({ params }: { params: Promise<{ pu
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-2 sm:grid-cols-4">
+              <div className="mt-6 grid gap-2 sm:grid-cols-4" data-tour="verify-status-chips">
                 <StatusChip
                   icon={batch.chainVerification.valid ? ShieldCheck : ShieldAlert}
                   label={batch.chainVerification.valid ? "Chuỗi hợp lệ" : "Cần kiểm tra"}
@@ -116,7 +117,7 @@ export default async function VerifyBatchPage({ params }: { params: Promise<{ pu
                 <StatusChip icon={CheckCircle2} label={hasSignedProductPhoto ? "Ảnh nguồn đã ký" : "Chưa có ảnh ký"} good={hasSignedProductPhoto} />
               </div>
 
-              <div className="mt-7 border-t border-white/8 pt-5">
+              <div className="mt-7 border-t border-white/8 pt-5" data-tour="verify-journey-timeline">
                 <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">Hành trình</p>
                 <div className="mt-4 flex items-start justify-between gap-1">
                   {batch.events.map((event, index) => {
@@ -147,13 +148,15 @@ export default async function VerifyBatchPage({ params }: { params: Promise<{ pu
             <span className="text-[10px] text-slate-500">Nhấn từng chặng để xem proof</span>
           </div>
 
-          <div className="mt-4 space-y-2">
+          <div className="mt-4 space-y-2" data-tour="verify-event-cards">
             {batch.events.map((event, index) => (
               <TraceEventCard key={event.id} event={event} index={index} solanaCheck={solanaChecks[index]} />
             ))}
           </div>
         </section>
       </div>
+
+      <ConsumerVerifyTourGuide />
     </main>
   );
 }

@@ -16,6 +16,32 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { CheckDiOrganizationMembership } from "@/lib/auth/server";
 import { CHECK_DI_REGISTRY_PROGRAM_ID } from "@/lib/solana/config";
+import { TourGuide, type TourStep } from "@/components/TourGuide";
+
+const WALLET_TOUR_STEPS: TourStep[] = [
+  {
+    target: '[data-tour="wallet-network-info"]',
+    title: "Kết nối Solana Devnet & Anchor Registry",
+    description: "Check-Di sử dụng Anchor program check_di_registry deploy trực tiếp trên Solana Devnet để tạo PDA và bảo đảm tính toàn vẹn chuỗi sự kiện.",
+  },
+  {
+    target: '[data-tour="wallet-org-select"]',
+    title: "Chọn tổ chức quản lý",
+    description: "Tài khoản sở hữu có thể liên kết ví Phantom riêng biệt cho từng doanh nghiệp để phân định rõ trách nhiệm pháp lý khi ký chặng.",
+  },
+  {
+    target: '[data-tour="wallet-connect-action"]',
+    title: "Liên kết & Ký xác minh ví",
+    description: "Nhấn kết nối Phantom và ký thông điệp challenge để chứng minh bạn nắm giữ private key ví tổ chức. Sau khi xác minh, địa chỉ ví được lưu an toàn.",
+  },
+  {
+    target: '[data-tour="wallet-security-notice"]',
+    title: "Cam kết an toàn mật mã",
+    description: "Thử thách ký chỉ sử dụng chữ ký số Ed25519; hoàn toàn không gửi SOL, không trừ phí giao dịch và không ủy thác tài sản.",
+    actionLabel: "Tiếp tục tạo sản phẩm mới →",
+    actionHref: "/batches/new?tour=1",
+  },
+];
 
 type PhantomProvider = {
   isPhantom?: boolean;
@@ -249,7 +275,7 @@ export default function OrganizationWalletPage() {
             </p>
 
             {/* Network & Program info badges */}
-            <div className="mt-4 flex flex-wrap items-center gap-2 pt-1 text-[11px]">
+            <div className="mt-4 flex flex-wrap items-center gap-2 pt-1 text-[11px]" data-tour="wallet-network-info">
               <div className="rounded-lg border border-white/5 bg-slate-950/60 px-2.5 py-1 text-slate-400">
                 Network: <span className="font-semibold text-emerald-300">Solana Devnet</span>
               </div>
@@ -280,7 +306,7 @@ export default function OrganizationWalletPage() {
               </div>
             ) : (
               <>
-                <label className="block text-xs font-semibold text-slate-300">
+                <label className="block text-xs font-semibold text-slate-300" data-tour="wallet-org-select">
                   Organization
                   <select
                     value={organizationId}
@@ -319,7 +345,7 @@ export default function OrganizationWalletPage() {
 
                 {/* State 4: Verified */}
                 {selected?.walletPublicKey ? (
-                  <div className="space-y-4">
+                  <div className="space-y-4" data-tour="wallet-connect-action">
                     <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.05] p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-xs font-bold text-emerald-300">
@@ -387,7 +413,7 @@ export default function OrganizationWalletPage() {
                   </div>
                 ) : (
                   /* State 2 & 3: Not verified */
-                  <div className="space-y-4">
+                  <div className="space-y-4" data-tour="wallet-connect-action">
                     <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Trạng thái ví</p>
                       <p className="mt-1 text-sm text-slate-300">
@@ -427,7 +453,7 @@ export default function OrganizationWalletPage() {
                 )}
 
                 {/* Prominent Security Notice */}
-                <div className="flex items-start gap-2.5 rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.05] p-3.5 text-xs leading-relaxed text-cyan-100/90">
+                <div className="flex items-start gap-2.5 rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.05] p-3.5 text-xs leading-relaxed text-cyan-100/90" data-tour="wallet-security-notice">
                   <Info className="mt-0.5 size-4 shrink-0 text-cyan-400" />
                   <div>
                     <p className="font-bold text-cyan-300">Cảnh báo an toàn:</p>
@@ -457,6 +483,13 @@ export default function OrganizationWalletPage() {
           </div>
         </section>
       </div>
+
+      <TourGuide
+        tourKey="supplier_wallet"
+        flowTitle="Hướng dẫn ví Phantom"
+        role="supplier"
+        steps={WALLET_TOUR_STEPS}
+      />
     </main>
   );
 }
