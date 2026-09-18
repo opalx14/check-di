@@ -1485,9 +1485,36 @@ function EventCard({
       <p className="mt-3 text-xs leading-relaxed text-slate-300">{event.summary}</p>
 
       {(event.aiValidations ?? []).map((validation) => (
-        <div key={validation.message} className={`mt-3 flex items-start gap-2 rounded-xl border p-2.5 text-xs ${validation.status === "matched" ? "border-cyan-500/15 bg-cyan-500/[0.05] text-slate-300" : "border-amber-500/20 bg-amber-500/[0.06] text-amber-100/80"}`}>
-          {validation.status === "matched" ? <Bot className="mt-0.5 size-3.5 shrink-0 text-cyan-300" /> : <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-300" />}
-          {validation.message}
+        <div key={validation.message} className={`mt-3 rounded-xl border p-2.5 text-xs ${validation.status === "matched" ? "border-cyan-500/15 bg-cyan-500/[0.05] text-slate-300" : "border-amber-500/20 bg-amber-500/[0.06] text-amber-100/80"}`}>
+          <div className="flex items-start gap-2">
+            {validation.status === "matched" ? <Bot className="mt-0.5 size-3.5 shrink-0 text-cyan-300" /> : <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-300" />}
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span>{validation.message}</span>
+                {validation.severity && (
+                  <span className="rounded-full border border-current/20 px-1.5 py-0.5 font-mono text-[9px] font-bold">
+                    {validation.severity}
+                  </span>
+                )}
+              </div>
+              {validation.evidence && (
+                <div className="mt-2 rounded-lg border border-white/8 bg-black/15 p-2 font-mono text-[9px] leading-relaxed text-slate-400">
+                  <div>FIELD: {validation.evidence.sourceField}</div>
+                  {validation.evidence.extractedValue !== undefined && (
+                    <div>EXTRACTED: {String(validation.evidence.extractedValue)}</div>
+                  )}
+                  {validation.evidence.expectedValue !== undefined && (
+                    <div>EXPECTED: {String(validation.evidence.expectedValue)}</div>
+                  )}
+                  {validation.evidence.sourceText && (
+                    <div className="mt-1 font-sans text-[10px] text-slate-400">
+                      {validation.evidence.sourceText}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       ))}
 

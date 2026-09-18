@@ -72,11 +72,22 @@ export type TraceEvent = {
   status: TraceEventStatus;
 };
 
+export type AIValidationSeverity = "LOW" | "MEDIUM" | "HIGH";
+
+export type AIValidationEvidence = {
+  sourceField: string;
+  sourceText?: string;
+  extractedValue?: string | number | boolean;
+  expectedValue?: string | number | boolean;
+};
+
 export type AIValidation = {
   status: "matched" | "warning" | "needs_review";
   message: string;
   fields: string[];
   sourceDocumentId?: string;
+  severity?: AIValidationSeverity;
+  evidence?: AIValidationEvidence;
 };
 
 export type ProductBatch = {

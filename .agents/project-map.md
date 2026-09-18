@@ -56,7 +56,7 @@ Next.js App Router, landing, API và các route sản phẩm sau này:
 UI dùng lại: hero, journey timeline/map preview, document check, QR/public verification.
 
 ### `src/lib/ai`
-AI demo hỗ trợ đối chiếu chứng từ giữa các chặng. `document-extraction.ts` dùng deterministic fixture từ tên file + metadata chặng để mô phỏng structured extraction và sinh `matched/warning/needs_review`; không cần API key, không gọi model ngoài và UI luôn ghi rõ đây là `DEMO EXTRACTION`.
+AI demo hỗ trợ đối chiếu chứng từ giữa các chặng. `document-extraction.ts` dùng deterministic fixture từ tên file + metadata chặng để mô phỏng structured extraction và sinh `matched/warning/needs_review`; không cần API key, không gọi model ngoài và UI luôn ghi rõ đây là `DEMO EXTRACTION`. Phase 13E bổ sung explainability cho check mới: severity `LOW|MEDIUM|HIGH` và evidence có source field/text + extracted/expected value; Supabase migration `202609180001` persist hai field nullable để không làm thay đổi legacy signed payloads khi hydrate.
 
 ### `src/lib/documents`
 Private off-chain storage cho chứng từ draft với adapter `file|supabase`. Local dùng `.data/documents` mode `0600`; khi `CHECK_DI_DB_DRIVER=supabase`, mặc định dùng private Supabase Storage bucket `check-di-documents`. Cả hai path đều kiểm tra magic bytes, giới hạn size, SHA-256 và bắt buộc raw bytes vẫn khớp hash trước reanalyze; raw file/object path không expose qua public proof.

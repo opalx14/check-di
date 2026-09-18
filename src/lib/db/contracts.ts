@@ -150,8 +150,14 @@ export function buildAiValidations(
     return [
       {
         status: "needs_review",
+        severity: "MEDIUM",
         message: "Thiếu dữ liệu khối lượng để đối chiếu hao hụt đóng gói.",
         fields: ["inputWeightKg", "outputWeightKg", "declaredLossPercent"],
+        evidence: {
+          sourceField: "metrics",
+          sourceText:
+            "Cần inputWeightKg, outputWeightKg và declaredLossPercent để chạy rule đối chiếu.",
+        },
       },
     ];
   }
@@ -165,9 +171,16 @@ export function buildAiValidations(
       return [
         {
           status: "needs_review",
+          severity: "MEDIUM",
           message:
             "Chưa có chặng thu hoạch đã xác nhận để đối chiếu thời gian kiểm định.",
           fields: ["harvestAt", "inspectionAt"],
+          evidence: {
+            sourceField: "occurredAt",
+            sourceText:
+              "Không có timestamp thu hoạch đã xác nhận để làm mốc so sánh.",
+            extractedValue: input.occurredAt,
+          },
         },
       ];
     }

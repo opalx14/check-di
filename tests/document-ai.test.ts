@@ -159,6 +159,13 @@ describe("Check-Di document demo pipeline", () => {
         (item) => item.status === "warning" && item.fields.includes("batchId"),
       ),
     ).toBe(true);
+    const batchMismatch = validations.find((item) =>
+      item.fields.includes("batchId"),
+    );
+    expect(batchMismatch?.severity).toBe("HIGH");
+    expect(batchMismatch?.evidence?.sourceField).toBe("batchId");
+    expect(batchMismatch?.evidence?.extractedValue).toBe("WRONG-999-01");
+    expect(batchMismatch?.evidence?.expectedValue).toBe("DUR-260830-01");
     expect(
       validations.some(
         (item) => item.status === "matched" && item.fields.includes("quantity"),

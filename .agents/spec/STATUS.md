@@ -291,6 +291,14 @@ canonical payload + previousEventHash
 - Live reconciliation hiện tại: **49 batches checked, 0 issues, 0 missing mirror, 0 invalid mirror**.
 - Validation sau Phase 13D: `bun test` **68 passed / 0 failed / 229 assertions**, `bun run typecheck` pass, `bun run build` pass.
 
+## Phase 13E — AI/Data Check explainability
+
+- Deterministic AI/data checks mới có severity `LOW | MEDIUM | HIGH` và structured evidence gồm source field, source text, extracted value và expected value khi có.
+- Batch-ID mismatch được đánh dấu `HIGH`; organization/origin/quantity mismatch mặc định `MEDIUM`; chronology sai thứ tự là `HIGH`; matched checks là `LOW`.
+- Management UI và consumer verify hiển thị severity + evidence thay vì chỉ một warning string, nhưng vẫn ghi rõ đây là deterministic `DEMO EXTRACTION + rule cross-check`, không claim OCR/LLM production.
+- Supabase adapter persist/hydrate `severity/evidence` chỉ khi field tồn tại; migration `202609180001_check_di_ai_explainability.sql` thêm hai column nullable để legacy signed events không bị thay đổi canonical payload sau hydrate.
+- Local validation: `bun test` **68 passed / 0 failed / 233 assertions**, typecheck/build/diff-check pass. Remote migration/deploy Phase 13E cần apply trước khi production chạy code mới.
+
 ## Not implemented yet
 
 - Production vẫn chưa bật `CHECK_DI_AUTH_MODE=required` mặc định. Local/demo hiện dùng `optional`; tài khoản producer demo seed nội bộ chỉ phục vụ trải nghiệm nhanh, còn production identity thật vẫn theo Supabase Auth + organization membership.
@@ -306,7 +314,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**Phase 13D đã hoàn tất local gate; bước kế tiếp là Phase 13E AI/Data Check explainability (severity + evidence), rồi Phase 13F deterministic PII redaction. Production hiện đã deploy commit 19 cho Phase 13A–13C; Phase 13D sẽ deploy sau commit riêng và browser smoke không regression.**
+**Phase 13D hoàn tất và Phase 13E đã hoàn tất local code gate; bước kế tiếp là apply migration/deploy Phase 13D–13E rồi tiếp tục Phase 13F deterministic PII redaction.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 

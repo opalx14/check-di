@@ -88,6 +88,8 @@ type AiCheckRow = {
   status: AIValidation["status"];
   message: string;
   fields: string[];
+  severity: AIValidation["severity"] | null;
+  evidence: AIValidation["evidence"] | null;
   created_at: string;
 };
 
@@ -205,6 +207,8 @@ function toTraceEvent({
       message: check.message,
       fields: check.fields,
       sourceDocumentId: check.document_id ?? undefined,
+      ...(check.severity ? { severity: check.severity } : {}),
+      ...(check.evidence ? { evidence: check.evidence } : {}),
     })),
     previousEventHash: row.previous_event_hash ?? undefined,
     eventHash: row.event_hash ?? undefined,
@@ -383,6 +387,8 @@ export function createSupabaseBatchRepository(
           status: validation.status,
           message: validation.message,
           fields: validation.fields,
+          severity: validation.severity ?? null,
+          evidence: validation.evidence ?? null,
         })),
         prefer: "return=minimal",
       });
@@ -499,6 +505,8 @@ export function createSupabaseBatchRepository(
             status: validation.status,
             message: validation.message,
             fields: validation.fields,
+            severity: validation.severity ?? null,
+            evidence: validation.evidence ?? null,
           })),
           prefer: "return=minimal",
         });

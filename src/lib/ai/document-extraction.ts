@@ -161,12 +161,38 @@ function documentValidation(
   status: AIValidation["status"],
   message: string,
   fields: string[],
+  explain?: {
+    severity?: AIValidation["severity"];
+    sourceField?: string;
+    extractedValue?: string | number | boolean;
+    expectedValue?: string | number | boolean;
+  },
 ): AIValidation {
+  const severity =
+    explain?.severity ??
+    (status === "matched"
+      ? "LOW"
+      : status === "needs_review"
+        ? "MEDIUM"
+        : fields.includes("batchId")
+          ? "HIGH"
+          : "MEDIUM");
   return {
     status,
     message,
     fields,
     sourceDocumentId: evidence.id,
+    severity,
+    evidence: {
+      sourceField: explain?.sourceField ?? fields[0] ?? "document",
+      sourceText: `${evidence.filename}: ${message}`,
+      ...(explain?.extractedValue !== undefined
+        ? { extractedValue: explain.extractedValue }
+        : {}),
+      ...(explain?.expectedValue !== undefined
+        ? { expectedValue: explain.expectedValue }
+        : {}),
+    },
   };
 }
 
@@ -192,6 +218,12 @@ export function buildDocumentCrossChecks({
           ? `${evidence.filename}: mã lô demo nhận diện khớp ${batch.publicId}.`
           : `${evidence.filename}: mã lô demo nhận diện (${extraction.batchId}) không khớp ${batch.publicId}.`,
         ["batchId"],
+        {
+          severity: batchMatches ? "LOW" : "HIGH",
+          sourceField: "batchId",
+          extractedValue: extraction.batchId,
+          expectedValue: batch.publicId,
+        },
       ),
     );
   } else {
@@ -218,6 +250,12 @@ export function buildDocumentCrossChecks({
           ? `${evidence.filename}: đơn vị demo nhận diện khớp bên xác nhận chặng.`
           : `${evidence.filename}: đơn vị demo nhận diện (${extraction.organizationName}) khác bên xác nhận ${event.organizationName}.`,
         ["organizationName"],
+        {
+          severity: organizationMatches ? "LOW" : "MEDIUM",
+          sourceField: "organizationName",
+          extractedValue: extraction.organizationName,
+          expectedValue: event.organizationName,
+        },
       ),
     );
   }
@@ -234,6 +272,12 @@ export function buildDocumentCrossChecks({
           ? `${evidence.filename}: địa điểm nguồn demo nhận diện phù hợp chặng sản xuất.`
           : `${evidence.filename}: địa điểm nguồn demo nhận diện (${extraction.origin}) chưa khớp nguồn gốc/chặng.`,
         ["origin", "location"],
+        {
+          severity: originMatches ? "LOW" : "MEDIUM",
+          sourceField: "origin",
+          extractedValue: extraction.origin,
+          expectedValue: `${batch.origin} / ${event.location}`,
+        },
       ),
     );
   }
@@ -262,6 +306,12 @@ export function buildDocumentCrossChecks({
             ? `${evidence.filename}: khối lượng ${extraction.quantity} ${extraction.unit} khớp dữ liệu chặng.`
             : `${evidence.filename}: khối lượng ${extraction.quantity} ${extraction.unit} không khớp các số liệu chặng.`,
           ["quantity", "metrics"],
+          {
+            severity: quantityMatches ? "LOW" : "MEDIUM",
+            sourceField: "quantity",
+            extractedValue: `${extraction.quantity} ${extraction.unit}`,
+            expectedValue: candidates.join(" / "),
+          },
         ),
       );
     }

@@ -196,6 +196,39 @@ function TraceEventCard({ event, index, solanaCheck }: { event: TraceEvent; inde
       <div className="border-t border-white/8 px-4 pb-4 pt-3">
         <p className="text-xs leading-relaxed text-slate-300">{event.summary}</p>
 
+        {(event.aiValidations ?? []).length > 0 && (
+          <div className="mt-3 space-y-2">
+            {(event.aiValidations ?? []).map((validation) => (
+              <div
+                key={validation.message}
+                className="rounded-xl border border-white/8 bg-white/[0.025] p-3"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-semibold text-slate-300">
+                    {validation.message}
+                  </span>
+                  {validation.severity && (
+                    <span className="rounded-full border border-white/10 px-1.5 py-0.5 font-mono text-[9px] font-bold text-slate-400">
+                      {validation.severity}
+                    </span>
+                  )}
+                </div>
+                {validation.evidence && (
+                  <div className="mt-2 grid gap-1 font-mono text-[9px] text-slate-500 sm:grid-cols-3">
+                    <span>Field: {validation.evidence.sourceField}</span>
+                    <span>
+                      Extracted: {validation.evidence.extractedValue !== undefined ? String(validation.evidence.extractedValue) : "—"}
+                    </span>
+                    <span>
+                      Expected: {validation.evidence.expectedValue !== undefined ? String(validation.evidence.expectedValue) : "—"}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="mt-3 grid gap-2 sm:grid-cols-4">
           <MiniInfo label="Ảnh / chứng từ" value={`${documents.length} file`} />
           <MiniInfo label="Event hash" value={shorten(event.eventHash)} mono />
