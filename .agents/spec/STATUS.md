@@ -2,7 +2,7 @@
 
 ## Current phase
 
-**Phase 11 BUIDL CTC adapter đang triển khai trên nền Phase 10 demo-ready; app production đã deploy thành công lên VPS tại `/opt/check-di` (port 7314, systemd `check-di.service`, Nginx reverse proxy + TLS certificate Let's Encrypt), public URL `https://check-di.promptmarketcap.net` hoạt động ổn định qua Cloudflare Proxy cho UniHackfest 2026.**
+**Phase 13A–13C public onboarding + browser Devnet wallet đã hoàn tất ở code/local/live-Devnet gate; production deployment/smoke của thay đổi Phase 13 đang chờ bước deploy cuối. App production hiện tại vẫn chạy tại `/opt/check-di` (port 7314, systemd `check-di.service`, Nginx + TLS), public URL `https://check-di.promptmarketcap.net`.**
 
 ## Product core
 
@@ -272,6 +272,17 @@ canonical payload + previousEventHash
   - `bun run build`: Compile thành công toàn bộ 16 routes trong < 1s.
   - Deploy production VPS `/opt/check-di` (`https://check-di.promptmarketcap.net`) và hoàn thành browser-smoke production tự động qua Playwright đạt 100%.
 
+## Phase 13A–13C — Public onboarding + embedded Devnet wallet
+
+- Public `/signup` tự tạo Supabase Auth user, `check_di_organizations` và membership role cố định `owner`; client không được chọn role và service-role key chỉ ở server.
+- Signup enforce password >= 12 ký tự có hoa/thường/số, basic server-side IP rate limit, duplicate-email mapping, retry tối đa 3 lần khi organization slug/id collision và best-effort cleanup nếu organization/membership provisioning lỗi.
+- Email confirmation giữ đúng semantics Supabase. `CHECK_DI_HACKATHON_AUTO_CONFIRM_SIGNUP` mặc định OFF; khi explicit bật và Supabase email delivery trả rate-limit, server mới dùng admin API tạo test account đã confirm. Wallet onboarding hiển thị rõ “Hackathon test mode” và không gọi đây là production email verification.
+- “Ví thử nghiệm Check-Di” generate Solana Ed25519 Keypair client-side, devnet-only/disposable/non-custodial. Secret key không gửi server và không lưu localStorage; vault dùng PBKDF2-SHA256 (210k) + AES-GCM-256, lưu ciphertext/salt/iv + metadata trong IndexedDB; unlock chỉ đưa Keypair vào memory, delete xóa local vault.
+- `CheckDiClientWalletSigner` thống nhất Phantom/browser wallet với `publicKey/signMessage/signTransaction`. Batch management tự mở unlock modal khi browser wallet đang khóa rồi retry thao tác; server Registry validation không bị bypass.
+- Local public smoke với feature flag test mode đã pass: signup → auto-login → owner membership → Ed25519 challenge → link browser wallet → `/api/auth/me` trả đúng `walletPublicKey` → cleanup test records.
+- Live Devnet browser-wallet smoke (không Phantom) đã tạo transaction `5qbYE6dMCT1yGMe2EbR1xQgzRzSjtExEUr7ELjFjDtZ1xvUDzmdJBRS3zqgim9pbCtwQU31soHyVZv81Vn5qoLeF`, Registry `7Nm5UmcTqF7tcm4k77vVcncn8fNWfMUosqL7cFXixooj`, Event PDA `DgQrQQ7NkqejQ1xqTRhQw2HEK5VtMmsWMYvyXLa7tUs4`; read-back verify authority/batchHash/registryLink/eventAuthority/organization/eventHash/previousEventHash/organizationHash/lifecycleStatus đều true.
+- Current local gates: `bun test` **63 passed / 0 failed / 217 assertions**, `bun run typecheck` pass, `bun run build` pass. Một lỗi prerender do `useSearchParams` trên static wallet page đã được build gate bắt và sửa bằng hydration-safe `window.location.search`.
+
 ## Not implemented yet
 
 - Production vẫn chưa bật `CHECK_DI_AUTH_MODE=required` mặc định. Local/demo hiện dùng `optional`; tài khoản producer demo seed nội bộ chỉ phục vụ trải nghiệm nhanh, còn production identity thật vẫn theo Supabase Auth + organization membership.
@@ -287,7 +298,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**BUIDL CTC gate kế tiếp: tạo/fund test-only EVM wallet, deploy source contract lên Sepolia + attested registry lên CC3, rồi chạy một source event thật qua Attestcoin proof builder tới `executeJourneyProof` và read-back transaction evidence. UniHackFest core vẫn chỉ còn human-in-the-loop Phantom provisioning gate.**
+**Sau khi deploy/smoke production Phase 13A–13C, tiếp tục Phase 13D reliability hardening: Idempotency-Key cho mutation quan trọng và reconciliation read-back cho proof pending/missing; sau đó Phase 13E AI/Data Check explainability. BUIDL CTC adapter giữ nguyên nhưng không chen vào roadmap UniHackFest hiện tại.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 

@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Signature,
   Trash2,
+  KeyRound,
 } from "lucide-react";
 import { Transaction } from "@solana/web3.js";
 import { useRouter } from "next/navigation";
@@ -25,6 +26,8 @@ import { useEffect, useState } from "react";
 import { TourGuide, type TourStep } from "@/components/TourGuide";
 import type { ManagedProductBatch } from "@/lib/db";
 import { productVisualForName } from "@/lib/product-visuals";
+import { unlockBrowserDevnetWallet } from "@/lib/wallet/browser-devnet-wallet";
+import { resolveOrganizationWalletSigner } from "@/lib/wallet/client-signer";
 import type { DocumentEvidence, TraceEvent } from "@/types/evidence";
 
 type FeePayerStatus = {
@@ -85,7 +88,7 @@ function buildBatchManageTourSteps(publicId: string): TourStep[] {
     {
       target: '[data-tour="batch-photo-capture"]',
       title: "Chụp ảnh sản phẩm thật tại nguồn",
-      description: "Ở chặng đầu, bắt buộc chụp hoặc tải ảnh nông sản thật. Khi còn bản nháp có thể chụp lại hoặc xóa; sau khi ký Phantom, SHA-256 ảnh được khóa vào lịch sử.",
+      description: "Ở chặng đầu, bắt buộc chụp hoặc tải ảnh nguồn. Khi còn bản nháp có thể chụp lại hoặc xóa; sau khi organization wallet ký, SHA-256 ảnh được khóa vào lịch sử số.",
     },
     {
       target: '[data-tour="batch-documents-section"]',
@@ -94,8 +97,8 @@ function buildBatchManageTourSteps(publicId: string): TourStep[] {
     },
     {
       target: '[data-tour="batch-confirm-action"]',
-      title: "Ký Phantom & Ghi nhận Solana Devnet",
-      description: "Tổ chức dùng Phantom ký canonical eventHash, sau đó ký Registry transaction để tạo Event PDA và nhận TXID thật trên Solana Explorer.",
+      title: "Ký organization wallet & ghi Solana Devnet",
+      description: "Tổ chức dùng Phantom hoặc ví thử nghiệm Devnet đã liên kết để ký canonical eventHash, sau đó ký Registry transaction tạo Event PDA và TXID thật trên Solana Explorer.",
     },
     {
       target: '[data-tour="batch-solana-pda"]',
@@ -122,10 +125,13 @@ function errorMessage(value: string) {
   if (value === "draft_event_exists") return "Hãy xác nhận chặng draft hiện tại trước khi tạo chặng mới.";
   if (value === "invalid_event_input") return "Thông tin chặng chưa đầy đủ.";
   if (value === "event_not_draft") return "Chặng này đã được xử lý trước đó.";
-  if (value === "organization_wallet_required") return "Organization chưa liên kết Phantom. Hãy liên kết ví trước khi xác nhận chặng.";
-  if (value === "wallet_public_key_mismatch") return "Ví Phantom đang mở không khớp ví đã liên kết với organization.";
-  if (value === "external_event_signature_invalid") return "Chữ ký Phantom không hợp lệ với eventHash hiện tại.";
+  if (value === "organization_wallet_required") return "Organization chưa liên kết ví ký. Hãy thiết lập ví trước khi xác nhận chặng.";
+  if (value === "wallet_public_key_mismatch") return "Ví đang mở không khớp public key đã liên kết với organization.";
+  if (value === "external_event_signature_invalid") return "Chữ ký organization wallet không hợp lệ với eventHash hiện tại.";
   if (value === "phantom_not_available") return "Không tìm thấy Phantom trên trình duyệt này.";
+  if (value === "browser_wallet_locked") return "Ví thử nghiệm Devnet đang khóa. Mở trang Thiết lập ví để mở khóa rồi quay lại.";
+  if (value === "browser_wallet_public_key_mismatch") return "Ví thử nghiệm trong trình duyệt không khớp signer đã liên kết.";
+  if (value === "wallet_signer_not_available") return "Không tìm thấy signer phù hợp. Kết nối Phantom hoặc mở khóa ví thử nghiệm Devnet.";
   if (value === "product_photo_required") return "Hãy chụp hoặc tải ảnh sản phẩm thật trước khi ký chặng đầu tiên.";
   return "Không thể lưu thay đổi. Vui lòng thử lại.";
 }
@@ -150,28 +156,6 @@ function base64ToBytes(value: string) {
   return Uint8Array.from(binary, (character) => character.charCodeAt(0));
 }
 
-type PhantomProvider = {
-  isPhantom?: boolean;
-  publicKey?: { toString(): string };
-  connect(): Promise<{ publicKey?: { toString(): string } }>;
-  signMessage(message: Uint8Array): Promise<{
-    signature: Uint8Array;
-    publicKey?: { toString(): string };
-  }>;
-  signTransaction(transaction: Transaction): Promise<Transaction>;
-};
-
-function getPhantomProvider(): PhantomProvider | null {
-  const provider = (
-    window as Window & {
-      phantom?: { solana?: PhantomProvider };
-      solana?: PhantomProvider;
-    }
-  ).phantom?.solana ??
-    (window as Window & { solana?: PhantomProvider }).solana;
-  return provider?.isPhantom ? provider : null;
-}
-
 function documentErrorMessage(value: string) {
   if (value === "unsupported_document_type") return "Chỉ nhận PDF, JPG, PNG hoặc WebP hợp lệ.";
   if (value === "document_content_type_mismatch") return "Nội dung file không khớp định dạng mà trình duyệt khai báo.";
@@ -191,10 +175,10 @@ function solanaErrorMessage(value: string) {
     return "Chuỗi PDA trên Devnet chưa theo kịp previousEventHash. Hãy anchor các chặng trước theo đúng thứ tự trước.";
   }
   if (value === "organization_wallet_required") {
-    return "Organization chưa liên kết Phantom nên chưa thể ghi Event PDA.";
+    return "Organization chưa liên kết ví ký nên chưa thể ghi Event PDA.";
   }
   if (value === "wallet_public_key_mismatch") {
-    return "Ví Phantom đang mở không khớp organization signer của chặng này.";
+    return "Ví đang mở không khớp organization signer của chặng này.";
   }
   return `Không thể ghi proof lên Solana Devnet: ${value}`;
 }
@@ -220,6 +204,14 @@ export function BatchManagementClient({
   const [removingDocumentId, setRemovingDocumentId] = useState<string | null>(null);
   const [confirmProgress, setConfirmProgress] = useState<ConfirmProgressModal | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [unlockModal, setUnlockModal] = useState<{
+    open: boolean;
+    organizationId: string;
+    onUnlocked: () => void;
+  } | null>(null);
+  const [unlockPassphrase, setUnlockPassphrase] = useState("");
+  const [unlockError, setUnlockError] = useState<string | null>(null);
+  const [unlocking, setUnlocking] = useState(false);
 
   const draft = batch.events.find((event) => event.status === "draft");
   const draftHasProductPhoto = Boolean(
@@ -396,7 +388,7 @@ export function BatchManagementClient({
     if (
       targetEvent?.stage === "production" &&
       !window.confirm(
-        "Ký chặng nguồn ngay? Sau khi Phantom ký, SHA-256 ảnh nằm trong event hash và bản ghi này không thể sửa hoặc xóa. Nếu ảnh chưa đúng, hãy bấm Hủy và chụp lại trước.",
+        "Ký chặng nguồn ngay? Sau khi organization wallet ký, SHA-256 ảnh nằm trong event hash và bản ghi này không thể bị âm thầm sửa mà không làm proof mismatch. Nếu ảnh chưa đúng, hãy bấm Hủy và chụp lại trước.",
       )
     ) {
       return;
@@ -425,8 +417,13 @@ export function BatchManagementClient({
         if (!preparation.eventHash || !preparation.walletPublicKey) {
           throw new Error("organization_wallet_required");
         }
-        const provider = getPhantomProvider();
-        if (!provider) throw new Error("phantom_not_available");
+        if (!targetEvent?.organizationId) {
+          throw new Error("organization_wallet_required");
+        }
+        const signer = await resolveOrganizationWalletSigner({
+          organizationId: targetEvent.organizationId,
+          expectedPublicKey: preparation.walletPublicKey,
+        });
 
         setConfirmProgress({
           open: true,
@@ -435,14 +432,8 @@ export function BatchManagementClient({
           stageLabel: stageLabels[draft?.stage ?? "production"],
         });
 
-        const connection = await provider.connect();
-        const publicKey =
-          connection.publicKey?.toString() ?? provider.publicKey?.toString();
-        if (publicKey !== preparation.walletPublicKey) {
-          throw new Error("wallet_public_key_mismatch");
-        }
-
-        const signed = await provider.signMessage(
+        const publicKey = signer.publicKey;
+        const signature = await signer.signMessage(
           new TextEncoder().encode(preparation.eventHash),
         );
 
@@ -455,7 +446,7 @@ export function BatchManagementClient({
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
             signerPublicKey: publicKey,
-            signatureBase64: bytesToBase64(signed.signature),
+            signatureBase64: bytesToBase64(signature),
           }),
         };
 
@@ -520,7 +511,7 @@ export function BatchManagementClient({
           );
 
           const transaction = Transaction.from(base64ToBytes(transactionBase64));
-          const signedTx = await provider.signTransaction(transaction);
+          const signedTx = await signer.signTransaction(transaction);
           const signedTransactionBase64 = bytesToBase64(
             signedTx.serialize({
               requireAllSignatures: true,
@@ -593,9 +584,26 @@ export function BatchManagementClient({
       router.refresh();
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "unknown_error";
+      if (message === "browser_wallet_locked" && targetEvent?.organizationId) {
+        setConfirmProgress(null);
+        setUnlockModal({
+          open: true,
+          organizationId: targetEvent.organizationId,
+          onUnlocked: () => {
+            setUnlockModal(null);
+            void confirmEvent(eventId);
+          },
+        });
+        return;
+      }
       const resolvedError =
-        message === "phantom_not_available" ||
-        message === "wallet_public_key_mismatch"
+        [
+          "phantom_not_available",
+          "wallet_public_key_mismatch",
+          "browser_wallet_locked",
+          "browser_wallet_public_key_mismatch",
+          "wallet_signer_not_available",
+        ].includes(message)
           ? errorMessage(message)
           : solanaErrorMessage(message);
 
@@ -658,6 +666,7 @@ export function BatchManagementClient({
   }
 
   async function anchorEvent(eventId: string) {
+    const sourceEvent = batch.events.find((event) => event.id === eventId) ?? null;
     setAnchoringId(eventId);
     setError(null);
 
@@ -707,8 +716,13 @@ export function BatchManagementClient({
         if (!transactionBase64 || !walletPublicKey) {
           throw new Error("phantom_transaction_prepare_invalid");
         }
-        const provider = getPhantomProvider();
-        if (!provider) throw new Error("phantom_not_available");
+        if (!sourceEvent?.organizationId) {
+          throw new Error("organization_wallet_required");
+        }
+        const signer = await resolveOrganizationWalletSigner({
+          organizationId: sourceEvent.organizationId,
+          expectedPublicKey: walletPublicKey,
+        });
 
         setConfirmProgress({
           open: true,
@@ -716,15 +730,8 @@ export function BatchManagementClient({
           stepStatus: "waiting_tx",
         });
 
-        const connection = await provider.connect();
-        const publicKey =
-          connection.publicKey?.toString() ?? provider.publicKey?.toString();
-        if (publicKey !== walletPublicKey) {
-          throw new Error("wallet_public_key_mismatch");
-        }
-
         const transaction = Transaction.from(base64ToBytes(transactionBase64));
-        const signed = await provider.signTransaction(transaction);
+        const signed = await signer.signTransaction(transaction);
         const signedTransactionBase64 = bytesToBase64(
           signed.serialize({
             requireAllSignatures: true,
@@ -778,9 +785,26 @@ export function BatchManagementClient({
       router.refresh();
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "unknown_error";
+      if (message === "browser_wallet_locked" && sourceEvent?.organizationId) {
+        setConfirmProgress(null);
+        setUnlockModal({
+          open: true,
+          organizationId: sourceEvent.organizationId,
+          onUnlocked: () => {
+            setUnlockModal(null);
+            void anchorEvent(eventId);
+          },
+        });
+        return;
+      }
       const resolvedError =
-        message === "phantom_not_available" ||
-        message === "wallet_public_key_mismatch"
+        [
+          "phantom_not_available",
+          "wallet_public_key_mismatch",
+          "browser_wallet_locked",
+          "browser_wallet_public_key_mismatch",
+          "wallet_signer_not_available",
+        ].includes(message)
           ? errorMessage(message)
           : solanaErrorMessage(message);
 
@@ -976,7 +1000,7 @@ export function BatchManagementClient({
                 </p>
                 <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[10px] text-slate-400">
                   <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3"><span className="font-bold text-cyan-300">1</span><br />Chụp & xem lại</div>
-                  <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3"><span className="font-bold text-violet-300">2</span><br />Phantom ký</div>
+                  <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3"><span className="font-bold text-violet-300">2</span><br />Ví tổ chức ký</div>
                   <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3"><span className="font-bold text-emerald-300">3</span><br />Devnet TXID</div>
                 </div>
                 <button
@@ -1013,6 +1037,85 @@ export function BatchManagementClient({
             router.refresh();
           }}
         />
+      )}
+
+      {unlockModal?.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-[#0b111c] p-6 shadow-2xl">
+            <div className="flex size-11 items-center justify-center rounded-2xl border border-cyan-500/25 bg-cyan-500/10 text-cyan-300">
+              <KeyRound className="size-5" />
+            </div>
+            <h3 className="mt-4 font-display text-lg font-bold text-white">
+              Mở khóa ví thử nghiệm Devnet
+            </h3>
+            <p className="mt-1 text-xs text-slate-400">
+              Nhập mật khẩu ví để ký chặng này. Mật khẩu được giải mã cục bộ trong trình duyệt, không bao giờ gửi lên máy chủ.
+            </p>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!unlockPassphrase || unlocking) return;
+                setUnlocking(true);
+                setUnlockError(null);
+                try {
+                  await unlockBrowserDevnetWallet(
+                    unlockModal.organizationId,
+                    unlockPassphrase,
+                  );
+                  setUnlocking(false);
+                  setUnlockPassphrase("");
+                  unlockModal.onUnlocked();
+                } catch {
+                  setUnlocking(false);
+                  setUnlockError("Mật khẩu ví chưa đúng. Vui lòng thử lại.");
+                }
+              }}
+              className="mt-4 space-y-3"
+            >
+              <input
+                type="password"
+                value={unlockPassphrase}
+                onChange={(e) => setUnlockPassphrase(e.target.value)}
+                placeholder="Mật khẩu ví (≥ 8 ký tự)"
+                autoFocus
+                className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none focus:border-cyan-500/50"
+              />
+
+              {unlockError && (
+                <p className="rounded-lg border border-red-500/20 bg-red-500/10 p-2 text-xs text-red-200">
+                  {unlockError}
+                </p>
+              )}
+
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUnlockModal(null);
+                    setUnlockPassphrase("");
+                    setUnlockError(null);
+                  }}
+                  className="rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-semibold text-slate-300 hover:bg-white/10"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={unlocking || !unlockPassphrase}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-cyan-500 py-2.5 text-xs font-bold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
+                >
+                  {unlocking ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <KeyRound className="size-3.5" />
+                  )}
+                  Mở khóa & Ký
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       <TourGuide
@@ -1067,7 +1170,7 @@ function DocumentUploadPanel({
           </p>
           <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
             {isProductCapture
-              ? "Chụp trực tiếp bằng điện thoại hoặc chọn ảnh thật. Ảnh được SHA-256 và đi vào payload trước khi Phantom ký."
+              ? "Chụp trực tiếp bằng điện thoại hoặc chọn ảnh nguồn. Ảnh được SHA-256 và đi vào payload trước khi organization wallet ký."
               : "PDF/ảnh giữ off-chain, SHA-256 thật; extraction hiện là demo deterministic."}
           </p>
         </div>
@@ -1538,7 +1641,7 @@ function ConfirmProgressModalView({
             </div>
             <div>
               <h3 className="font-display font-bold text-white">Xác nhận chặng & Solana Devnet</h3>
-              <p className="text-[11px] font-mono text-slate-400">Phantom dual-signer pipeline</p>
+              <p className="text-[11px] font-mono text-slate-400">Organization wallet dual-signer pipeline</p>
             </div>
           </div>
           <span className="rounded-full border border-violet-500/25 bg-violet-500/10 px-2 py-0.5 font-mono text-[9px] font-bold text-violet-300">
@@ -1581,7 +1684,7 @@ function ConfirmProgressModalView({
                 <div className="flex items-center gap-2 text-violet-300">
                   <Loader2 className="size-3.5 animate-spin" />
                   {progress.stepStatus === "waiting_signature"
-                    ? "Chờ Phantom ký xác nhận event hash..."
+                    ? "Chờ ví tổ chức ký xác nhận event hash..."
                     : "Đang chuẩn bị canonical event hash..."}
                 </div>
               )}
@@ -1629,7 +1732,7 @@ function ConfirmProgressModalView({
                 <div className="flex items-center gap-2 text-violet-300">
                   <Loader2 className="size-3.5 animate-spin" />
                   {progress.stepStatus === "waiting_tx"
-                    ? "Chờ Phantom duyệt transaction Registry..."
+                    ? "Chờ ví tổ chức duyệt transaction Registry..."
                     : progress.stepStatus === "sending_tx"
                       ? "Đang gửi transaction lên Solana Devnet..."
                       : "Đang chuẩn bị transaction dual-signer..."}
@@ -1706,7 +1809,7 @@ function ConfirmProgressModalView({
             </button>
           ) : (
             <p className="text-center text-[11px] text-slate-500">
-              Vui lòng giữ cửa sổ này và xác nhận trên ví Phantom khi có popup.
+              Vui lòng giữ cửa sổ này; nếu dùng Phantom hãy xác nhận popup, nếu dùng ví thử nghiệm hãy bảo đảm ví đang được mở khóa.
             </p>
           )}
         </div>

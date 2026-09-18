@@ -1,6 +1,6 @@
 # Check-Di — Tổng hợp tiến độ, kiến trúc và định hướng tiếp theo
 
-Cập nhật: **30/08/2026**
+Cập nhật: **18/09/2026**
 
 > Trạng thái mới nhất: Phase 5B đã hoàn tất custom `check_di_registry` vertical slice trên Solana Devnet. Program `9sNDitEeYSFQ7LxmNuaiZPoCLVdrzhdR8P5zmoEW78Yi` đã build SBF + deploy thật, Batch/Event PDA đã được tạo và đọc ngược RPC. Product flow hiện ưu tiên custom Registry PDA làm proof chính; SPL Memo chỉ còn fallback.
 
@@ -691,20 +691,26 @@ Chuẩn bị song song:
 
 ---
 
-## 11. Thứ tự triển khai đề xuất từ trạng thái hiện tại
+## 11. Roadmap hiện tại sau UniHackFest hardening
 
-Không nên tiếp tục dành nhiều thời gian chỉnh landing nếu không có bug rõ ràng.
-
-Thứ tự nên là:
+Các milestone nền tảng trong roadmap cũ (Supabase, organization auth, Phantom signing, PDA lifecycle, private storage và submission polish) đã hoàn tất. Roadmap active chuyển sang:
 
 ```text
-1. provision Supabase thật + apply migration + migrate/seed demo data
-2. organization auth + wallet/Phantom signing
-3. PDA-backed revoke/supersede UI
-4. private object storage/local QR renderer
-5. final demo polish
-6. pitch/submission package cho 2 track
+13A. Public signup + organization owner provisioning          COMPLETE
+13B. Embedded browser Devnet wallet + ownership challenge    COMPLETE
+13C. eventHash + dual-signer Registry E2E không cần Phantom  COMPLETE (live Devnet)
+13D. Idempotency-Key + reconciliation                        NEXT
+13E. AI/Data Check severity + evidence
+13F. deterministic PII redaction
+13G. independent Devnet verifier trên consumer verify
+13H. consumer journey stepper
+13I. i18n completeness
+13J. audit/export dossier
 ```
+
+Phase 13A–13C giữ security boundary: service-role chỉ ở server; embedded-wallet secret chỉ ở browser, mã hóa PBKDF2/AES-GCM trong IndexedDB; server chỉ nhận public key/challenge signature và tiếp tục validate đầy đủ fee payer/program/PDA/accounts/instruction/signatures trước khi relay Registry transaction.
+
+Hackathon auto-confirm signup là explicit fallback, mặc định OFF, chỉ chạy khi Supabase email delivery bị rate-limit và UI phải ghi đúng đây là test mode — không thay thế production email ownership verification.
 
 ---
 

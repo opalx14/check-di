@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowLeft, Building2, Loader2, LogIn, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Building2, Loader2, LogIn, ShieldCheck, UserPlus } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -150,6 +151,16 @@ export default function LoginPage() {
               {submitting ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
           </form>
+
+          <div className="border-t border-white/10 px-5 py-4 sm:px-7">
+            <Link
+              href="/signup"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-500/25 bg-cyan-500/[0.06] px-5 py-3 text-sm font-semibold text-cyan-200 transition hover:border-cyan-400/40 hover:bg-cyan-500/[0.1]"
+            >
+              <UserPlus className="size-4" />
+              Người dùng mới? Tạo tài khoản để test
+            </Link>
+          </div>
         </section>
       </div>
 

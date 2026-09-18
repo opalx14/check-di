@@ -101,8 +101,8 @@ export function GettingStartedSection() {
           icon: Camera,
         },
         {
-          title: vi ? "Phantom ký và tạo TXID thật" : "Phantom signs and creates a real TXID",
-          text: vi ? "Phantom ký eventHash rồi ký Registry transaction trên Solana Devnet; QR mở hành trình cho người mua." : "Phantom signs the event hash and Registry transaction on Solana Devnet, then the QR becomes public.",
+          title: vi ? "Ví tổ chức ký và tạo TXID thật" : "Organization wallet signs and creates a real TXID",
+          text: vi ? "Phantom hoặc ví thử nghiệm Devnet đã liên kết ký eventHash và Registry transaction; QR sau đó mở hành trình cho người mua." : "A linked Phantom or Check-Di Devnet test wallet signs the event hash and Registry transaction before the QR journey becomes public.",
           icon: Signature,
           finalHref: "/supplier?tour=1",
         },

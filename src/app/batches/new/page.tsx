@@ -38,7 +38,7 @@ function messageFor(error: string) {
   if (error === "public_id_exists") return "Mã lô này đã tồn tại.";
   if (error === "invalid_public_id") return "Mã lô chưa hợp lệ.";
   if (error === "unauthorized") return "Bạn cần đăng nhập nhà cung cấp.";
-  if (error === "organization_wallet_required") return "Hãy liên kết Phantom trước khi tạo lô.";
+  if (error === "organization_wallet_required") return "Hãy thiết lập ví ký cho tổ chức trước khi tạo lô.";
   return "Không thể tạo lô. Vui lòng thử lại.";
 }
 
