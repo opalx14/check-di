@@ -2,11 +2,11 @@
 
 ## 1. Mục Tiêu Kỹ Thuật (What Check-Di Proves)
 
-Check-Di không phải là một mock-up giao diện hay ý tưởng trên giấy. Hệ thống đã được triển khai hoàn chỉnh (full-stack production ready):
+Check-Di chứng minh tính khả thi của mô hình truy xuất nguồn gốc tối giản thông qua bản dựng thực tế (MVP / live demo deployed production):
 1. **Sản phẩm chạy thực tế**: Web application Next.js 16 App Router, React 19, TypeScript, Bun runtime.
-2. **Cấu trúc dữ liệu bất biến (Hash-Linked Trace Events)**: Mỗi chặng được mã hóa canonical JSON payload, băm SHA-256 kết nối chắt chẽ với mã băm chặng trước (`GENESIS` ở chặng 1).
-3. **Cơ chế khóa ảnh nguồn (Source Photo Locking)**: Ảnh chụp nông sản tại nông trường được tính mã băm SHA-256 và gắn vào payload chặng 1, đảm bảo tính toàn vẹn vật lý và số học.
-4. **AI Audit Gate (Deterministic Extraction & Rule Cross-Check)**: Trích xuất trường có cấu trúc từ chứng từ số (PDF/ảnh) và chạy kiểm toán chéo (kiểm tra thứ tự thời gian, hao hụt định mức, lệch mã lô) trả về kết quả `Matched` hoặc `Warning`.
+2. **Cấu trúc dữ liệu bất biến (Hash-Linked Trace Events)**: Mỗi chặng được mã hóa canonical JSON payload, băm SHA-256 kết nối chặt chẽ với mã băm chặng trước (`GENESIS` ở chặng 1).
+3. **Cơ chế khóa mã băm ảnh nguồn (Source Photo Locking)**: Ảnh chụp nông sản tại nguồn được tính mã băm SHA-256 và gắn vào payload chặng 1, đảm bảo tính toàn vẹn số của ảnh/payload sau xác nhận.
+4. **AI Audit Gate (Deterministic Extraction & Rule Cross-Check)**: Trích xuất trường có cấu trúc từ chứng từ số (PDF/ảnh) theo cơ chế deterministic DEMO EXTRACTION và chạy kiểm toán chéo (kiểm tra thứ tự thời gian, hao hụt định mức, lệch mã lô) trả về kết quả `Matched` hoặc `Warning`.
 5. **Solana Anchor Program Deployed Live trên Devnet**:
    - Program ID: `9sNDitEeYSFQ7LxmNuaiZPoCLVdrzhdR8P5zmoEW78Yi`
    - Quản lý trạng thái và tính toàn vẹn bằng Program Derived Addresses (PDAs).
@@ -20,11 +20,11 @@ Check-Di không phải là một mock-up giao diện hay ý tưởng trên giấ
 ```text
 1. Khởi tạo lô hàng (Batch Metadata + Catalog Nông sản)
    ↓
-2. Chụp ảnh nguồn (Source Photo) → Hash SHA-256 → Khóa vào Draft Event #1
+2. Chụp/tải ảnh nguồn (Source Photo) → Hash SHA-256 → Khóa vào Draft Event #1
    ↓
-3. Tải chứng từ số (PDF/Image) → Trích xuất cấu trúc (DEMO EXTRACTION)
+3. Tải chứng từ số (PDF/Image) → Trích xuất cấu trúc (deterministic DEMO EXTRACTION)
    ↓
-4. AI Cross-Check (Định mức hao hụt, thứ tự thời gian, đối chiếu mã lô)
+4. AI Cross-Check Rule (Định mức hao hụt, thứ tự thời gian, đối chiếu mã lô)
    ↓
 5. Tổ chức ký xác nhận:
    - Chuẩn hóa canonical JSON payload
@@ -63,10 +63,10 @@ Check-Di không phải là một mock-up giao diện hay ý tưởng trên giấ
 - **Solana Devnet Program**:
   - Address: `9sNDitEeYSFQ7LxmNuaiZPoCLVdrzhdR8P5zmoEW78Yi`
   - Explorer: `https://explorer.solana.com/address/9sNDitEeYSFQ7LxmNuaiZPoCLVdrzhdR8P5zmoEW78Yi?cluster=devnet`
-- **Sample Verified Batch**:
-  - Public ID: `DUR-260830-01`
+- **Sample Verified Batch (`DUR-260830-01`)**:
   - Finalized Events: 5/5
-  - Sample Event PDA: `DeG1qjLXHBWuym3dtDtkRQY担oULeJFao2JqQK9DiHvL`
+  - Sample Event PDA (chặng 5): `DeG1qjXLjHBWuym3dtDtkRQYXoULeJFao2JqQK9DiHvL`
+  - Sample Event PDA (chặng 1): `HKLXPSjtEjscEUkBUnBW5Sz5sS3iWyoT48CJH1ZXbJe4`
   - Sample Transaction: `3Bz8yG73LLSXtaBVnxJgKdifxYYgMjw4QebtKByb5uFCZaToE5RUkc6QuWBkMSGe9mEdbPmHjh8Z8opsM75SvvyF`
 - **Tự Động Hóa & Kiểm Thử (Automated Verification)**:
   - 13 test suites với 49 test cases bao phủ toàn bộ luồng nghiệp vụ, hashing, ví Phantom, RLS database và scanner.
@@ -80,4 +80,5 @@ Check-Di không phải là một mock-up giao diện hay ý tưởng trên giấ
 - [x] Đã deploy Solana Anchor Program live trên Devnet.
 - [x] Ký ví Phantom hai chiều (challenge signMessage + tx sign).
 - [x] Hỗ trợ tour onboarding tương tác bám sát DOM thật trên toàn bộ các route.
+- [x] Minh bạch giới hạn: Demo extraction và rule AI, không claim OCR/LLM production khi chưa có external model integration.
 - [x] Hoàn thành build, typecheck và deploy production thành công.

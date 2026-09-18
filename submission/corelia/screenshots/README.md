@@ -19,7 +19,7 @@ Bộ 6 ảnh chụp màn hình chất lượng cao được lưu trữ dưới �
 - **File**: `01-check-di-landing-overview.png` (1.8 MB)
 - **Route được chụp**: `/`
 - **Nội dung chính**:
-  - Giao diện Hero giới thiệu định vị Check-Di: truy xuất nguồn gốc nông sản theo từng chặng hành trình thực tế.
+  - Giao diện Hero giới thiệu định vị Check-Di: truy xuất hành trình sự kiện chuỗi cung ứng theo từng chặng.
   - Thẻ tóm tắt lô hàng mẫu `Dưa hấu Hắc Mỹ Nhân · WM-260917-01` (hành trình từ Long An về TP.HCM).
   - Trực quan hóa 5 mắt xích chuỗi cung ứng: Nhà vườn → Đóng gói → Kiểm định → Vận chuyển → Điểm bán.
   - Các nút tác vụ chính: Quét / tra cứu sản phẩm, Tôi là nhà cung cấp, chuyển đổi ngôn ngữ Việt / Anh.
@@ -41,7 +41,7 @@ Bộ 6 ảnh chụp màn hình chất lượng cao được lưu trữ dưới �
 - **Route được chụp**: `/batches/new`
 - **Nội dung chính**:
   - Khung giao diện khởi tạo lô hàng mới tích hợp trực quan hóa sinh động.
-  - Thẻ visual preview bên trái: Hiển thị hình ảnh nông sản thực tế chất lượng cao tự động đồng bộ theo loại nông sản được chọn.
+  - Thẻ visual preview bên trái: Hiển thị hình ảnh mẫu chất lượng cao tự động đồng bộ theo loại nông sản được chọn trong catalog demo.
   - Bộ chọn danh mục nông sản Việt Nam phong phú (>20 loại): Dưa hấu Hắc Mỹ Nhân, Thanh long ruột đỏ, Sầu riêng Ri6, Xoài cát Hòa Lộc, Cam sành, Bưởi da xanh, Mít Thái, Đu đủ ruột đỏ...
   - Form khai báo nghiệp vụ: Tên sản phẩm, Nguồn gốc xuất xứ (vùng trồng), Mã lô công khai, và nút CTA `Tạo và thêm hành trình`.
 
@@ -49,9 +49,9 @@ Bộ 6 ảnh chụp màn hình chất lượng cao được lưu trữ dưới �
 - **File**: `04-check-di-document-ai-check.png` (373 KB)
 - **Route được chụp**: `/batches/batch-demo-ri6-001` (quản lý chặng Đóng gói & Kiểm định)
 - **Nội dung chính**:
-  - Quản lý chi tiết các chặng chuỗi cung ứng của lô `Sầu riêng Ri6 · DUR-260830-01`.
+  - Quản lý chi tiết các chặng chuỗi cung ứng của lô mẫu `Sầu riêng Ri6 · DUR-260830-01`.
   - Minh chứng chứng từ số đính kèm chặng: `Nhật ký thu hoạch`, `VietGAP #VG-2026`, `Packing list #PK-0830`, `Biên bản bàn giao lô`.
-  - Kết quả kiểm tra đối chiếu dữ liệu AI: Khối lượng và tỷ lệ hao hụt thực tế (10.0%) khớp mức khai báo.
+  - Kết quả kiểm tra đối chiếu dữ liệu AI mẫu: Khối lượng và tỷ lệ hao hụt thực tế (10.0%) khớp mức khai báo.
   - Liên kết mật mã minh bạch: Previous hash (`GENESIS` hoặc mã băm chặng trước), Event hash canonical SHA-256, Signer key Ed25519, và nút tương tác on-chain `Check-Di Registry · PDA` dẫn thẳng tới Solana Explorer.
   - Thao tác vòng đời (Lifecycle): Nút `Revoke event` và `Supersede event` xử lý hiệu chỉnh dữ liệu minh bạch.
   - Form thêm chặng mới bên phải để các bên tiếp theo trong chuỗi nhập thông tin và tải chứng từ.
@@ -61,8 +61,8 @@ Bộ 6 ảnh chụp màn hình chất lượng cao được lưu trữ dưới �
 - **Route được chụp**: `/verify/DUR-260830-01`
 - **Nội dung chính**:
   - Trải nghiệm người tiêu dùng sau khi quét mã QR tem truy xuất trên bao bì trái cây.
-  - Thẻ sản phẩm nổi bật: Ảnh chụp nguồn nông sản thực tế (Sầu riêng Ri6 tại vườn Đắk Lắk), mã lô `DUR-260830-01`, hành lang di chuyển `Krông Pắc, Đắk Lắk → Quận 7, TP.HCM` và mã QR công khai.
-  - Huy hiệu bảo chứng độc lập: `AI không cảnh báo`, `5/5 Devnet proof`, `Chưa có cảnh báo`.
+  - Thẻ sản phẩm nổi bật: Ảnh nguồn được chụp/upload trong luồng demo (Sầu riêng Ri6 tại vườn Đắk Lắk), mã lô `DUR-260830-01`, hành lang di chuyển `Krông Pắc, Đắk Lắk → Quận 7, TP.HCM` và mã QR công khai.
+  - Huy hiệu trạng thái toàn vẹn & kiểm tra: `AI không cảnh báo`, `5/5 Devnet proof`, `Chưa có cảnh báo` (chứng minh tính toàn vẹn và trạng thái dữ liệu, không tự động bảo chứng phẩm cấp vật lý ngoài đời).
   - Thanh tiến trình mini 5 chặng: Thu hoạch → Đóng gói → Kiểm định → Vận chuyển → Điểm bán.
   - Danh sách chi tiết 5 chặng đã xác nhận với dấu kiểm xanh verified, kèm mốc thời gian và tên tổ chức chịu trách nhiệm (Vườn Minh Phát, HTX Đắk Farm, Trung tâm QC Demo, Green Route Logistics...).
   - Nút kích hoạt tour hướng dẫn người tiêu dùng: `✨ Hướng dẫn xác thực QR`.
@@ -76,7 +76,7 @@ Bộ 6 ảnh chụp màn hình chất lượng cao được lưu trữ dưới �
     - **Technical / Blockchain Track**: Chuỗi hash SHA-256 canonical, chữ ký ví Phantom của tổ chức, Program Anchor và Event PDA trên Solana Devnet.
   - Badge trạng thái **Live readiness**: xác nhận Program `9sNDitEeYSFQ7LxmNuaiZPoCLVdrzhdR8P5zmoEW78Yi` đang executable trên Devnet, 5/5 finalized events và 5 Registry proof verified live.
   - Bảng số liệu snapshot: Finalized events (5), Chain (Valid/Check), Registry live (5/5), Documents, Terminal status, Program (Deployed).
-  - Chi tiết mật mã sống: Program ID, Sample Event PDA (`DeG1qjLX...`), Organization signer, Event hash canonical SHA-256, nút mở JSON proof và link Solana Devnet Explorer.
+  - Chi tiết mật mã sống: Program ID, Sample Event PDA (`DeG1qjXL...`), Organization signer, Event hash canonical SHA-256, nút mở JSON proof và link Solana Devnet Explorer.
 
 ---
 

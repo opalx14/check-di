@@ -263,8 +263,9 @@ canonical payload + previousEventHash
   - `05-check-di-consumer-verification.png` (1.6 MB): Trải nghiệm người mua với tem QR, ảnh chụp nguồn thực tế, timeline 5 chặng verified và liên kết Solana Devnet Explorer.
   - `06-check-di-judge-solana-proof.png` (375 KB): Bảng điều khiển Giám khảo (`/judge`) quy tụ 2 track, live readiness badge, Program ID Anchor (`9sNDit...`), Event PDA và chuỗi hash canonical SHA-256.
   - Đã cập nhật `submission/corelia/screenshots/README.md` với mô tả kỹ thuật chi tiết từng ảnh.
-- **Đồng bộ nội dung submission UniHackfest với code thật**:
-  - Cập nhật `docs/competition/demo-script.md`, `pitch-outline.md`, `product-business.md`, `technical-build.md` bám sát 100% code thực tế: hero dưa hấu Hắc Mỹ Nhân + catalog 26 loại nông sản, cơ chế khóa cứng ảnh nguồn bằng SHA-256, AI demo extraction minh bạch (không claim OCR/LLM quá đà), kiến trúc hai làn dữ liệu một nguồn duy nhất, và Anchor Program live trên Devnet.
+- **Đồng bộ nội dung submission UniHackfest với code thật & Hotfix tính trung thực**:
+  - Cập nhật `docs/competition/demo-script.md`, `pitch-outline.md`, `product-business.md`, `technical-build.md`, và `submission/corelia/screenshots/README.md` bám sát 100% code thực tế: hero dưa hấu Hắc Mỹ Nhân + catalog 26 loại nông sản, khóa mã băm SHA-256 ảnh nguồn, AI demo extraction minh bạch (không claim OCR/LLM quá đà), kiến trúc hai làn dữ liệu một nguồn duy nhất, và Anchor Program live trên Devnet.
+  - **Hotfix truthfulness**: Bỏ các claim tuyệt đối hóa (như "không thể làm giả", "ngăn chặn hoàn toàn việc tráo nông sản"); làm rõ mã băm ảnh chỉ bảo đảm tính toàn vẹn số của tệp dữ liệu đã ký, không tự thay thế việc kiểm định vật lý ngoài đời thực; chuyển "trách nhiệm pháp lý" sang "trách nhiệm/xác nhận dữ liệu theo từng bên"; làm rõ AI là prototype deterministic demo extraction + rule cross-check; điều chỉnh compliance sang hướng privacy-by-design định hướng tương thích Nghị định 13/2023/NĐ-CP và hướng tới tương thích TCVN; và đính chính chính xác Event PDA mẫu `DeG1qjXLjHBWuym3dtDtkRQYXoULeJFao2JqQK9DiHvL`.
 - **Kiểm thử & Triển khai**:
   - `bun test`: 49/49 passed across 13 test suites (167 assertions).
   - `bun run typecheck`: 0 errors.
