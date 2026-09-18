@@ -5,6 +5,11 @@ import {
   resolveCheckDiOrganizationActor,
 } from "@/lib/auth/server";
 import { batchRepository } from "@/lib/db";
+import {
+  fingerprintIdempotentRequest,
+  getIdempotencyKey,
+  runIdempotent,
+} from "@/lib/reliability/idempotency";
 
 export async function POST(request: Request) {
   try {
@@ -22,12 +27,19 @@ export async function POST(request: Request) {
       );
     }
 
-    const batch = await batchRepository.createBatch({
+    const input = {
       productName: body.productName ?? "",
       origin: body.origin ?? "",
       publicId: body.publicId,
       createdByOrganizationId: actor.membership?.organizationId,
+    };
+    const idempotency = await runIdempotent({
+      scope: `create-batch:${actor.context?.user.id ?? "anonymous"}`,
+      key: getIdempotencyKey(request),
+      fingerprint: fingerprintIdempotentRequest(input),
+      operation: () => batchRepository.createBatch(input),
     });
+    const batch = idempotency.value;
 
     return NextResponse.json(
       {
@@ -38,7 +50,12 @@ export async function POST(request: Request) {
           verify: `/verify/${batch.publicId}`,
         },
       },
-      { status: 201 },
+      {
+        status: 201,
+        headers: {
+          "x-idempotency-replayed": idempotency.replayed ? "true" : "false",
+        },
+      },
     );
   } catch (error) {
     if (error instanceof CheckDiAuthError) {
@@ -48,7 +65,11 @@ export async function POST(request: Request) {
       );
     }
     const message = error instanceof Error ? error.message : "unknown_error";
-    const status = message === "public_id_exists" ? 409 : 400;
+    const status =
+      message === "public_id_exists" ||
+      message === "idempotency_key_reused_with_different_request"
+        ? 409
+        : 400;
     return NextResponse.json({ ok: false, error: message }, { status });
   }
 }

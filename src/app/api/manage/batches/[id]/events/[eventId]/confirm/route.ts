@@ -3,6 +3,11 @@ import { NextResponse } from "next/server";
 import { authorizeManagedEventRequest } from "@/lib/auth/authorization";
 import { CheckDiAuthError } from "@/lib/auth/server";
 import { batchRepository } from "@/lib/db";
+import {
+  fingerprintIdempotentRequest,
+  getIdempotencyKey,
+  runIdempotent,
+} from "@/lib/reliability/idempotency";
 import { anchorPersistedTraceEvent } from "@/lib/solana/anchor-service";
 import { isSolanaAutoAnchorEnabled } from "@/lib/solana/server";
 
@@ -35,7 +40,9 @@ function errorResponse(error: unknown) {
           message === "wallet_public_key_mismatch" ||
           message === "product_photo_required"
         ? 409
-        : 400;
+        : message === "idempotency_key_reused_with_different_request"
+          ? 409
+          : 400;
   return NextResponse.json({ ok: false, error: message }, { status });
 }
 
@@ -119,24 +126,45 @@ export async function POST(
       const signature = Buffer.from(body.signatureBase64, "base64").toString(
         "base64url",
       );
-      confirmedEvent = await batchRepository.confirmEvent(id, eventId, {
+      const confirmationInput = {
         signerPublicKey: walletPublicKey,
         signature,
+      };
+      const idempotency = await runIdempotent({
+        scope: `confirm-event:${actor.context.user.id}:${id}:${eventId}`,
+        key: getIdempotencyKey(request),
+        fingerprint: fingerprintIdempotentRequest(confirmationInput),
+        operation: () =>
+          batchRepository.confirmEvent(id, eventId, confirmationInput),
       });
+      confirmedEvent = idempotency.value;
 
-      return NextResponse.json({
-        ok: true,
-        event: confirmedEvent,
-        signingMode: "phantom",
-        solana: {
-          anchored: false,
-          skipped: true,
-          requiresWalletTransaction: true,
+      return NextResponse.json(
+        {
+          ok: true,
+          event: confirmedEvent,
+          signingMode: "phantom",
+          solana: {
+            anchored: false,
+            skipped: true,
+            requiresWalletTransaction: true,
+          },
         },
-      });
+        {
+          headers: {
+            "x-idempotency-replayed": idempotency.replayed ? "true" : "false",
+          },
+        },
+      );
     }
 
-    confirmedEvent = await batchRepository.confirmEvent(id, eventId);
+    const idempotency = await runIdempotent({
+      scope: `confirm-event:anonymous:${id}:${eventId}`,
+      key: getIdempotencyKey(request),
+      fingerprint: fingerprintIdempotentRequest({ id, eventId, mode: "demo" }),
+      operation: () => batchRepository.confirmEvent(id, eventId),
+    });
+    confirmedEvent = idempotency.value;
 
     if (!isSolanaAutoAnchorEnabled()) {
       return NextResponse.json({

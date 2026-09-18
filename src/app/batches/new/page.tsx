@@ -57,7 +57,10 @@ export default function NewBatchPage() {
     const form = new FormData(event.currentTarget);
     const response = await fetch("/api/batches", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        "idempotency-key": `create-batch:${crypto.randomUUID()}`,
+      },
       body: JSON.stringify({
         productName: form.get("productName"),
         origin: form.get("origin"),

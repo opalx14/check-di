@@ -17,6 +17,7 @@
     "program:smoke": "bun scripts/smoke-solana-registry.ts",
     "phantom:smoke": "bun scripts/smoke-phantom-registry.ts",
     "browser-wallet:smoke": "bun scripts/smoke-browser-devnet-registry.ts",
+    "reconcile:solana": "bun scripts/reconcile-solana-proofs.ts",
     "lifecycle:smoke": "bun scripts/smoke-solana-lifecycle.ts",
     "product:smoke": "bun scripts/smoke-solana-product-flow.ts",
     "document:smoke": "bun scripts/smoke-ai-document.ts",

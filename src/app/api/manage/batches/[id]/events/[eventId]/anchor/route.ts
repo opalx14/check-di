@@ -3,6 +3,11 @@ import { NextResponse } from "next/server";
 import { authorizeManagedEventRequest } from "@/lib/auth/authorization";
 import { CheckDiAuthError } from "@/lib/auth/server";
 import { batchRepository } from "@/lib/db";
+import {
+  fingerprintIdempotentRequest,
+  getIdempotencyKey,
+  runIdempotent,
+} from "@/lib/reliability/idempotency";
 import { anchorPersistedTraceEvent } from "@/lib/solana/anchor-service";
 import {
   preparePhantomRegistryTransaction,
@@ -26,7 +31,9 @@ function errorResponse(error: unknown) {
           message === "wallet_public_key_mismatch" ||
           message === "registry_chain_head_not_ready"
         ? 409
-        : 400;
+        : message === "idempotency_key_reused_with_different_request"
+          ? 409
+          : 400;
   return NextResponse.json({ ok: false, error: message }, { status });
 }
 
@@ -60,28 +67,48 @@ export async function POST(
         if (!body.signedTransactionBase64) {
           throw new Error("phantom_signed_transaction_missing");
         }
-        const result = await submitPhantomRegistryTransaction({
-          publicId: batch.publicId,
-          event,
-          walletPublicKey,
-          signedTransactionBase64: body.signedTransactionBase64,
-        });
-        const persisted = await batchRepository.setSolanaProof(
-          id,
-          eventId,
-          result.proof,
-        );
-        return NextResponse.json({
-          ok: true,
-          event: persisted,
-          signingMode: "phantom",
-          solana: {
-            anchored: true,
-            reused: result.reused,
-            proofKind: "check-di-registry",
-            transactionSignature: result.transactionSignature,
+        const signedTransactionBase64 = body.signedTransactionBase64;
+        const idempotency = await runIdempotent({
+          scope: `anchor-event:${actor.context.user.id}:${id}:${eventId}`,
+          key: getIdempotencyKey(request),
+          fingerprint: fingerprintIdempotentRequest({
+            action: "submit",
+            signedTransactionBase64,
+          }),
+          operation: async () => {
+            const result = await submitPhantomRegistryTransaction({
+              publicId: batch.publicId,
+              event,
+              walletPublicKey,
+              signedTransactionBase64,
+            });
+            const persisted = await batchRepository.setSolanaProof(
+              id,
+              eventId,
+              result.proof,
+            );
+            return { result, persisted };
           },
         });
+        const { result, persisted } = idempotency.value;
+        return NextResponse.json(
+          {
+            ok: true,
+            event: persisted,
+            signingMode: "phantom",
+            solana: {
+              anchored: true,
+              reused: result.reused,
+              proofKind: "check-di-registry",
+              transactionSignature: result.transactionSignature,
+            },
+          },
+          {
+            headers: {
+              "x-idempotency-replayed": idempotency.replayed ? "true" : "false",
+            },
+          },
+        );
       }
 
       const prepared = await preparePhantomRegistryTransaction({
@@ -123,7 +150,13 @@ export async function POST(
       });
     }
 
-    const result = await anchorPersistedTraceEvent(id, eventId);
+    const idempotency = await runIdempotent({
+      scope: `anchor-event:anonymous:${id}:${eventId}`,
+      key: getIdempotencyKey(request),
+      fingerprint: fingerprintIdempotentRequest({ id, eventId, mode: "demo" }),
+      operation: () => anchorPersistedTraceEvent(id, eventId),
+    });
+    const result = idempotency.value;
     return NextResponse.json(
       {
         ok: result.anchored,
@@ -139,7 +172,12 @@ export async function POST(
           error: "error" in result ? result.error : undefined,
         },
       },
-      { status: result.anchored ? 200 : 503 },
+      {
+        status: result.anchored ? 200 : 503,
+        headers: {
+          "x-idempotency-replayed": idempotency.replayed ? "true" : "false",
+        },
+      },
     );
   } catch (error) {
     return errorResponse(error);

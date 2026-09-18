@@ -283,6 +283,14 @@ canonical payload + previousEventHash
 - Live Devnet browser-wallet smoke (không Phantom) đã tạo transaction `5qbYE6dMCT1yGMe2EbR1xQgzRzSjtExEUr7ELjFjDtZ1xvUDzmdJBRS3zqgim9pbCtwQU31soHyVZv81Vn5qoLeF`, Registry `7Nm5UmcTqF7tcm4k77vVcncn8fNWfMUosqL7cFXixooj`, Event PDA `DgQrQQ7NkqejQ1xqTRhQw2HEK5VtMmsWMYvyXLa7tUs4`; read-back verify authority/batchHash/registryLink/eventAuthority/organization/eventHash/previousEventHash/organizationHash/lifecycleStatus đều true.
 - Current local gates: `bun test` **63 passed / 0 failed / 217 assertions**, `bun run typecheck` pass, `bun run build` pass. Một lỗi prerender do `useSearchParams` trên static wallet page đã được build gate bắt và sửa bằng hydration-safe `window.location.search`.
 
+## Phase 13D — Reliability hardening
+
+- Mutation API `POST /api/batches`, `POST /api/manage/batches/[id]/events`, event confirmation và Registry anchor submit hỗ trợ `Idempotency-Key`; UI tự gửi key cho create batch/event/confirm/anchor.
+- Idempotency store giữ cùng pending Promise/result trong runtime 15 phút, scope theo user + resource; cùng key khác payload bị từ chối `409`, operation lỗi bị xóa khỏi cache để retry hợp lệ. Đây là lớp chống duplicate cho single-instance hackathon runtime, không claim thay thế durable distributed idempotency store.
+- `bun run reconcile:solana` là reconciliation read-only: list batch/events, đọc Event PDA trực tiếp từ Devnet RPC, so DB mirror với live chain và chỉ báo `needs_mirror_sync / investigate_live_mismatch / proof_not_found`; script không tự tạo hoặc fabricate proof.
+- Live reconciliation hiện tại: **49 batches checked, 0 issues, 0 missing mirror, 0 invalid mirror**.
+- Validation sau Phase 13D: `bun test` **68 passed / 0 failed / 229 assertions**, `bun run typecheck` pass, `bun run build` pass.
+
 ## Not implemented yet
 
 - Production vẫn chưa bật `CHECK_DI_AUTH_MODE=required` mặc định. Local/demo hiện dùng `optional`; tài khoản producer demo seed nội bộ chỉ phục vụ trải nghiệm nhanh, còn production identity thật vẫn theo Supabase Auth + organization membership.
@@ -298,7 +306,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**Sau khi deploy/smoke production Phase 13A–13C, tiếp tục Phase 13D reliability hardening: Idempotency-Key cho mutation quan trọng và reconciliation read-back cho proof pending/missing; sau đó Phase 13E AI/Data Check explainability. BUIDL CTC adapter giữ nguyên nhưng không chen vào roadmap UniHackFest hiện tại.**
+**Phase 13D đã hoàn tất local gate; bước kế tiếp là Phase 13E AI/Data Check explainability (severity + evidence), rồi Phase 13F deterministic PII redaction. Production hiện đã deploy commit 19 cho Phase 13A–13C; Phase 13D sẽ deploy sau commit riêng và browser smoke không regression.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 

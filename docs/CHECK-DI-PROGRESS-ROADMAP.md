@@ -699,8 +699,8 @@ Các milestone nền tảng trong roadmap cũ (Supabase, organization auth, Phan
 13A. Public signup + organization owner provisioning          COMPLETE
 13B. Embedded browser Devnet wallet + ownership challenge    COMPLETE
 13C. eventHash + dual-signer Registry E2E không cần Phantom  COMPLETE (live Devnet)
-13D. Idempotency-Key + reconciliation                        NEXT
-13E. AI/Data Check severity + evidence
+13D. Idempotency-Key + reconciliation                        COMPLETE
+13E. AI/Data Check severity + evidence                         NEXT
 13F. deterministic PII redaction
 13G. independent Devnet verifier trên consumer verify
 13H. consumer journey stepper

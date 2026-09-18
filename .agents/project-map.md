@@ -75,6 +75,9 @@ Canonicalization, SHA-256 event hashing và chain verification server-side. Lega
 ### `src/lib/wallet` + `src/lib/solana`
 `client-signer.ts` định nghĩa organization wallet signer chung cho Phantom và browser Devnet wallet (`publicKey`, `signMessage`, `signTransaction`); management UI không hard-code Phantom. `browser-devnet-wallet.ts` giữ encrypted vault trong IndexedDB và chỉ giữ unlocked Keypair trong memory. Solana config + Devnet integrity vẫn dùng custom `check_di_registry` làm proof chính. Legacy server field/module còn tên `phantom` vì compatibility, nhưng transaction semantics không đổi: server partial-sign fee payer, organization wallet ký, server validate fee payer/program/PDA/accounts/instruction/signatures rồi relay Devnet và persist/read-back proof. Live browser-wallet dual-signer smoke đã tạo Event PDA thật và verify toàn bộ checks; Phantom path và lifecycle vẫn giữ tương thích.
 
+### `src/lib/reliability`
+Reliability helpers cho mutation quan trọng. `idempotency.ts` hỗ trợ `Idempotency-Key` theo scope user/resource, fingerprint payload ổn định, reuse cùng pending Promise/result trong TTL 15 phút và từ chối cùng key với payload khác. UI hiện gửi key cho create batch/event, confirm và Registry submit. `bun run reconcile:solana` là read-only Devnet reconciliation script: so DB mirror với live Event PDA và chỉ báo mismatch/missing mirror, không tự sinh proof.
+
 ### `src/lib/creditcoin`
 BUIDL CTC adapter tách biệt khỏi Solana core: cấu hình public CC3/Attestcoin, source chainKey Sepolia, live readiness probe và proof-builder client. `readiness.ts` bắt buộc RPC trả đúng CC3 testnet chain ID `102031`, Proof API healthy và attested height > 0; contract deployment readiness chỉ xanh khi có cả source + registry public address thật. `proof-builder.ts` gọi current `/api/v1/proof-by-tx/{chainKey}/{txHash}`, validate proof/tx identity và map response sang `CheckDiAttestedRegistry.ProofInput` thay vì tin raw API payload trực tiếp.
 

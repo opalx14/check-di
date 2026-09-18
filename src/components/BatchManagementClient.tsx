@@ -284,7 +284,10 @@ export function BatchManagementClient({
 
     const response = await fetch(`/api/manage/batches/${encodeURIComponent(batch.id)}/events`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        "idempotency-key": `create-event:${crypto.randomUUID()}`,
+      },
       body: JSON.stringify({
         stage,
         organizationName: form.get("organizationName"),
@@ -443,7 +446,10 @@ export function BatchManagementClient({
 
         requestInit = {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: {
+            "content-type": "application/json",
+            "idempotency-key": `confirm-event:${eventId}:${crypto.randomUUID()}`,
+          },
           body: JSON.stringify({
             signerPublicKey: publicKey,
             signatureBase64: bytesToBase64(signature),
@@ -525,7 +531,10 @@ export function BatchManagementClient({
 
           const submitResponse = await fetch(anchorUrl, {
             method: "POST",
-            headers: { "content-type": "application/json" },
+            headers: {
+              "content-type": "application/json",
+              "idempotency-key": `anchor-event:${eventId}:${crypto.randomUUID()}`,
+            },
             body: JSON.stringify({
               action: "submit",
               signedTransactionBase64,
@@ -745,7 +754,10 @@ export function BatchManagementClient({
 
         const submitResponse = await fetch(anchorUrl, {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: {
+            "content-type": "application/json",
+            "idempotency-key": `anchor-event:${eventId}:${crypto.randomUUID()}`,
+          },
           body: JSON.stringify({
             action: "submit",
             signedTransactionBase64,
