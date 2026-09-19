@@ -1,3 +1,7 @@
+import {
+  redactDocumentExtraction,
+  redactForPublicDisplay,
+} from "@/lib/ai/pii-redaction";
 import type {
   AIValidation,
   DocumentExtraction,
@@ -135,7 +139,7 @@ export function extractDocumentDemo({
     (value) => value !== undefined,
   ).length;
 
-  return {
+  return redactDocumentExtraction({
     status: "completed",
     provider: "demo",
     model: "deterministic-v1",
@@ -153,7 +157,7 @@ export function extractDocumentDemo({
       "DEMO: extraction mô phỏng từ tên file + metadata chặng; không phải OCR/LLM.",
       `MIME dùng cho demo extraction: ${mimeType}.`,
     ],
-  };
+  });
 }
 
 function documentValidation(
@@ -177,20 +181,23 @@ function documentValidation(
         : fields.includes("batchId")
           ? "HIGH"
           : "MEDIUM");
+  const safeValue = (value: string | number | boolean) =>
+    typeof value === "string" ? redactForPublicDisplay(value) : value;
+
   return {
     status,
-    message,
+    message: redactForPublicDisplay(message),
     fields,
     sourceDocumentId: evidence.id,
     severity,
     evidence: {
       sourceField: explain?.sourceField ?? fields[0] ?? "document",
-      sourceText: `${evidence.filename}: ${message}`,
+      sourceText: redactForPublicDisplay(`${evidence.filename}: ${message}`),
       ...(explain?.extractedValue !== undefined
-        ? { extractedValue: explain.extractedValue }
+        ? { extractedValue: safeValue(explain.extractedValue) }
         : {}),
       ...(explain?.expectedValue !== undefined
-        ? { expectedValue: explain.expectedValue }
+        ? { expectedValue: safeValue(explain.expectedValue) }
         : {}),
     },
   };

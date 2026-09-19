@@ -17,6 +17,7 @@ import { notFound } from "next/navigation";
 
 import { ConsumerVerifyTourGuide } from "@/components/ConsumerVerifyTourGuide";
 import { batchRepository } from "@/lib/db";
+import { redactForPublicDisplay } from "@/lib/ai/pii-redaction";
 import { productVisualForName } from "@/lib/product-visuals";
 import {
   verifyTraceEventSolanaProof,
@@ -205,7 +206,7 @@ function TraceEventCard({ event, index, solanaCheck }: { event: TraceEvent; inde
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-[11px] font-semibold text-slate-300">
-                    {validation.message}
+                    {redactForPublicDisplay(validation.message)}
                   </span>
                   {validation.severity && (
                     <span className="rounded-full border border-white/10 px-1.5 py-0.5 font-mono text-[9px] font-bold text-slate-400">
@@ -217,10 +218,10 @@ function TraceEventCard({ event, index, solanaCheck }: { event: TraceEvent; inde
                   <div className="mt-2 grid gap-1 font-mono text-[9px] text-slate-500 sm:grid-cols-3">
                     <span>Field: {validation.evidence.sourceField}</span>
                     <span>
-                      Extracted: {validation.evidence.extractedValue !== undefined ? String(validation.evidence.extractedValue) : "—"}
+                      Extracted: {validation.evidence.extractedValue !== undefined ? redactForPublicDisplay(String(validation.evidence.extractedValue)) : "—"}
                     </span>
                     <span>
-                      Expected: {validation.evidence.expectedValue !== undefined ? String(validation.evidence.expectedValue) : "—"}
+                      Expected: {validation.evidence.expectedValue !== undefined ? redactForPublicDisplay(String(validation.evidence.expectedValue)) : "—"}
                     </span>
                   </div>
                 )}
@@ -244,7 +245,7 @@ function TraceEventCard({ event, index, solanaCheck }: { event: TraceEvent; inde
           <div className="mt-3 flex flex-wrap gap-2">
             {documents.map((document) => (
               <span key={document.id} className="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-1 text-[10px] text-slate-400">
-                {document.mimeType.startsWith("image/") ? "Ảnh đã ký" : document.filename} · SHA {shorten(document.sha256)}
+                {document.mimeType.startsWith("image/") ? "Ảnh đã ký" : redactForPublicDisplay(document.filename)} · SHA {shorten(document.sha256)}
               </span>
             ))}
           </div>

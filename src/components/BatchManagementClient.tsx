@@ -1297,6 +1297,14 @@ function DocumentEvidenceCard({
         {extraction.provider} · {extraction.model} · simulated
         {extraction.confidence !== undefined ? ` · confidence ${(extraction.confidence * 100).toFixed(0)}%` : ""}
       </p>
+      {extraction.privacy?.applied && (
+        <p className="mt-1 text-[9px] text-slate-600">
+          PII redaction: deterministic-v1
+          {extraction.privacy.redactedCategories.length > 0
+            ? ` · masked ${extraction.privacy.redactedCategories.join(", ")}`
+            : " · không phát hiện field nhạy cảm trong extraction output"}
+        </p>
+      )}
       {(onReanalyze || onRemove) && (
         <div className="mt-2 flex flex-wrap items-center gap-3">
           {onReanalyze && (

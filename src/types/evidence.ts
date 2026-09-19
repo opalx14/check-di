@@ -18,6 +18,11 @@ export type DocumentExtraction = {
   organizationName?: string;
   confidence?: number;
   notes?: string[];
+  privacy?: {
+    redactionMode: "deterministic-v1";
+    applied: true;
+    redactedCategories: Array<"cccd" | "phone" | "bank_account" | "personal_address">;
+  };
   error?: string;
 };
 

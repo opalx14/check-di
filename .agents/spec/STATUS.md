@@ -299,6 +299,15 @@ canonical payload + previousEventHash
 - Supabase adapter persist/hydrate `severity/evidence` chỉ khi field tồn tại; migration `202609180001_check_di_ai_explainability.sql` thêm hai column nullable để legacy signed events không bị thay đổi canonical payload sau hydrate.
 - Local validation: `bun test` **68 passed / 0 failed / 233 assertions**, typecheck/build/diff-check pass. Remote migration/deploy Phase 13E cần apply trước khi production chạy code mới.
 
+## Phase 13F — Deterministic PII redaction
+
+- Thêm `src/lib/ai/pii-redaction.ts` để deterministic-mask CCCD, số điện thoại và STK có label; không giữ 4 số cuối trong output để tránh rò rỉ định danh không cần thiết. STK được detect trước CCCD để account 12 chữ số không bị phân loại sai.
+- Personal address chỉ bị mask trong field/free-text được đánh dấu là ngữ cảnh cá nhân; không blanket-redact `origin/destination` vì đây có thể là dữ liệu traceability công khai hợp lệ.
+- Demo extraction chạy redaction trước khi trả structured output và gắn metadata `privacy.redactionMode=deterministic-v1` + danh sách category đã mask. Raw PDF/image bytes, SHA-256 và private object gốc không bị sửa nên integrity evidence vẫn giữ nguyên.
+- AI validation message/sourceText/extracted/expected string được sanitize trước khi persist cho event mới. Consumer verify còn sanitize động legacy message/value và filename non-image để dữ liệu cũ không vô tình lộ PII trên public proof.
+- Đây là redaction của extracted/textual output, **không claim OCR/visual redaction trên raw PDF/image**.
+- Local validation sau Phase 13F: `bun test` **73 passed / 0 failed / 254 assertions**, `bun run typecheck` pass, `bun run build` pass (18 static pages generated / dynamic routes compiled).
+
 ## Not implemented yet
 
 - Production vẫn chưa bật `CHECK_DI_AUTH_MODE=required` mặc định. Local/demo hiện dùng `optional`; tài khoản producer demo seed nội bộ chỉ phục vụ trải nghiệm nhanh, còn production identity thật vẫn theo Supabase Auth + organization membership.
@@ -314,7 +323,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**Phase 13D hoàn tất và Phase 13E đã hoàn tất local code gate; bước kế tiếp là apply migration/deploy Phase 13D–13E rồi tiếp tục Phase 13F deterministic PII redaction.**
+**Phase 13D–13F đã hoàn tất local code gate. Bước kế tiếp: apply migration `202609180001_check_di_ai_explainability.sql` trên remote an toàn, deploy commits 20–22, chạy production browser smoke/cleanup test data, rồi chuyển sang Phase 13G independent Devnet verifier.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 
