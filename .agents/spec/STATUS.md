@@ -2,7 +2,7 @@
 
 ## Current phase
 
-**Phase 13A–13C public onboarding + browser Devnet wallet đã hoàn tất ở code/local/live-Devnet gate; production deployment/smoke của thay đổi Phase 13 đang chờ bước deploy cuối. App production hiện tại vẫn chạy tại `/opt/check-di` (port 7314, systemd `check-di.service`, Nginx + TLS), public URL `https://check-di.promptmarketcap.net`.**
+**Phase 13A–13F đã hoàn tất và commits 20–22 hiện đã deploy production. Supabase migration `202609180001_check_di_ai_explainability.sql` đã apply + repair history thành công; app production chạy tại `/opt/check-di` (port 7314, systemd `check-di.service`, Nginx + TLS), public URL `https://check-di.promptmarketcap.net`. Phase 13G independent Devnet verifier đã hoàn tất local code/live-RPC gate và đang chờ commit/deploy.**
 
 ## Product core
 
@@ -297,7 +297,8 @@ canonical payload + previousEventHash
 - Batch-ID mismatch được đánh dấu `HIGH`; organization/origin/quantity mismatch mặc định `MEDIUM`; chronology sai thứ tự là `HIGH`; matched checks là `LOW`.
 - Management UI và consumer verify hiển thị severity + evidence thay vì chỉ một warning string, nhưng vẫn ghi rõ đây là deterministic `DEMO EXTRACTION + rule cross-check`, không claim OCR/LLM production.
 - Supabase adapter persist/hydrate `severity/evidence` chỉ khi field tồn tại; migration `202609180001_check_di_ai_explainability.sql` thêm hai column nullable để legacy signed events không bị thay đổi canonical payload sau hydrate.
-- Local validation: `bun test` **68 passed / 0 failed / 233 assertions**, typecheck/build/diff-check pass. Remote migration/deploy Phase 13E cần apply trước khi production chạy code mới.
+- Local validation: `bun test` **68 passed / 0 failed / 233 assertions**, typecheck/build/diff-check pass.
+- Remote migration `202609180001_check_di_ai_explainability.sql` đã apply trực tiếp lên linked Supabase project và migration history đã repair riêng version `202609180001`; REST query `severity,evidence` trả 200. Commits 20–22 đã deploy production thành công.
 
 ## Phase 13F — Deterministic PII redaction
 
@@ -307,6 +308,15 @@ canonical payload + previousEventHash
 - AI validation message/sourceText/extracted/expected string được sanitize trước khi persist cho event mới. Consumer verify còn sanitize động legacy message/value và filename non-image để dữ liệu cũ không vô tình lộ PII trên public proof.
 - Đây là redaction của extracted/textual output, **không claim OCR/visual redaction trên raw PDF/image**.
 - Local validation sau Phase 13F: `bun test` **73 passed / 0 failed / 254 assertions**, `bun run typecheck` pass, `bun run build` pass (18 static pages generated / dynamic routes compiled).
+- Production deploy commits 20–22 hoàn tất với backup `/root/backups/check-di_backup_20260919_092802.tar.gz`; remote build pass, `check-di.service` active và local/public health + `/signup` + `/verify/DUR-260830-01` đều HTTP 200.
+
+## Phase 13G — Independent Devnet verifier
+
+- Thêm public route `GET /api/verify/[publicId]/devnet` chạy `no-store`, đọc batch public rồi verify từng Registry event bằng một lượt Solana Devnet RPC mới.
+- Verifier chỉ dùng public inputs cần thiết: `publicId`, event hash/previous hash/organization và public Registry authority. Persisted `registryAddress/eventPda/TXID` không được tin để quyết định `valid`; PDA được derive lại và account state được đọc trực tiếp từ Devnet.
+- Consumer `/verify/[publicId]` có nút **Independent Devnet verifier / Kiểm tra độc lập** để người dùng chủ động chạy fresh RPC check; UI ghi rõ đây là integrity/hash-chain verification, không phải xác minh sự thật ngoài đời.
+- Live local endpoint trên sample `DUR-260830-01`: **5/5 Registry events verified**, mọi check authority/batchHash/registryLink/eventAuthority/organization/eventHash/previousEventHash/organizationHash/lifecycleStatus đều true.
+- Local gate sau 13G: `bun test` **76 passed / 0 failed / 259 assertions**, typecheck/build/diff-check pass; Next.js build nhận route mới `/api/verify/[publicId]/devnet`.
 
 ## Not implemented yet
 
@@ -323,7 +333,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**Phase 13D–13F đã hoàn tất local code gate. Bước kế tiếp: apply migration `202609180001_check_di_ai_explainability.sql` trên remote an toàn, deploy commits 20–22, chạy production browser smoke/cleanup test data, rồi chuyển sang Phase 13G independent Devnet verifier.**
+**Phase 13G đã hoàn tất local/live-RPC gate. Bước kế tiếp: commit/deploy 13G, chạy production browser smoke cho nút independent verifier, sau đó xin explicit confirmation trước khi xóa identity PROD-SMOKE cũ; tiếp theo chuyển Phase 13H consumer journey stepper.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 

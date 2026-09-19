@@ -16,6 +16,7 @@ import {
 import { notFound } from "next/navigation";
 
 import { ConsumerVerifyTourGuide } from "@/components/ConsumerVerifyTourGuide";
+import { IndependentDevnetVerifier } from "@/components/IndependentDevnetVerifier";
 import { batchRepository } from "@/lib/db";
 import { redactForPublicDisplay } from "@/lib/ai/pii-redaction";
 import { productVisualForName } from "@/lib/product-visuals";
@@ -139,6 +140,10 @@ export default async function VerifyBatchPage({ params }: { params: Promise<{ pu
             </div>
           </div>
         </section>
+
+        <div className="mt-6">
+          <IndependentDevnetVerifier publicId={batch.publicId} />
+        </div>
 
         <section className="mt-6">
           <div className="flex items-end justify-between gap-4">

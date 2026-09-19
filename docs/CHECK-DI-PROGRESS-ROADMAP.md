@@ -700,10 +700,10 @@ Các milestone nền tảng trong roadmap cũ (Supabase, organization auth, Phan
 13B. Embedded browser Devnet wallet + ownership challenge    COMPLETE
 13C. eventHash + dual-signer Registry E2E không cần Phantom  COMPLETE (live Devnet)
 13D. Idempotency-Key + reconciliation                        COMPLETE
-13E. AI/Data Check severity + evidence                         COMPLETE (local; production migration pending)
-13F. deterministic PII redaction                               COMPLETE (local; deploy pending)
-13G. independent Devnet verifier trên consumer verify          NEXT
-13H. consumer journey stepper
+13E. AI/Data Check severity + evidence                         COMPLETE (production)
+13F. deterministic PII redaction                               COMPLETE (production)
+13G. independent Devnet verifier trên consumer verify          COMPLETE (local/live-RPC; deploy pending)
+13H. consumer journey stepper                                   NEXT
 13I. i18n completeness
 13J. audit/export dossier
 ```
@@ -713,6 +713,8 @@ Phase 13A–13C giữ security boundary: service-role chỉ ở server; embedded
 Hackathon auto-confirm signup là explicit fallback, mặc định OFF, chỉ chạy khi Supabase email delivery bị rate-limit và UI phải ghi đúng đây là test mode — không thay thế production email ownership verification.
 
 Phase 13F chỉ redaction deterministic trên extracted/textual output: CCCD, phone, labeled bank account và personal-address trong field được đánh dấu. Raw PDF/image vẫn private off-chain, giữ nguyên bytes + SHA-256; consumer verify sanitize thêm legacy text/filename trước khi render public. Không claim OCR/visual redaction của file gốc.
+
+Phase 13G thêm fresh Devnet verifier độc lập khỏi persisted mirror address/TXID: public route derive lại Registry/Event PDA từ public inputs + authority, đọc account trực tiếp Solana Devnet RPC và trả từng check integrity. Consumer verify có nút chủ động chạy lượt kiểm tra mới; sample DUR-260830-01 pass 5/5 Registry events trên local/live-RPC gate.
 
 ---
 
