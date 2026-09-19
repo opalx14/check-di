@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
+import { ProductionProofSection } from "@/components/ProductionProofSection";
 import { GettingStartedSection } from "@/components/GettingStartedSection";
 import { RolePathsSection } from "@/components/RolePathsSection";
 import { CoreFlowSection } from "@/components/CoreFlowSection";
@@ -16,6 +17,7 @@ export default function Home() {
 
       <main className="relative z-10">
         <HeroSection />
+        <ProductionProofSection />
         <RolePathsSection />
         <CoreFlowSection />
         <OnChainArchitectureSection />

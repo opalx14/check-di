@@ -2,7 +2,7 @@
 
 ## Current phase
 
-**Phase 13A–13H đã hoàn tất và deploy production. Phase 13I consumer i18n completeness đã hoàn tất local code gate và đang chờ commit/deploy. Supabase migration `202609180001_check_di_ai_explainability.sql` đã apply + repair history thành công; app production chạy tại `/opt/check-di` (port 7314, systemd `check-di.service`, Nginx + TLS), public URL `https://check-di.promptmarketcap.net`.**
+**Phase 13A–13J hardening đã hoàn tất và deploy production. Supabase migration `202609180001_check_di_ai_explainability.sql` đã apply + repair history thành công; chain verification, independent Devnet verifier và public audit dossier đều pass trên sample live. App production chạy tại `/opt/check-di` (port 7314, systemd `check-di.service`, Nginx + TLS), public URL `https://check-di.promptmarketcap.net`. Phase 14A đang đưa các proof đã chạy thật lên landing để người xem không phải đi sâu mới thấy giá trị kỹ thuật.**
 
 ## Product core
 
@@ -32,7 +32,8 @@ Batch / QR
 - Mobile UX ưu tiên `QR -> AI quick check -> Map`; chi tiết mở theo yêu cầu.
 - UI ghi rõ dữ liệu demo và không trình bày Devnet proof giả như dữ liệu thật.
 - i18n Việt/Anh và typography hiện tại đã tích hợp trong landing.
-- Landing đã rút gọn theo benchmark Redline/SkillBridge: navbar chỉ giữ tác vụ chính, hero có ảnh sầu riêng thật, hai persona rõ ràng, pipeline 5 chặng, kiến trúc integrity ngắn gọn và ô tra cứu batch nhanh; các section competition/compliance dài đã bỏ khỏi landing public.
+- Landing đã rút gọn theo benchmark Redline/SkillBridge: navbar chỉ giữ tác vụ chính, hero có ảnh sản phẩm, hai persona rõ ràng, pipeline 5 chặng, kiến trúc integrity ngắn gọn và ô tra cứu batch nhanh; các section competition/compliance dài đã bỏ khỏi landing public.
+- Phase 14A thêm khối **Production Proof** ngay sau hero: chỉ rõ sample live `DUR-260830-01`, chain 5/5, Solana Devnet 5/5, fresh-RPC independent verifier và redacted audit dossier; có CTA mở proof thật và tải audit JSON để landing phản ánh đúng các capability đã harden ở Phase 13.
 - Landing dùng onboarding dạng popup/coach-mark cho người mới: bước đầu chọn `Nhà cung cấp` hoặc `Người mua`, sau đó tour rẽ nhánh theo đúng mục đích. Supplier tour hiện giải thích trọn flow email demo -> Phantom -> chọn hơn 20 loại trái cây -> chụp ảnh thật -> ký -> Devnet TXID; client được dẫn tới quét QR. Tour chỉ hiện lần đầu bằng localStorage và không chiếm layout.
 
 ### Real off-chain integrity slice
@@ -373,7 +374,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**Phase 13A–13J hardening đã hoàn tất và đang chạy production. Chain verification + fresh Devnet verifier + public audit dossier đều pass trên sample live. Việc còn lại không tự động thực hiện: cleanup identity PROD-SMOKE cũ cần explicit confirmation vì là xóa dữ liệu production; Creditcoin end-to-end vẫn là lane mở riêng, không ảnh hưởng Solana core/demo hiện tại.**
+**Phase 14A Production Proof storytelling đã hoàn tất local code gate; bước kế tiếp là commit/deploy landing mới và browser-smoke CTA proof/audit trên production. Sau đó có thể chuyển sang polish submission/demo narrative. Cleanup identity PROD-SMOKE cũ vẫn cần explicit confirmation vì là xóa dữ liệu production; Creditcoin end-to-end vẫn là lane mở riêng.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 
