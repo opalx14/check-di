@@ -81,6 +81,9 @@ Reliability helpers cho mutation quan trọng. `idempotency.ts` hỗ trợ `Idem
 ### `src/lib/consumer`
 Phase 13H thêm helper state cho consumer journey stepper. `journey-stepper.ts` clamp active index, tính progress 0–100% và phân loại `selected/completed/upcoming` độc lập UI để tránh lỗi edge case khi hành trình có 0/1/N chặng.
 
+### `src/lib/audit`
+Phase 13J thêm `dossier.ts` để build public redacted audit export: giữ hash/signature/lifecycle/document SHA-256 + AI evidence đã sanitize + fresh Devnet verification, nhưng không đưa raw document/private storage path/extraction raw text hay canonical signed payload đầy đủ ra public. Public download route: `/api/verify/[publicId]/dossier`.
+
 ### `src/lib/i18n`
 VI/EN dictionaries + client context cho UI public. Phase 13I bổ sung namespace `consumerScan` và `consumerVerify`, parity test giữa hai locale, cookie `check_di_locale` đồng bộ với localStorage và `getServerDictionary()` cho dynamic consumer verify page. LanguageSwitcher persist locale rồi `router.refresh()` để server-rendered verify copy và client scanner/stepper/verifier cùng chuyển ngôn ngữ; root layout không đọc cookie nên các route static khác không bị ép dynamic.
 

@@ -280,6 +280,7 @@
   },
   "consumerVerify": {
     "scanAnother": "Scan another code",
+    "downloadAuditDossier": "Download audit dossier",
     "chainValid": "Chain valid",
     "needsCheck": "Needs review",
     "aiNoWarnings": "No AI warnings",

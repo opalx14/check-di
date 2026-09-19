@@ -340,6 +340,17 @@ canonical payload + previousEventHash
 - Thêm `getServerDictionary()` chỉ dùng ở dynamic verify page để đọc locale server-side; không kéo toàn bộ root layout sang dynamic rendering nên landing/login/signup vẫn giữ static optimization như trước.
 - Verify SSR đã được kiểm tra bằng cookie: `check_di_locale=en` render các chuỗi “Scan another code / Trace details / confirmed stages”, còn `vi` render “Quét mã khác / Chi tiết truy xuất / chặng đã xác nhận”.
 - Local gate sau 13I: `bun test` **81 passed / 0 failed / 279 assertions**, typecheck/build/diff-check pass.
+- Commit 26 đã deploy production với backup `/root/backups/check-di_backup_20260919_102450.tar.gz`; build 18/18 routes pass, service active. Fresh browser smoke VI ↔ EN trên `/scan` + `/verify/DUR-260830-01`, journey stepper và independent verifier đều pass; verifier vẫn 5/5, console/network 0 lỗi.
+
+## Phase 13J — Public audit/export dossier
+
+- Thêm `src/lib/audit/dossier.ts` tạo **public redacted audit dossier** từ public batch + fresh independent Devnet results.
+- Dossier giữ audit essentials: product/publicId, lifecycle status, previous/event hash, signer/signature, document SHA-256 metadata, AI/data checks đã sanitize, chain verification và Registry/Event PDA đọc mới từ Devnet.
+- Dossier cố ý **không** chứa raw PDF/image, private storage path, extraction raw text hoặc canonical signed payload đầy đủ; response tự ghi `redacted=true`, `canonicalSignedPayloadIncluded=false`, `rawDocumentsIncluded=false` để không đánh tráo public export với signed source-of-truth.
+- Public endpoint `GET /api/verify/[publicId]/dossier` chạy `no-store`, verify fresh Devnet trước khi build JSON và trả `Content-Disposition: attachment`.
+- Consumer verify có nút VI/EN “Tải hồ sơ audit / Download audit dossier”.
+- PII filename hardening được mở rộng: CCCD/STK embedded trong filename với dấu gạch/underscore cũng được mask trước public export.
+- Local gate sau 13J: `bun test` **83 passed / 0 failed / 295 assertions**, typecheck/build/diff-check pass; Next.js build nhận route mới `/api/verify/[publicId]/dossier`.
 
 ## Not implemented yet
 
@@ -356,7 +367,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**Phase 13I đã hoàn tất local code gate. Bước kế tiếp: commit/deploy consumer i18n, smoke VI ↔ EN trên /scan + /verify và independent verifier, rồi chuyển Phase 13J audit/export dossier. Identity PROD-SMOKE cũ vẫn còn; chỉ cleanup khi có explicit confirmation vì đây là thao tác xóa dữ liệu production.**
+**Phase 13J đã hoàn tất local code gate. Bước kế tiếp: commit/deploy audit dossier, smoke download JSON + PII boundary + fresh Devnet 5/5 trên production, rồi chốt roadmap hardening. Identity PROD-SMOKE cũ vẫn còn; chỉ cleanup khi có explicit confirmation vì đây là thao tác xóa dữ liệu production.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 

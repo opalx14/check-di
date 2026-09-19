@@ -280,6 +280,7 @@
   },
   "consumerVerify": {
     "scanAnother": "Quét mã khác",
+    "downloadAuditDossier": "Tải hồ sơ audit",
     "chainValid": "Chuỗi hợp lệ",
     "needsCheck": "Cần kiểm tra",
     "aiNoWarnings": "AI không cảnh báo",

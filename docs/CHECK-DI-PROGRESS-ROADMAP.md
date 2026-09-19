@@ -704,8 +704,8 @@ Các milestone nền tảng trong roadmap cũ (Supabase, organization auth, Phan
 13F. deterministic PII redaction                               COMPLETE (production)
 13G. independent Devnet verifier trên consumer verify          COMPLETE (production)
 13H. consumer journey stepper                                   COMPLETE (production)
-13I. i18n completeness                                          COMPLETE (local; deploy pending)
-13J. audit/export dossier                                       NEXT
+13I. i18n completeness                                          COMPLETE (production)
+13J. audit/export dossier                                       COMPLETE (local; deploy pending)
 ```
 
 Phase 13A–13C giữ security boundary: service-role chỉ ở server; embedded-wallet secret chỉ ở browser, mã hóa PBKDF2/AES-GCM trong IndexedDB; server chỉ nhận public key/challenge signature và tiếp tục validate đầy đủ fee payer/program/PDA/accounts/instruction/signatures trước khi relay Registry transaction.
@@ -718,7 +718,9 @@ Phase 13G thêm fresh Devnet verifier độc lập khỏi persisted mirror addre
 
 Phase 13H thay timeline consumer tĩnh bằng mobile-first journey stepper. Người dùng có thể tap chặng hoặc dùng Chặng trước / Chặng tiếp; panel focus hiển thị organization/location/time, sanitized summary, AI/data warning, Devnet integrity và Event PDA. State helper được tách riêng và test edge case 0/1/N stages. Production browser smoke đã pass thao tác trực tiếp và giữ independent verifier 5/5.
 
-Phase 13I hoàn thiện VI/EN cho public consumer flow /scan + /verify, gồm camera fallback, stepper, proof details, independent verifier và tours. Locale persist localStorage + SameSite cookie; dynamic verify đọc cookie server-side còn root layout không bị ép dynamic. Dictionary parity test khóa cấu trúc consumerScan/consumerVerify giữa vi/en.
+Phase 13I hoàn thiện VI/EN cho public consumer flow /scan + /verify, gồm camera fallback, stepper, proof details, independent verifier và tours. Locale persist localStorage + SameSite cookie; dynamic verify đọc cookie server-side còn root layout không bị ép dynamic. Dictionary parity test khóa cấu trúc consumerScan/consumerVerify giữa vi/en. Commit 26 đã deploy production; browser smoke VI ↔ EN, stepper và independent verifier 5/5 đều pass, console/network 0 lỗi.
+
+Phase 13J thêm public audit dossier JSON: export lifecycle/hash/signature/document SHA-256 + sanitized AI evidence và fresh Devnet verification, nhưng không export raw document/private path/extraction raw text hay canonical signed payload đầy đủ. Consumer verify có nút tải dossier VI/EN; endpoint `/api/verify/[publicId]/dossier` chạy no-store và attachment.
 
 ---
 

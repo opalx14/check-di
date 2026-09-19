@@ -3,6 +3,7 @@ import {
   CheckCircle2,
   ChevronRight,
   ExternalLink,
+  FileDown,
   Hash,
   MapPin,
   PackageCheck,
@@ -82,8 +83,14 @@ export default async function VerifyBatchPage({ params }: { params: Promise<{ pu
       <div className="relative mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
         <header className="flex items-center justify-between gap-3 border-b border-white/8 pb-5">
           <a href="/" className="font-display font-bold text-white">Check-Di</a>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <LanguageSwitcher />
+            <a
+              href={`/api/verify/${encodeURIComponent(batch.publicId)}/dossier`}
+              className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.06] px-3 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/10"
+            >
+              <FileDown className="size-3.5" /> {copy.downloadAuditDossier}
+            </a>
             <a href="/scan" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-300">
               <QrCode className="size-3.5" /> {copy.scanAnother}
             </a>

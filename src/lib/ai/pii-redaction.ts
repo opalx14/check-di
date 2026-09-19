@@ -32,7 +32,7 @@ export function redactSensitiveText(
   // Bank account number only when accompanied by a bank-account label. Run this
   // before generic numeric detectors so a 12-digit account is not misclassified as CCCD.
   value = value.replace(
-    /\b(STK|Số tài khoản|So tai khoan|Bank account)\s*[:#-]?\s*([0-9][0-9 .-]{6,20}[0-9])\b/gi,
+    /(?<![A-Za-z0-9])(STK|Số tài khoản|So tai khoan|Bank account)\s*[:#-]?\s*([0-9][0-9 .-]{6,20}[0-9])(?!\d)/gi,
     (_full, label: string) => {
       addCategory(categories, "bank_account");
       return `${label}: ${maskValue("bank_account")}`;
@@ -40,7 +40,7 @@ export function redactSensitiveText(
   );
 
   // Vietnamese citizen ID (CCCD): 12 consecutive digits.
-  value = value.replace(/\b\d{12}\b/g, () => {
+  value = value.replace(/(?<!\d)\d{12}(?!\d)/g, () => {
     addCategory(categories, "cccd");
     return maskValue("cccd");
   });

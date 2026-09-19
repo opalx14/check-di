@@ -244,6 +244,7 @@ export type FooterDictionary = {
 
 export type ConsumerVerifyDictionary = {
   scanAnother: string;
+  downloadAuditDossier: string;
   chainValid: string;
   needsCheck: string;
   aiNoWarnings: string;
