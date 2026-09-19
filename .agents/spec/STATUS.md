@@ -353,8 +353,10 @@ canonical payload + previousEventHash
 - Local gate sau 13J: `bun test` **83 passed / 0 failed / 295 assertions**, typecheck/build/diff-check pass; Next.js build nhận route mới `/api/verify/[publicId]/dossier`.
 - Commit 27 đã deploy production với backup `/root/backups/check-di_backup_20260919_103012.tar.gz`; endpoint dossier trả 200 attachment, scope privacy đúng, fresh Devnet vẫn 5/5 và browser smoke VI/EN không có console/network error.
 - Production dossier smoke đồng thời phát hiện `chainVerification.valid=false` cho sample legacy dù chữ ký + Devnet 5/5 đều hợp lệ. Root cause: PostgreSQL `timestamptz` hydrate cùng một instant thành `+00:00`, trong khi legacy signed payload hash dùng textual `+07:00`; nội dung thời gian không đổi nhưng byte-string canonical hash khác.
-- Hotfix verifier local cho phép một tập serialization thời gian tương đương đã biết: exact, UTC ISO `Z`, UTC `Z` không milliseconds, legacy Vietnam `+07:00` có/không milliseconds. Signature vẫn bắt buộc valid và event hash chỉ được chấp nhận nếu một candidate semantic-equivalent recompute khớp; timestamp khác instant vẫn fail.
+- Hotfix verifier cho phép một tập serialization thời gian tương đương đã biết: exact, UTC ISO `Z`, UTC `Z` không milliseconds, legacy Vietnam `+07:00` có/không milliseconds. Signature vẫn bắt buộc valid và event hash chỉ được chấp nhận nếu một candidate semantic-equivalent recompute khớp; timestamp khác instant vẫn fail.
 - Local gate sau timestamp compatibility hotfix: `bun test` **85 passed / 0 failed / 303 assertions**, typecheck/build/diff-check pass. Live Supabase sample `DUR-260830-01` local-readback trở lại **chain valid 5/5**, mỗi event ghi `hashMode=legacy-vn-offset`.
+- Commit 28 đã deploy production với backup `/root/backups/check-di_backup_20260919_103549.tar.gz`; service active, dossier trả `chainVerification.valid=true`, 5/5 chain checks `link/hash/signature/valid=true`, legacy sample dùng `hashMode=legacy-vn-offset`; independent Devnet verifier vẫn 5/5. SSR VI/EN hiển thị “Chuỗi hợp lệ / Chain valid” và nút audit đúng locale.
+- Final read-only reconciliation sau hardening: **49 batches checked, 0 issues, 0 missing mirror, 0 invalid mirror**.
 
 ## Not implemented yet
 
@@ -371,7 +373,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**Phase 13J đã deploy production; bước kế tiếp là commit/deploy timestamp canonicalization compatibility hotfix, xác nhận dossier `chainVerification.valid=true` + Devnet 5/5 trên production, rồi chốt roadmap hardening. Identity PROD-SMOKE cũ vẫn còn; chỉ cleanup khi có explicit confirmation vì đây là thao tác xóa dữ liệu production.**
+**Phase 13A–13J hardening đã hoàn tất và đang chạy production. Chain verification + fresh Devnet verifier + public audit dossier đều pass trên sample live. Việc còn lại không tự động thực hiện: cleanup identity PROD-SMOKE cũ cần explicit confirmation vì là xóa dữ liệu production; Creditcoin end-to-end vẫn là lane mở riêng, không ảnh hưởng Solana core/demo hiện tại.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 
