@@ -706,7 +706,8 @@ Các milestone nền tảng trong roadmap cũ (Supabase, organization auth, Phan
 13H. consumer journey stepper                                   COMPLETE (production)
 13I. i18n completeness                                          COMPLETE (production)
 13J. audit/export dossier                                       COMPLETE (production)
-14A. production proof storytelling trên landing               COMPLETE (local; deploy pending)
+14A. production proof storytelling trên landing               COMPLETE (production)
+14B. landing i18n completeness                                  COMPLETE (local; deploy pending)
 ```
 
 Phase 13A–13C giữ security boundary: service-role chỉ ở server; embedded-wallet secret chỉ ở browser, mã hóa PBKDF2/AES-GCM trong IndexedDB; server chỉ nhận public key/challenge signature và tiếp tục validate đầy đủ fee payer/program/PDA/accounts/instruction/signatures trước khi relay Registry transaction.
@@ -723,7 +724,9 @@ Phase 13I hoàn thiện VI/EN cho public consumer flow /scan + /verify, gồm ca
 
 Phase 13J thêm public audit dossier JSON: export lifecycle/hash/signature/document SHA-256 + sanitized AI evidence và fresh Devnet verification, nhưng không export raw document/private path/extraction raw text hay canonical signed payload đầy đủ. Consumer verify có nút tải dossier VI/EN; endpoint `/api/verify/[publicId]/dossier` chạy no-store và attachment. Commit 27 đã deploy production, boundary/privacy + Devnet 5/5 pass. Smoke phát hiện legacy sample bị false-negative chain hash do PostgreSQL timestamptz đổi textual +07:00 thành +00:00; commit 28 đã hotfix verifier bằng các timestamp serialization semantic-equivalent đã biết, không nới lỏng signature/eventHash. Production hiện trả chain valid 5/5 + Devnet 5/5, và reconciliation read-only 49 batches báo 0 issue.
 
-Phase 14A đưa các proof production lên landing bằng một khối riêng ngay sau hero. Khối này tách rõ sample marketing trên hero với **live proof batch `DUR-260830-01`**, hiển thị chain 5/5, Solana Devnet 5/5, independent fresh-RPC verifier và redacted audit dossier; CTA mở thẳng consumer proof hoặc tải audit JSON. Mục tiêu là để judge/người xem thấy ngay Check-Di không chỉ là mockup mà không cần tự khám phá nhiều route.
+Phase 14A đưa các proof production lên landing bằng một khối riêng ngay sau hero. Khối này tách rõ sample marketing trên hero với **live proof batch `DUR-260830-01`**, hiển thị chain 5/5, Solana Devnet 5/5, independent fresh-RPC verifier và redacted audit dossier; CTA mở thẳng consumer proof hoặc tải audit JSON. Commit 30 đã deploy production với backup `/root/backups/check-di_backup_20260919_141405.tar.gz`; homepage/verify/dossier đều 200.
+
+Phase 14B dọn nốt i18n landing: navbar “Kho sản phẩm / Quét QR”, hero proof summary và quick lookup chuyển sang dictionary VI/EN thay vì hard-code tiếng Việt. Thêm parity test cho nav/hero/quickLookup để tránh regression khi đổi locale.
 
 ---
 

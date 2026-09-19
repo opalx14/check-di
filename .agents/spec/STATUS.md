@@ -34,6 +34,7 @@ Batch / QR
 - i18n Việt/Anh và typography hiện tại đã tích hợp trong landing.
 - Landing đã rút gọn theo benchmark Redline/SkillBridge: navbar chỉ giữ tác vụ chính, hero có ảnh sản phẩm, hai persona rõ ràng, pipeline 5 chặng, kiến trúc integrity ngắn gọn và ô tra cứu batch nhanh; các section competition/compliance dài đã bỏ khỏi landing public.
 - Phase 14A thêm khối **Production Proof** ngay sau hero: chỉ rõ sample live `DUR-260830-01`, chain 5/5, Solana Devnet 5/5, fresh-RPC independent verifier và redacted audit dossier; có CTA mở proof thật và tải audit JSON để landing phản ánh đúng các capability đã harden ở Phase 13.
+- Commit 30 đã deploy production với backup `/root/backups/check-di_backup_20260919_141405.tar.gz`; homepage public trả 200 và render trực tiếp “Đang chạy production / Không chỉ là mockup.”, live batch `DUR-260830-01`, `5/5`, `Fresh RPC`, `Redacted`, CTA proof + audit. Verify/dossier routes vẫn 200 và chain live vẫn hợp lệ.
 - Landing dùng onboarding dạng popup/coach-mark cho người mới: bước đầu chọn `Nhà cung cấp` hoặc `Người mua`, sau đó tour rẽ nhánh theo đúng mục đích. Supplier tour hiện giải thích trọn flow email demo -> Phantom -> chọn hơn 20 loại trái cây -> chụp ảnh thật -> ký -> Devnet TXID; client được dẫn tới quét QR. Tour chỉ hiện lần đầu bằng localStorage và không chiếm layout.
 
 ### Real off-chain integrity slice
@@ -374,7 +375,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**Phase 14A Production Proof storytelling đã hoàn tất local code gate; bước kế tiếp là commit/deploy landing mới và browser-smoke CTA proof/audit trên production. Sau đó có thể chuyển sang polish submission/demo narrative. Cleanup identity PROD-SMOKE cũ vẫn cần explicit confirmation vì là xóa dữ liệu production; Creditcoin end-to-end vẫn là lane mở riêng.**
+**Phase 14A đã chạy production. Phase 14B landing i18n completeness đã hoàn tất local gate: navbar, hero proof summary và quick lookup không còn hard-code tiếng Việt; VI/EN parity test đã thêm. Bước kế tiếp là commit/deploy Phase 14B và smoke chuyển ngôn ngữ trực tiếp trên homepage. Cleanup identity PROD-SMOKE cũ vẫn cần explicit confirmation vì là xóa dữ liệu production; Creditcoin end-to-end vẫn là lane mở riêng.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 

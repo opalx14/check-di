@@ -8,6 +8,8 @@ export type NavDictionary = {
   safety: string;
   tryScan: string;
   createBatch: string;
+  productInventory: string;
+  scanQr: string;
   openMenu: string;
 };
 
@@ -33,6 +35,12 @@ export type HeroDictionary = {
   qrActionLabel: string;
   qrActionValue: string;
   qrActionDetail: string;
+  journeyCountValue: string;
+  journeyCountLabel: string;
+  originValue: string;
+  originLabel: string;
+  qrReadyValue: string;
+  qrReadyLabel: string;
   journeyStages: {
     farm: { label: string; place: string };
     packing: { label: string; place: string };
@@ -322,6 +330,15 @@ export type ConsumerScanDictionary = {
   tourFlowTitle: string;
 };
 
+export type QuickLookupDictionary = {
+  badge: string;
+  title: string;
+  description: string;
+  inputLabel: string;
+  check: string;
+  openCamera: string;
+};
+
 export type CommonDictionary = {
   switchLanguage: string;
   vietnamese: string;
@@ -344,5 +361,6 @@ export type Dictionary = {
   footer: FooterDictionary;
   consumerVerify: ConsumerVerifyDictionary;
   consumerScan: ConsumerScanDictionary;
+  quickLookup: QuickLookupDictionary;
   common: CommonDictionary;
 };

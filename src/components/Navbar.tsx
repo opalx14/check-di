@@ -29,7 +29,7 @@ export function Navbar() {
             className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-300 transition hover:text-cyan-300"
           >
             <Boxes className="size-3.5" />
-            Kho sản phẩm
+            {dict.nav.productInventory}
           </a>
         </nav>
 
@@ -44,7 +44,7 @@ export function Navbar() {
             className="inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2.5 text-xs font-extrabold text-slate-950 transition hover:bg-cyan-300"
           >
             <QrCode className="size-4" />
-            Quét QR
+            {dict.nav.scanQr}
           </a>
         </div>
 
@@ -52,7 +52,7 @@ export function Navbar() {
           <a
             href="/supplier"
             data-tour="supplier-mobile"
-            aria-label="Kho sản phẩm"
+            aria-label={dict.nav.productInventory}
             className="flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300"
           >
             <Boxes className="size-4" />
@@ -64,7 +64,7 @@ export function Navbar() {
           <a
             href="/scan"
             data-tour="scan-mobile"
-            aria-label="Quét QR"
+            aria-label={dict.nav.scanQr}
             className="flex size-9 items-center justify-center rounded-xl bg-cyan-400 text-slate-950"
           >
             <QrCode className="size-4" />

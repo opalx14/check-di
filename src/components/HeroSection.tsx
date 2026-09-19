@@ -122,16 +122,16 @@ export function HeroSection() {
 
                 <div className="mt-4 grid grid-cols-3 gap-2 border-t border-white/8 pt-4 text-center">
                   <div>
-                    <p className="font-display text-sm font-bold text-white">5 chặng</p>
-                    <p className="mt-0.5 text-[10px] text-slate-500">đã ghi nhận</p>
+                    <p className="font-display text-sm font-bold text-white">{dict.hero.journeyCountValue}</p>
+                    <p className="mt-0.5 text-[10px] text-slate-500">{dict.hero.journeyCountLabel}</p>
                   </div>
                   <div>
-                    <p className="font-display text-sm font-bold text-white">Long An</p>
-                    <p className="mt-0.5 text-[10px] text-slate-500">nguồn gốc minh họa</p>
+                    <p className="font-display text-sm font-bold text-white">{dict.hero.originValue}</p>
+                    <p className="mt-0.5 text-[10px] text-slate-500">{dict.hero.originLabel}</p>
                   </div>
                   <div>
-                    <p className="font-display text-sm font-bold text-emerald-300">QR ready</p>
-                    <p className="mt-0.5 text-[10px] text-slate-500">xem hành trình</p>
+                    <p className="font-display text-sm font-bold text-emerald-300">{dict.hero.qrReadyValue}</p>
+                    <p className="mt-0.5 text-[10px] text-slate-500">{dict.hero.qrReadyLabel}</p>
                   </div>
                 </div>
               </div>

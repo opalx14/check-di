@@ -11,6 +11,8 @@
     "safety": "Data Integrity",
     "tryScan": "Try Product Scan",
     "createBatch": "Create batch",
+    "productInventory": "Product inventory",
+    "scanQr": "Scan QR",
     "openMenu": "Open menu"
   },
   "hero": {
@@ -35,6 +37,12 @@
     "qrActionLabel": "When scanning QR",
     "qrActionValue": "View Full Journey Timeline",
     "qrActionDetail": "Location · Documents · Hash · Verifier",
+    "journeyCountValue": "5 stages",
+    "journeyCountLabel": "recorded",
+    "originValue": "Long An",
+    "originLabel": "illustrative origin",
+    "qrReadyValue": "QR ready",
+    "qrReadyLabel": "view journey",
     "journeyStages": {
       "farm": { "label": "Farm Origin", "place": "Long An" },
       "packing": { "label": "Packaging", "place": "Tan An" },
@@ -335,6 +343,14 @@
       "logistics": "Transit",
       "retail": "Retail"
     }
+  },
+  "quickLookup": {
+    "badge": "LOOKUP",
+    "title": "Have a batch ID? Verify it now.",
+    "description": "Or open the camera to scan a QR label.",
+    "inputLabel": "Batch ID",
+    "check": "Verify",
+    "openCamera": "Open camera"
   },
   "consumerScan": {
     "supplierQuestion": "Are you a supplier?",

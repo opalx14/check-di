@@ -11,6 +11,8 @@
     "safety": "An toàn dữ liệu",
     "tryScan": "Quét thử sản phẩm",
     "createBatch": "Tạo lô",
+    "productInventory": "Kho sản phẩm",
+    "scanQr": "Quét QR",
     "openMenu": "Mở menu"
   },
   "hero": {
@@ -35,6 +37,12 @@
     "qrActionLabel": "Khi quét QR",
     "qrActionValue": "Xem toàn bộ timeline",
     "qrActionDetail": "Địa điểm · chứng từ · hash · đơn vị xác nhận",
+    "journeyCountValue": "5 chặng",
+    "journeyCountLabel": "đã ghi nhận",
+    "originValue": "Long An",
+    "originLabel": "nguồn gốc minh họa",
+    "qrReadyValue": "QR ready",
+    "qrReadyLabel": "xem hành trình",
     "journeyStages": {
       "farm": { "label": "Nhà vườn", "place": "Long An" },
       "packing": { "label": "Đóng gói", "place": "Tân An" },
@@ -335,6 +343,14 @@
       "logistics": "Vận chuyển",
       "retail": "Điểm bán"
     }
+  },
+  "quickLookup": {
+    "badge": "TRA CỨU",
+    "title": "Có mã lô? Kiểm tra ngay.",
+    "description": "Hoặc mở camera để quét QR trên sản phẩm.",
+    "inputLabel": "Mã lô",
+    "check": "Kiểm tra",
+    "openCamera": "Mở camera"
   },
   "consumerScan": {
     "supplierQuestion": "Bạn là nhà cung cấp?",
