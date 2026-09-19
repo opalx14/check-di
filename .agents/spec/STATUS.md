@@ -375,7 +375,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**Phase 14A đã chạy production. Phase 14B landing i18n completeness đã hoàn tất local gate: navbar, hero proof summary, role paths và quick lookup không còn hard-code tiếng Việt; VI/EN parity test đã thêm. Bước kế tiếp là commit/deploy Phase 14B và smoke chuyển ngôn ngữ trực tiếp trên homepage. Cleanup identity PROD-SMOKE cũ vẫn cần explicit confirmation vì là xóa dữ liệu production; Creditcoin end-to-end vẫn là lane mở riêng.**
+**Phase 14A–14B đã chạy production. Landing hiện surface live Production Proof ngay sau hero và toàn bộ navbar/hero proof summary/role paths/quick lookup dùng dictionary VI/EN. Commit 31–32 đã deploy với backup gần nhất `/root/backups/check-di_backup_20260919_142208.tar.gz`; homepage, health, scan và verify đều HTTP 200. Static VI render đúng và production JS bundle chứa EN copy tương ứng. Remoat latest-response vẫn bị stale ở report commit 28 nên browser toggle smoke fresh chưa đọc lại được qua MCP, nhưng deploy/build/source/asset verification đều pass. Cleanup identity PROD-SMOKE cũ vẫn cần explicit confirmation vì là xóa dữ liệu production; Creditcoin end-to-end vẫn là lane mở riêng.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 
