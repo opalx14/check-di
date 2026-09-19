@@ -142,6 +142,99 @@ export function confirmTraceEventWithExternalSignature(
   return candidate;
 }
 
+export type TraceEventHashVerificationMode =
+  | "exact"
+  | "utc-iso"
+  | "utc-z-no-ms"
+  | "legacy-vn-offset"
+  | "legacy-vn-offset-ms";
+
+function buildEventHashCandidate(
+  event: TraceEvent,
+  occurredAt: string,
+) {
+  return buildTraceEventHash(
+    {
+      id: event.id,
+      batchId: event.batchId,
+      stage: event.stage,
+      organizationId: event.organizationId,
+      organizationName: event.organizationName,
+      location: event.location,
+      occurredAt,
+      summary: event.summary,
+      documents: event.documents,
+      documentEvidence: event.documentEvidence,
+      metrics: event.metrics,
+      aiValidations: event.aiValidations,
+    },
+    event.previousEventHash ?? "",
+  );
+}
+
+function formatFixedOffsetTimestamp(
+  date: Date,
+  offsetMinutes: number,
+  includeMilliseconds: boolean,
+) {
+  const shifted = new Date(date.getTime() + offsetMinutes * 60_000);
+  const iso = shifted.toISOString();
+  const base = includeMilliseconds ? iso.slice(0, 23) : iso.slice(0, 19);
+  const sign = offsetMinutes >= 0 ? "+" : "-";
+  const absoluteMinutes = Math.abs(offsetMinutes);
+  const hours = String(Math.floor(absoluteMinutes / 60)).padStart(2, "0");
+  const minutes = String(absoluteMinutes % 60).padStart(2, "0");
+  return `${base}${sign}${hours}:${minutes}`;
+}
+
+function verifyEventHash(event: TraceEvent): {
+  hashValid: boolean;
+  hashMode?: TraceEventHashVerificationMode;
+} {
+  if (!event.previousEventHash || !event.eventHash) {
+    return { hashValid: false };
+  }
+
+  const candidates: Array<{
+    mode: TraceEventHashVerificationMode;
+    occurredAt: string;
+  }> = [{ mode: "exact", occurredAt: event.occurredAt }];
+
+  const parsed = new Date(event.occurredAt);
+  if (!Number.isNaN(parsed.getTime())) {
+    const utcIso = parsed.toISOString();
+    candidates.push({ mode: "utc-iso", occurredAt: utcIso });
+    candidates.push({
+      mode: "utc-z-no-ms",
+      occurredAt: utcIso.replace(/\.000Z$/, "Z"),
+    });
+    candidates.push({
+      mode: "legacy-vn-offset",
+      occurredAt: formatFixedOffsetTimestamp(parsed, 7 * 60, false),
+    });
+    candidates.push({
+      mode: "legacy-vn-offset-ms",
+      occurredAt: formatFixedOffsetTimestamp(parsed, 7 * 60, true),
+    });
+  }
+
+  const seen = new Set<string>();
+  for (const candidate of candidates) {
+    if (seen.has(candidate.occurredAt)) continue;
+    seen.add(candidate.occurredAt);
+    if (buildEventHashCandidate(event, candidate.occurredAt) === event.eventHash) {
+      return candidate.mode === "exact"
+        ? { hashValid: true }
+        : {
+            hashValid: true,
+            hashMode: candidate.mode,
+          };
+    }
+  }
+
+  return { hashValid: false };
+}
+
 function importPublicKey(publicKeyValue: string) {
   try {
     return createPublicKey({
@@ -163,6 +256,7 @@ function importPublicKey(publicKeyValue: string) {
 export function verifyTraceEvent(event: TraceEvent): {
   hashValid: boolean;
   signatureValid: boolean;
+  hashMode?: TraceEventHashVerificationMode;
 } {
   if (
     !event.previousEventHash ||
@@ -174,27 +268,7 @@ export function verifyTraceEvent(event: TraceEvent): {
     return { hashValid: false, signatureValid: false };
   }
 
-  const payload = canonicalEventPayload({
-    id: event.id,
-    batchId: event.batchId,
-    stage: event.stage,
-    organizationId: event.organizationId,
-    organizationName: event.organizationName,
-    location: event.location,
-    occurredAt: event.occurredAt,
-    summary: event.summary,
-    documents: event.documents,
-    documentEvidence: event.documentEvidence,
-    metrics: event.metrics,
-    aiValidations: event.aiValidations,
-  });
-
-  const recomputedHash = sha256Hex(
-    canonicalize({
-      previousEventHash: event.previousEventHash,
-      payload,
-    }),
-  );
+  const hashCheck = verifyEventHash(event);
 
   let signatureValid = false;
   try {
@@ -228,7 +302,7 @@ export function verifyTraceEvent(event: TraceEvent): {
   }
 
   return {
-    hashValid: recomputedHash === event.eventHash,
+    ...hashCheck,
     signatureValid,
   };
 }

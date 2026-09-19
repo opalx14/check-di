@@ -351,6 +351,10 @@ canonical payload + previousEventHash
 - Consumer verify có nút VI/EN “Tải hồ sơ audit / Download audit dossier”.
 - PII filename hardening được mở rộng: CCCD/STK embedded trong filename với dấu gạch/underscore cũng được mask trước public export.
 - Local gate sau 13J: `bun test` **83 passed / 0 failed / 295 assertions**, typecheck/build/diff-check pass; Next.js build nhận route mới `/api/verify/[publicId]/dossier`.
+- Commit 27 đã deploy production với backup `/root/backups/check-di_backup_20260919_103012.tar.gz`; endpoint dossier trả 200 attachment, scope privacy đúng, fresh Devnet vẫn 5/5 và browser smoke VI/EN không có console/network error.
+- Production dossier smoke đồng thời phát hiện `chainVerification.valid=false` cho sample legacy dù chữ ký + Devnet 5/5 đều hợp lệ. Root cause: PostgreSQL `timestamptz` hydrate cùng một instant thành `+00:00`, trong khi legacy signed payload hash dùng textual `+07:00`; nội dung thời gian không đổi nhưng byte-string canonical hash khác.
+- Hotfix verifier local cho phép một tập serialization thời gian tương đương đã biết: exact, UTC ISO `Z`, UTC `Z` không milliseconds, legacy Vietnam `+07:00` có/không milliseconds. Signature vẫn bắt buộc valid và event hash chỉ được chấp nhận nếu một candidate semantic-equivalent recompute khớp; timestamp khác instant vẫn fail.
+- Local gate sau timestamp compatibility hotfix: `bun test` **85 passed / 0 failed / 303 assertions**, typecheck/build/diff-check pass. Live Supabase sample `DUR-260830-01` local-readback trở lại **chain valid 5/5**, mỗi event ghi `hashMode=legacy-vn-offset`.
 
 ## Not implemented yet
 
@@ -367,7 +371,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**Phase 13J đã hoàn tất local code gate. Bước kế tiếp: commit/deploy audit dossier, smoke download JSON + PII boundary + fresh Devnet 5/5 trên production, rồi chốt roadmap hardening. Identity PROD-SMOKE cũ vẫn còn; chỉ cleanup khi có explicit confirmation vì đây là thao tác xóa dữ liệu production.**
+**Phase 13J đã deploy production; bước kế tiếp là commit/deploy timestamp canonicalization compatibility hotfix, xác nhận dossier `chainVerification.valid=true` + Devnet 5/5 trên production, rồi chốt roadmap hardening. Identity PROD-SMOKE cũ vẫn còn; chỉ cleanup khi có explicit confirmation vì đây là thao tác xóa dữ liệu production.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 

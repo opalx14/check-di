@@ -6,6 +6,7 @@ import { PublicKey } from "@solana/web3.js";
 import { getSampleBatch } from "@/lib/db/sample-batch";
 import {
   buildTraceEventHash,
+  confirmTraceEvent,
   confirmTraceEventWithExternalSignature,
   type ConfirmTraceEventInput,
   verifyTraceChain,
@@ -51,6 +52,55 @@ describe("Check-Di traceability vertical slice", () => {
 
     expect(verification.valid).toBe(false);
     expect(verification.checks[1]?.hashValid).toBe(false);
+  });
+
+  test("accepts Supabase timestamptz normalization for legacy +07 signed events", () => {
+    const batch = getSampleBatch("DUR-260830-01");
+    const source = batch?.events[0];
+    expect(source).toBeDefined();
+
+    const hydrated = {
+      ...source!,
+      occurredAt: "2026-08-29T23:40:00+00:00",
+    };
+    const verification = verifyTraceEvent(hydrated);
+
+    expect(verification.hashValid).toBe(true);
+    expect(verification.signatureValid).toBe(true);
+    expect(verification.hashMode).toBe("legacy-vn-offset");
+  });
+
+  test("accepts Supabase timestamptz normalization for UTC ISO signed events", () => {
+    const input: ConfirmTraceEventInput = {
+      id: "evt-supabase-time-normalization",
+      batchId: "batch-time-normalization",
+      stage: "production",
+      organizationId: "org-time-normalization",
+      organizationName: "Time Normalization Farm",
+      location: "Long An",
+      occurredAt: "2026-09-19T03:00:00.000Z",
+      summary: "Timestamp normalization compatibility test",
+      documents: [],
+      metrics: {},
+      aiValidations: [],
+    };
+    const signed = confirmTraceEvent(input, "GENESIS");
+    const hydrated = {
+      ...signed,
+      occurredAt: "2026-09-19T03:00:00+00:00",
+    };
+
+    const verification = verifyTraceEvent(hydrated);
+    expect(verification.hashValid).toBe(true);
+    expect(verification.signatureValid).toBe(true);
+    expect(verification.hashMode).toBe("utc-iso");
+
+    expect(
+      verifyTraceEvent({
+        ...hydrated,
+        occurredAt: "2026-09-19T03:01:00+00:00",
+      }).hashValid,
+    ).toBe(false);
   });
 
   test("accepts a Phantom-style Solana base58 Ed25519 signer", () => {
