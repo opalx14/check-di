@@ -25,9 +25,37 @@ const fontMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Check-Di · Truy xuất nguồn gốc theo từng chặng",
+  metadataBase: new URL("https://check-di.promptmarketcap.net"),
+  title: "Check-Di · Quét QR, xem nguồn gốc, kiểm tra proof thật",
   description:
-    "Check-Di giúp theo dõi hành trình sản phẩm từ nơi sản xuất đến điểm bán bằng timeline, QR, AI đối chiếu chứng từ và hash kiểm tra tính toàn vẹn.",
+    "Check-Di theo dõi hành trình sản phẩm qua 5 chặng bằng QR, AI/Data Checks, SHA-256 + Ed25519, Solana Devnet và public audit dossier.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "vi_VN",
+    url: "/",
+    siteName: "Check-Di",
+    title: "Check-Di · Quét QR, xem nguồn gốc, kiểm tra proof thật",
+    description:
+      "Live demo truy xuất nguồn gốc với chain 5/5, Solana Devnet 5/5, fresh-RPC verifier và redacted audit dossier.",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Check-Di live production proof",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Check-Di · Quét QR, xem nguồn gốc, kiểm tra proof thật",
+    description:
+      "QR traceability + AI/Data Checks + Solana Devnet proof + public audit dossier.",
+    images: ["/opengraph-image"],
+  },
 };
 
 export default function RootLayout({

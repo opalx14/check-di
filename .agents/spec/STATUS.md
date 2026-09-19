@@ -35,6 +35,7 @@ Batch / QR
 - Landing đã rút gọn theo benchmark Redline/SkillBridge: navbar chỉ giữ tác vụ chính, hero có ảnh sản phẩm, hai persona rõ ràng, pipeline 5 chặng, kiến trúc integrity ngắn gọn và ô tra cứu batch nhanh; các section competition/compliance dài đã bỏ khỏi landing public.
 - Phase 14A thêm khối **Production Proof** ngay sau hero: chỉ rõ sample live `DUR-260830-01`, chain 5/5, Solana Devnet 5/5, fresh-RPC independent verifier và redacted audit dossier; có CTA mở proof thật và tải audit JSON để landing phản ánh đúng các capability đã harden ở Phase 13.
 - Commit 30 đã deploy production với backup `/root/backups/check-di_backup_20260919_141405.tar.gz`; homepage public trả 200 và render trực tiếp “Đang chạy production / Không chỉ là mockup.”, live batch `DUR-260830-01`, `5/5`, `Fresh RPC`, `Redacted`, CTA proof + audit. Verify/dossier routes vẫn 200 và chain live vẫn hợp lệ.
+- Phase 14C chuẩn bị link cho social/community sharing: metadataBase + canonical, Open Graph/Twitter metadata, social preview 1200×630 tại special route `/opengraph-image`, và nút “Chia sẻ demo / Share demo” dùng Web Share API nếu có, fallback copy URL. Local gate hiện **88 tests / 0 fail / 319 assertions**, typecheck/build/diff-check pass; build sinh 19 static pages gồm `/opengraph-image`.
 - Landing dùng onboarding dạng popup/coach-mark cho người mới: bước đầu chọn `Nhà cung cấp` hoặc `Người mua`, sau đó tour rẽ nhánh theo đúng mục đích. Supplier tour hiện giải thích trọn flow email demo -> Phantom -> chọn hơn 20 loại trái cây -> chụp ảnh thật -> ký -> Devnet TXID; client được dẫn tới quét QR. Tour chỉ hiện lần đầu bằng localStorage và không chiếm layout.
 
 ### Real off-chain integrity slice
@@ -375,7 +376,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**Phase 14A–14B đã chạy production. Landing hiện surface live Production Proof ngay sau hero và toàn bộ navbar/hero proof summary/role paths/quick lookup dùng dictionary VI/EN. Commit 31–32 đã deploy với backup gần nhất `/root/backups/check-di_backup_20260919_142208.tar.gz`; homepage, health, scan và verify đều HTTP 200. Static VI render đúng và production JS bundle chứa EN copy tương ứng. Remoat latest-response vẫn bị stale ở report commit 28 nên browser toggle smoke fresh chưa đọc lại được qua MCP, nhưng deploy/build/source/asset verification đều pass. Cleanup identity PROD-SMOKE cũ vẫn cần explicit confirmation vì là xóa dữ liệu production; Creditcoin end-to-end vẫn là lane mở riêng.**
+**Phase 14A–14B đã chạy production. Phase 14C share-ready public launch đã hoàn tất local gate: root metadata có canonical + Open Graph/Twitter large-card metadata, route `/opengraph-image` render social card 1200×630, Production Proof có nút Web Share/clipboard “Chia sẻ demo”, và Phase 14D đã có `docs/CHECK-DI-COMMUNITY-LAUNCH-PACK.md` với bài đăng ngắn/kỹ thuật, screenshot checklist và safe-claim boundary. Bước kế tiếp là commit/deploy 14C–14D, curl-check OG tags/image và smoke nút share. Cleanup identity PROD-SMOKE cũ vẫn cần explicit confirmation vì là xóa dữ liệu production; Creditcoin end-to-end vẫn là lane mở riêng.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 

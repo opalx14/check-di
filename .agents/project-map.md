@@ -28,7 +28,9 @@ Location + timestamp + organization + batch data + documents
 ## Active structure
 
 ### `src/app`
-Next.js App Router, landing, API và các route sản phẩm sau này:
+Next.js App Router, landing, API và các route sản phẩm sau này. Phase 14C thêm `opengraph-image.tsx` (1200×630), canonical + Open Graph/Twitter metadata để link production có social preview khi chia sẻ vào hội nhóm.
+
+Các route chính:
 
 - `/` landing + demo.
 - `/verify/[publicId]` trang người tiêu dùng quét QR — đọc public proof từ persisted repository.
