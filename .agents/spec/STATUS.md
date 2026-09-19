@@ -2,7 +2,7 @@
 
 ## Current phase
 
-**Phase 13A–13G đã hoàn tất và deploy production. Supabase migration `202609180001_check_di_ai_explainability.sql` đã apply + repair history thành công; app production chạy tại `/opt/check-di` (port 7314, systemd `check-di.service`, Nginx + TLS), public URL `https://check-di.promptmarketcap.net`. Commit 23 independent Devnet verifier đã qua production API + browser UI smoke 5/5 Registry events.**
+**Phase 13A–13G đã hoàn tất và deploy production. Phase 13H consumer journey stepper đã hoàn tất local code gate và đang chờ commit/deploy. Supabase migration `202609180001_check_di_ai_explainability.sql` đã apply + repair history thành công; app production chạy tại `/opt/check-di` (port 7314, systemd `check-di.service`, Nginx + TLS), public URL `https://check-di.promptmarketcap.net`. Commit 23 independent Devnet verifier đã qua production API + browser UI smoke 5/5 Registry events.**
 
 ## Product core
 
@@ -321,6 +321,16 @@ canonical payload + previousEventHash
 - Production API `/api/verify/DUR-260830-01/devnet` trả `mode=fresh-devnet-rpc`, `persistedMirrorTrusted=false`, `verifiedEvents=5`, `allRegistryEventsVerified=true`.
 - Fresh Remoat browser smoke đã click **Kiểm tra độc lập** trên consumer verify và render 5/5 event cards `VERIFIED` + Event PDA; console 0 lỗi, network request verifier HTTP 200.
 
+## Phase 13H — Consumer journey stepper
+
+- Consumer verify thay static five-stage timeline bằng interactive stepper: tap trực tiếp từng chặng hoặc dùng **Chặng trước / Chặng tiếp** để duyệt tuần tự, ưu tiên thao tác mobile.
+- Mỗi step hiển thị organization, location, time, sanitized summary, AI/data warning count, Devnet integrity status và Event PDA ngắn; lifecycle revoked/superseded vẫn đổi trạng thái cảnh báo.
+- Stepper dùng helper `src/lib/consumer/journey-stepper.ts` để clamp index, tính progress và phân loại selected/completed/upcoming ổn định cho edge case 0/1/N steps.
+- Public display của event summary + organization name được chạy deterministic redaction trước render mà không đổi canonical signed event.
+- Consumer tour được cập nhật để giải thích stepper mới thay vì timeline tĩnh.
+- Local SSR check cho `/verify/DUR-260830-01` đã render các control **Chặng trước / Chặng tiếp**, mô tả chọn chặng, Devnet integrity và independent verifier.
+- Local gate sau 13H: `bun test` **79 passed / 0 failed / 273 assertions**, typecheck/build/diff-check pass.
+
 ## Not implemented yet
 
 - Production vẫn chưa bật `CHECK_DI_AUTH_MODE=required` mặc định. Local/demo hiện dùng `optional`; tài khoản producer demo seed nội bộ chỉ phục vụ trải nghiệm nhanh, còn production identity thật vẫn theo Supabase Auth + organization membership.
@@ -336,7 +346,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**Phase 13G đã hoàn tất production. Bước kế tiếp là Phase 13H consumer journey stepper. Identity PROD-SMOKE cũ vẫn còn; chỉ cleanup khi có explicit confirmation vì đây là thao tác xóa dữ liệu production.**
+**Phase 13H đã hoàn tất local code gate. Bước kế tiếp: commit/deploy stepper, chạy production browser interaction smoke, rồi chuyển Phase 13I i18n completeness. Identity PROD-SMOKE cũ vẫn còn; chỉ cleanup khi có explicit confirmation vì đây là thao tác xóa dữ liệu production.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 

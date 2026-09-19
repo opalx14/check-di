@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import { ConsumerJourneyStepper } from "@/components/ConsumerJourneyStepper";
 import { ConsumerVerifyTourGuide } from "@/components/ConsumerVerifyTourGuide";
 import { IndependentDevnetVerifier } from "@/components/IndependentDevnetVerifier";
 import { batchRepository } from "@/lib/db";
@@ -119,24 +120,22 @@ export default async function VerifyBatchPage({ params }: { params: Promise<{ pu
                 <StatusChip icon={CheckCircle2} label={hasSignedProductPhoto ? "Ảnh nguồn đã ký" : "Chưa có ảnh ký"} good={hasSignedProductPhoto} />
               </div>
 
-              <div className="mt-7 border-t border-white/8 pt-5" data-tour="verify-journey-timeline">
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">Hành trình</p>
-                <div className="mt-4 flex items-start justify-between gap-1">
-                  {batch.events.map((event, index) => {
-                    const meta = stageMeta[event.stage];
-                    const Icon = meta.icon;
-                    return (
-                      <div key={event.id} className="relative flex min-w-0 flex-1 flex-col items-center text-center">
-                        <div className="relative z-10 flex size-9 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300">
-                          <Icon className="size-4" />
-                        </div>
-                        <p className="mt-2 max-w-[80px] text-[10px] font-semibold text-slate-200 sm:text-[11px]">{meta.label}</p>
-                        {index < batch.events.length - 1 && <span className="absolute left-[62%] top-[18px] h-px w-[76%] bg-gradient-to-r from-emerald-400/45 to-cyan-400/25" />}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              <ConsumerJourneyStepper
+                events={batch.events.map((event, index) => ({
+                  id: event.id,
+                  stage: event.stage,
+                  organizationName: redactForPublicDisplay(event.organizationName),
+                  location: event.location,
+                  occurredAt: event.occurredAt,
+                  summary: redactForPublicDisplay(event.summary),
+                  lifecycleStatus: event.status,
+                  warningCount: (event.aiValidations ?? []).filter(
+                    (validation) => validation.status !== "matched",
+                  ).length,
+                  devnetVerified: solanaChecks[index]?.valid === true,
+                  eventPda: solanaChecks[index]?.eventPda,
+                }))}
+              />
             </div>
           </div>
         </section>
@@ -193,14 +192,14 @@ function TraceEventCard({ event, index, solanaCheck }: { event: TraceEvent; inde
             <p className="text-sm font-bold text-white">{index + 1}. {meta.label}</p>
             {!terminal && <CheckCircle2 className="size-3.5 text-emerald-400" />}
           </div>
-          <p className="mt-0.5 truncate text-[11px] text-slate-400">{event.organizationName} · {event.location}</p>
+          <p className="mt-0.5 truncate text-[11px] text-slate-400">{redactForPublicDisplay(event.organizationName)} · {event.location}</p>
         </div>
         <span className="hidden text-[10px] text-slate-500 sm:block">{formatTime(event.occurredAt)}</span>
         <ChevronRight className="size-4 text-slate-500 transition group-open:rotate-90" />
       </summary>
 
       <div className="border-t border-white/8 px-4 pb-4 pt-3">
-        <p className="text-xs leading-relaxed text-slate-300">{event.summary}</p>
+        <p className="text-xs leading-relaxed text-slate-300">{redactForPublicDisplay(event.summary)}</p>
 
         {(event.aiValidations ?? []).length > 0 && (
           <div className="mt-3 space-y-2">

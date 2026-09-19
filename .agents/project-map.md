@@ -53,7 +53,7 @@ Next.js App Router, landing, API và các route sản phẩm sau này:
 - `/batches/[id]` quản lý hành trình, AI warning, draft và xác nhận từng chặng; chặng nguồn của nhà sản xuất yêu cầu chụp/tải ảnh thật trước khi ký. Khi còn draft, ảnh có thể bỏ và chụp lại; sau khi Phantom ký thì SHA-256 của ảnh nằm trong canonical event hash, event bị khóa và Registry transaction tạo TXID/PDA thật trên Solana Devnet.
 
 ### `src/components`
-UI dùng lại: hero, journey timeline/map preview, document check, QR/public verification. Phase 13G thêm `IndependentDevnetVerifier.tsx` trên consumer verify để người dùng chủ động gọi fresh Devnet RPC verification thay vì chỉ xem trạng thái SSR đã render.
+UI dùng lại: hero, journey timeline/map preview, document check, QR/public verification. Phase 13G thêm `IndependentDevnetVerifier.tsx` trên consumer verify để người dùng chủ động gọi fresh Devnet RPC verification thay vì chỉ xem trạng thái SSR đã render. Phase 13H thêm `ConsumerJourneyStepper.tsx`: mobile-first interactive stage stepper cho consumer verify, hiển thị per-step organization/location/time, AI warning count, Devnet status và Event PDA thay cho timeline tĩnh.
 
 ### `src/lib/ai`
 AI demo hỗ trợ đối chiếu chứng từ giữa các chặng. `document-extraction.ts` dùng deterministic fixture từ tên file + metadata chặng để mô phỏng structured extraction và sinh `matched/warning/needs_review`; không cần API key, không gọi model ngoài và UI luôn ghi rõ đây là `DEMO EXTRACTION`. Phase 13E bổ sung explainability cho check mới: severity `LOW|MEDIUM|HIGH` và evidence có source field/text + extracted/expected value; Supabase migration `202609180001` persist hai field nullable để không làm thay đổi legacy signed payloads khi hydrate. Phase 13F thêm `pii-redaction.ts`: deterministic-mask CCCD/phone/labeled bank account và personal-address trong field free-text được đánh dấu; extraction + AI validation text được sanitize trước persist, consumer verify sanitize thêm legacy public text. Raw PDF/image bytes và SHA-256 không bị biến đổi; đây không phải OCR/visual redaction.
@@ -77,6 +77,9 @@ Canonicalization, SHA-256 event hashing và chain verification server-side. Lega
 
 ### `src/lib/reliability`
 Reliability helpers cho mutation quan trọng. `idempotency.ts` hỗ trợ `Idempotency-Key` theo scope user/resource, fingerprint payload ổn định, reuse cùng pending Promise/result trong TTL 15 phút và từ chối cùng key với payload khác. UI hiện gửi key cho create batch/event, confirm và Registry submit. `bun run reconcile:solana` là read-only Devnet reconciliation script: so DB mirror với live Event PDA và chỉ báo mismatch/missing mirror, không tự sinh proof.
+
+### `src/lib/consumer`
+Phase 13H thêm helper state cho consumer journey stepper. `journey-stepper.ts` clamp active index, tính progress 0–100% và phân loại `selected/completed/upcoming` độc lập UI để tránh lỗi edge case khi hành trình có 0/1/N chặng.
 
 ### `src/lib/creditcoin`
 BUIDL CTC adapter tách biệt khỏi Solana core: cấu hình public CC3/Attestcoin, source chainKey Sepolia, live readiness probe và proof-builder client. `readiness.ts` bắt buộc RPC trả đúng CC3 testnet chain ID `102031`, Proof API healthy và attested height > 0; contract deployment readiness chỉ xanh khi có cả source + registry public address thật. `proof-builder.ts` gọi current `/api/v1/proof-by-tx/{chainKey}/{txHash}`, validate proof/tx identity và map response sang `CheckDiAttestedRegistry.ProofInput` thay vì tin raw API payload trực tiếp.

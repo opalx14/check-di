@@ -15,8 +15,8 @@ const VERIFY_TOUR_STEPS: TourStep[] = [
   },
   {
     target: '[data-tour="verify-journey-timeline"]',
-    title: "Timeline hành trình chuỗi cung ứng",
-    description: "Trực quan hóa lộ trình từng bước: Thu hoạch nông trại → Đóng gói sơ chế → Kiểm định chất lượng → Vận chuyển kho lạnh → Điểm bán lẻ.",
+    title: "Stepper hành trình chuỗi cung ứng",
+    description: "Chọn từng chặng để xem ai xác nhận, ở đâu, lúc nào, cảnh báo AI/data check và trạng thái Devnet proof; dùng nút Chặng trước / Chặng tiếp để duyệt tuần tự.",
   },
   {
     target: '[data-tour="verify-event-cards"]',
