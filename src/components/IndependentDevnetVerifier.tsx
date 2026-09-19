@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { RefreshCw, ShieldAlert, ShieldCheck } from "lucide-react";
 
+import { useI18n } from "@/lib/i18n";
+
 type IndependentEventResult = {
   eventId: string;
   stage: string;
@@ -50,6 +52,7 @@ export function IndependentDevnetVerifier({
 }: {
   publicId: string;
 }) {
+  const { locale, t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<IndependentVerifierResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -88,12 +91,10 @@ export function IndependentDevnetVerifier({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-cyan-300">
-            Independent Devnet verifier
+            {t("consumerVerify.independentTitle")}
           </p>
           <p className="mt-1 max-w-2xl text-[11px] leading-relaxed text-slate-400">
-            Chạy một lượt đọc mới từ Solana Devnet RPC, tự derive Registry/Event
-            PDA từ public inputs và không tin địa chỉ mirror/TXID đã lưu để quyết
-            định proof hợp lệ.
+            {t("consumerVerify.independentDescription")}
           </p>
         </div>
         <button
@@ -103,14 +104,14 @@ export function IndependentDevnetVerifier({
           className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-cyan-500/25 bg-cyan-500/10 px-4 py-2.5 text-xs font-bold text-cyan-200 hover:bg-cyan-500/15 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
-          {loading ? "Đang đọc Devnet..." : "Kiểm tra độc lập"}
+          {loading ? t("consumerVerify.independentLoading") : t("consumerVerify.independentAction")}
         </button>
       </div>
 
       {error && (
         <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/[0.05] p-3 text-[11px] text-amber-200">
           <ShieldAlert className="mt-0.5 size-3.5 shrink-0" />
-          <span>Không hoàn tất được lượt đọc Devnet: {error}</span>
+          <span>{t("consumerVerify.independentFailed", { error })}</span>
         </div>
       )}
 
@@ -129,8 +130,10 @@ export function IndependentDevnetVerifier({
               <ShieldAlert className="size-4 shrink-0" />
             )}
             <span>
-              {result.summary.verifiedEvents}/{result.summary.registryEvents} Registry
-              events xác minh trực tiếp từ Devnet
+              {t("consumerVerify.independentSummary", {
+                verified: result.summary.verifiedEvents,
+                total: result.summary.registryEvents,
+              })}
             </span>
           </div>
 
@@ -149,11 +152,11 @@ export function IndependentDevnetVerifier({
                       event.valid ? "text-emerald-300" : "text-amber-300"
                     }`}
                   >
-                    {event.valid ? "VERIFIED" : "NOT VERIFIED"}
+                    {event.valid ? t("consumerVerify.verified").toUpperCase() : t("consumerVerify.notVerified").toUpperCase()}
                   </span>
                 </div>
                 <p className="mt-1 font-mono text-[9px] text-slate-500">
-                  Event PDA {short(event.eventPda)}
+                  {t("consumerVerify.eventPda")} {short(event.eventPda)}
                 </p>
                 {event.error && (
                   <p className="mt-1 text-[9px] text-amber-300/80">
@@ -165,9 +168,11 @@ export function IndependentDevnetVerifier({
           </div>
 
           <p className="mt-2 text-[9px] leading-relaxed text-slate-600">
-            Fresh RPC check tại {new Date(result.verifier.verifiedAt).toLocaleString("vi-VN")}.
-            Kiểm tra này xác minh integrity/hash-chain on-chain, không tự kết luận
-            chứng từ ngoài đời là đúng.
+            {t("consumerVerify.freshRpcNote", {
+              time: new Date(result.verifier.verifiedAt).toLocaleString(
+                locale === "en" ? "en-US" : "vi-VN",
+              ),
+            })}
           </p>
         </div>
       )}

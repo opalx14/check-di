@@ -3,6 +3,7 @@
 import { useI18n, Locale } from "@/lib/i18n";
 import { Check, ChevronDown, Globe } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type LanguageSwitcherProps = {
   variant?: "dropdown" | "inline";
@@ -16,10 +17,16 @@ const LANGUAGES: Array<{ code: Locale; label: string; short: string; flag: strin
 
 export function LanguageSwitcher({ variant = "dropdown", className = "" }: LanguageSwitcherProps) {
   const { locale, setLocale } = useI18n();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const currentLang = LANGUAGES.find((l) => l.code === locale) || LANGUAGES[0];
+
+  const changeLocale = (nextLocale: Locale) => {
+    setLocale(nextLocale);
+    router.refresh();
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -40,7 +47,7 @@ export function LanguageSwitcher({ variant = "dropdown", className = "" }: Langu
             <button
               key={lang.code}
               type="button"
-              onClick={() => setLocale(lang.code)}
+              onClick={() => changeLocale(lang.code)}
               className={`flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition-all ${
                 isActive
                   ? "border border-cyan-500/30 bg-cyan-500/15 text-cyan-300 shadow-sm shadow-cyan-500/20"
@@ -92,7 +99,7 @@ export function LanguageSwitcher({ variant = "dropdown", className = "" }: Langu
                   key={lang.code}
                   type="button"
                   onClick={() => {
-                    setLocale(lang.code);
+                    changeLocale(lang.code);
                     setIsOpen(false);
                   }}
                   className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium transition-all ${

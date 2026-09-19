@@ -19,6 +19,7 @@ import {
   journeyProgressPercent,
   journeyStepVisualState,
 } from "@/lib/consumer/journey-stepper";
+import { useI18n } from "@/lib/i18n";
 
 export type ConsumerJourneyStep = {
   id: string;
@@ -34,15 +35,15 @@ export type ConsumerJourneyStep = {
 };
 
 const stageMeta = {
-  production: { label: "Thu hoạch", icon: Sprout },
-  packing: { label: "Đóng gói", icon: Warehouse },
-  inspection: { label: "Kiểm định", icon: PackageCheck },
-  logistics: { label: "Vận chuyển", icon: Truck },
-  retail: { label: "Điểm bán", icon: MapPin },
+  production: { icon: Sprout },
+  packing: { icon: Warehouse },
+  inspection: { icon: PackageCheck },
+  logistics: { icon: Truck },
+  retail: { icon: MapPin },
 } as const;
 
-function formatTime(value: string) {
-  return new Intl.DateTimeFormat("vi-VN", {
+function formatTime(value: string, locale: "vi" | "en") {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "vi-VN", {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: "Asia/Ho_Chi_Minh",
@@ -60,6 +61,7 @@ export function ConsumerJourneyStepper({
 }: {
   events: ConsumerJourneyStep[];
 }) {
+  const { locale, t } = useI18n();
   const [activeIndex, setActiveIndex] = useState(0);
   const safeIndex = clampJourneyIndex(activeIndex, events.length);
   const active = events[safeIndex];
@@ -78,10 +80,10 @@ export function ConsumerJourneyStepper({
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">
-            Hành trình
+            {t("consumerVerify.journey")}
           </p>
           <p className="mt-1 text-xs text-slate-400">
-            Chọn từng chặng để xem ai xác nhận, ở đâu và proof tương ứng.
+            {t("consumerVerify.journeyHint")}
           </p>
         </div>
         <span className="font-mono text-[10px] text-slate-500">
@@ -100,6 +102,7 @@ export function ConsumerJourneyStepper({
           {events.map((event, index) => {
             const itemMeta = stageMeta[event.stage];
             const ItemIcon = itemMeta.icon;
+            const itemLabel = t(`consumerVerify.stages.${event.stage}`);
             const visualState = journeyStepVisualState(index, safeIndex);
             const selected = visualState === "selected";
             const completed = visualState === "completed" || selected;
@@ -128,7 +131,7 @@ export function ConsumerJourneyStepper({
                     selected ? "text-white" : "text-slate-400"
                   }`}
                 >
-                  {itemMeta.label}
+                  {itemLabel}
                 </span>
               </button>
             );
@@ -149,14 +152,14 @@ export function ConsumerJourneyStepper({
               <Icon className="size-4" />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-bold text-white">{meta.label}</p>
+              <p className="text-sm font-bold text-white">{t(`consumerVerify.stages.${active.stage}`)}</p>
               <p className="mt-0.5 text-[11px] text-slate-400">
                 {active.organizationName} · {active.location}
               </p>
             </div>
           </div>
           <span className="text-[10px] text-slate-500">
-            {formatTime(active.occurredAt)}
+            {formatTime(active.occurredAt, locale)}
           </span>
         </div>
 
@@ -167,18 +170,18 @@ export function ConsumerJourneyStepper({
         <div className="mt-3 grid gap-2 sm:grid-cols-3">
           <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3">
             <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">
-              Devnet integrity
+              {t("consumerVerify.devnetIntegrity")}
             </p>
             <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold">
               {active.devnetVerified ? (
                 <>
                   <ShieldCheck className="size-3.5 text-emerald-300" />
-                  <span className="text-emerald-300">Verified</span>
+                  <span className="text-emerald-300">{t("consumerVerify.verified")}</span>
                 </>
               ) : (
                 <>
                   <AlertTriangle className="size-3.5 text-amber-300" />
-                  <span className="text-amber-300">Needs check</span>
+                  <span className="text-amber-300">{t("consumerVerify.needsCheck")}</span>
                 </>
               )}
             </div>
@@ -186,7 +189,7 @@ export function ConsumerJourneyStepper({
 
           <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3">
             <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">
-              AI/data checks
+              {t("consumerVerify.aiDataChecks")}
             </p>
             <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold">
               <CheckCircle2
@@ -204,15 +207,15 @@ export function ConsumerJourneyStepper({
                 }
               >
                 {active.warningCount === 0
-                  ? "Không cảnh báo"
-                  : `${active.warningCount} cảnh báo`}
+                  ? t("consumerVerify.noWarnings")
+                  : t("consumerVerify.warningCount", { count: active.warningCount })}
               </span>
             </div>
           </div>
 
           <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3">
             <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">
-              Event PDA
+              {t("consumerVerify.eventPda")}
             </p>
             <p className="mt-1 font-mono text-xs text-slate-300">
               {short(active.eventPda)}
@@ -228,7 +231,7 @@ export function ConsumerJourneyStepper({
             className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-[11px] font-semibold text-slate-300 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-30"
           >
             <ChevronLeft className="size-3.5" />
-            Chặng trước
+            {t("consumerVerify.previousStage")}
           </button>
 
           <button
@@ -239,7 +242,7 @@ export function ConsumerJourneyStepper({
             disabled={safeIndex === events.length - 1}
             className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.06] px-3 py-2 text-[11px] font-semibold text-cyan-200 hover:bg-cyan-500/10 disabled:cursor-not-allowed disabled:opacity-30"
           >
-            Chặng tiếp
+            {t("consumerVerify.nextStage")}
             <ChevronRight className="size-3.5" />
           </button>
         </div>

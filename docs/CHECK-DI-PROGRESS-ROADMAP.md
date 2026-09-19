@@ -703,9 +703,9 @@ Các milestone nền tảng trong roadmap cũ (Supabase, organization auth, Phan
 13E. AI/Data Check severity + evidence                         COMPLETE (production)
 13F. deterministic PII redaction                               COMPLETE (production)
 13G. independent Devnet verifier trên consumer verify          COMPLETE (production)
-13H. consumer journey stepper                                   COMPLETE (local; deploy pending)
-13I. i18n completeness                                          NEXT
-13J. audit/export dossier
+13H. consumer journey stepper                                   COMPLETE (production)
+13I. i18n completeness                                          COMPLETE (local; deploy pending)
+13J. audit/export dossier                                       NEXT
 ```
 
 Phase 13A–13C giữ security boundary: service-role chỉ ở server; embedded-wallet secret chỉ ở browser, mã hóa PBKDF2/AES-GCM trong IndexedDB; server chỉ nhận public key/challenge signature và tiếp tục validate đầy đủ fee payer/program/PDA/accounts/instruction/signatures trước khi relay Registry transaction.
@@ -716,7 +716,9 @@ Phase 13F chỉ redaction deterministic trên extracted/textual output: CCCD, ph
 
 Phase 13G thêm fresh Devnet verifier độc lập khỏi persisted mirror address/TXID: public route derive lại Registry/Event PDA từ public inputs + authority, đọc account trực tiếp Solana Devnet RPC và trả từng check integrity. Consumer verify có nút chủ động chạy lượt kiểm tra mới; sample DUR-260830-01 pass 5/5 Registry events cả local/live-RPC lẫn production browser smoke, không có console/network error.
 
-Phase 13H thay timeline consumer tĩnh bằng mobile-first journey stepper. Người dùng có thể tap chặng hoặc dùng Chặng trước / Chặng tiếp; panel focus hiển thị organization/location/time, sanitized summary, AI/data warning, Devnet integrity và Event PDA. State helper được tách riêng và test edge case 0/1/N stages.
+Phase 13H thay timeline consumer tĩnh bằng mobile-first journey stepper. Người dùng có thể tap chặng hoặc dùng Chặng trước / Chặng tiếp; panel focus hiển thị organization/location/time, sanitized summary, AI/data warning, Devnet integrity và Event PDA. State helper được tách riêng và test edge case 0/1/N stages. Production browser smoke đã pass thao tác trực tiếp và giữ independent verifier 5/5.
+
+Phase 13I hoàn thiện VI/EN cho public consumer flow /scan + /verify, gồm camera fallback, stepper, proof details, independent verifier và tours. Locale persist localStorage + SameSite cookie; dynamic verify đọc cookie server-side còn root layout không bị ép dynamic. Dictionary parity test khóa cấu trúc consumerScan/consumerVerify giữa vi/en.
 
 ---
 

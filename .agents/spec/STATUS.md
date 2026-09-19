@@ -2,7 +2,7 @@
 
 ## Current phase
 
-**Phase 13A–13G đã hoàn tất và deploy production. Phase 13H consumer journey stepper đã hoàn tất local code gate và đang chờ commit/deploy. Supabase migration `202609180001_check_di_ai_explainability.sql` đã apply + repair history thành công; app production chạy tại `/opt/check-di` (port 7314, systemd `check-di.service`, Nginx + TLS), public URL `https://check-di.promptmarketcap.net`. Commit 23 independent Devnet verifier đã qua production API + browser UI smoke 5/5 Registry events.**
+**Phase 13A–13H đã hoàn tất và deploy production. Phase 13I consumer i18n completeness đã hoàn tất local code gate và đang chờ commit/deploy. Supabase migration `202609180001_check_di_ai_explainability.sql` đã apply + repair history thành công; app production chạy tại `/opt/check-di` (port 7314, systemd `check-di.service`, Nginx + TLS), public URL `https://check-di.promptmarketcap.net`.**
 
 ## Product core
 
@@ -330,6 +330,16 @@ canonical payload + previousEventHash
 - Consumer tour được cập nhật để giải thích stepper mới thay vì timeline tĩnh.
 - Local SSR check cho `/verify/DUR-260830-01` đã render các control **Chặng trước / Chặng tiếp**, mô tả chọn chặng, Devnet integrity và independent verifier.
 - Local gate sau 13H: `bun test` **79 passed / 0 failed / 273 assertions**, typecheck/build/diff-check pass.
+- Commit 25 đã deploy production với backup `/root/backups/check-di_backup_20260919_094604.tar.gz`; browser smoke click trực tiếp Đóng gói/Vận chuyển + Chặng trước/Chặng tiếp đều cập nhật đúng panel, independent verifier vẫn 5/5, console/network 0 lỗi.
+
+## Phase 13I — Consumer i18n completeness
+
+- Hoàn thiện VI/EN cho public consumer flow `/scan` và `/verify/[publicId]`, gồm scanner/camera fallback, journey stepper, AI/data labels, proof detail, independent Devnet verifier và consumer tours.
+- Thêm namespace `consumerScan` + `consumerVerify` đồng cấu trong `vi.json/en.json`; test parity đảm bảo hai locale không thiếu leaf key.
+- LanguageSwitcher hiện persist locale ở cả `localStorage` và SameSite=Lax cookie rồi `router.refresh()`; cookie cho phép dynamic consumer verify server component render đúng locale, trong khi client context vẫn giữ state cho scanner/stepper/verifier.
+- Thêm `getServerDictionary()` chỉ dùng ở dynamic verify page để đọc locale server-side; không kéo toàn bộ root layout sang dynamic rendering nên landing/login/signup vẫn giữ static optimization như trước.
+- Verify SSR đã được kiểm tra bằng cookie: `check_di_locale=en` render các chuỗi “Scan another code / Trace details / confirmed stages”, còn `vi` render “Quét mã khác / Chi tiết truy xuất / chặng đã xác nhận”.
+- Local gate sau 13I: `bun test` **81 passed / 0 failed / 279 assertions**, typecheck/build/diff-check pass.
 
 ## Not implemented yet
 
@@ -346,7 +356,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**Phase 13H đã hoàn tất local code gate. Bước kế tiếp: commit/deploy stepper, chạy production browser interaction smoke, rồi chuyển Phase 13I i18n completeness. Identity PROD-SMOKE cũ vẫn còn; chỉ cleanup khi có explicit confirmation vì đây là thao tác xóa dữ liệu production.**
+**Phase 13I đã hoàn tất local code gate. Bước kế tiếp: commit/deploy consumer i18n, smoke VI ↔ EN trên /scan + /verify và independent verifier, rồi chuyển Phase 13J audit/export dossier. Identity PROD-SMOKE cũ vẫn còn; chỉ cleanup khi có explicit confirmation vì đây là thao tác xóa dữ liệu production.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 

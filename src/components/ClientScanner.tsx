@@ -12,32 +12,14 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { TourGuide, type TourStep } from "@/components/TourGuide";
 import { parseCheckDiScanValue } from "@/lib/client-scan";
+import { useI18n } from "@/lib/i18n";
 import {
   PRODUCT_CATALOG,
   PRODUCT_VISUAL_EXAMPLES,
 } from "@/lib/product-visuals";
-
-const SCAN_TOUR_STEPS: TourStep[] = [
-  {
-    target: '[data-tour="scan-camera-btn"]',
-    title: "Quét QR bằng Camera",
-    description: "Nhấn 'Mở camera quét QR' để quét trực tiếp tem dán trên bao bì sản phẩm (tự động nhận diện qua BarcodeDetector trên trình duyệt).",
-  },
-  {
-    target: '[data-tour="scan-input-form"]',
-    title: "Tra cứu bằng mã định danh công khai",
-    description: "Bạn có thể nhập trực tiếp mã lô (ví dụ DUR-260830-01) để xem ngay báo cáo hành trình mà không cần bật camera.",
-  },
-  {
-    target: '[data-tour="scan-sample-gallery"]',
-    title: "Lô hàng mẫu thực tế",
-    description: "Nhấn vào các sản phẩm mẫu có sẵn để trải nghiệm đầy đủ giao diện xác thực người tiêu dùng với timeline 5 chặng, AI check và bằng chứng Solana Devnet.",
-    actionLabel: "Mở lô mẫu sầu riêng Ri6 →",
-    actionHref: "/verify/DUR-260830-01?tour=1",
-  },
-];
 
 type Detector = {
   detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string }>>;
@@ -52,6 +34,26 @@ declare global {
 
 export function ClientScanner() {
   const router = useRouter();
+  const { t } = useI18n();
+  const scanTourSteps: TourStep[] = [
+    {
+      target: '[data-tour="scan-camera-btn"]',
+      title: t("consumerScan.tourCameraTitle"),
+      description: t("consumerScan.tourCameraDescription"),
+    },
+    {
+      target: '[data-tour="scan-input-form"]',
+      title: t("consumerScan.tourInputTitle"),
+      description: t("consumerScan.tourInputDescription"),
+    },
+    {
+      target: '[data-tour="scan-sample-gallery"]',
+      title: t("consumerScan.tourGalleryTitle"),
+      description: t("consumerScan.tourGalleryDescription"),
+      actionLabel: t("consumerScan.tourGalleryAction"),
+      actionHref: "/verify/DUR-260830-01?tour=1",
+    },
+  ];
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const frameRef = useRef<number | null>(null);
@@ -78,12 +80,12 @@ export function ClientScanner() {
     setCameraError(null);
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      setCameraError("Thiết bị này chưa hỗ trợ camera trong trình duyệt.");
+      setCameraError(t("consumerScan.cameraUnsupported"));
       return;
     }
 
     if (!window.BarcodeDetector) {
-      setCameraError("Trình duyệt chưa hỗ trợ quét QR trực tiếp. Nhập mã lô ở ô bên dưới.");
+      setCameraError(t("consumerScan.qrUnsupported"));
       return;
     }
 
@@ -117,7 +119,7 @@ export function ClientScanner() {
       };
       frameRef.current = requestAnimationFrame(scan);
     } catch {
-      setCameraError("Không mở được camera. Bạn vẫn có thể nhập mã lô thủ công.");
+      setCameraError(t("consumerScan.cameraOpenFailed"));
       stopCamera();
     }
   }
@@ -130,15 +132,18 @@ export function ClientScanner() {
       <div className="relative mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
         <header className="flex items-center justify-between border-b border-white/8 pb-5">
           <a href="/" className="font-display font-bold text-white">Check-Di</a>
-          <a href="/supplier" className="text-xs font-semibold text-slate-400 hover:text-white">Bạn là nhà cung cấp?</a>
+          <div className="flex items-center gap-3">
+            <a href="/supplier" className="text-xs font-semibold text-slate-400 hover:text-white">{t("consumerScan.supplierQuestion")}</a>
+            <LanguageSwitcher />
+          </div>
         </header>
 
         <section className="mx-auto mt-10 max-w-3xl text-center">
           <div className="mx-auto flex size-12 items-center justify-center rounded-2xl border border-cyan-500/20 bg-cyan-500/10 text-cyan-300">
             <QrCode className="size-5" />
           </div>
-          <h1 className="font-display mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-5xl">Quét QR. Xem hành trình.</h1>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-slate-400 sm:text-base">Không cần tài khoản. Quét tem trên sản phẩm hoặc nhập mã lô.</p>
+          <h1 className="font-display mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-5xl">{t("consumerScan.title")}</h1>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-slate-400 sm:text-base">{t("consumerScan.description")}</p>
         </section>
 
         <section className="mx-auto mt-8 max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-[#0b111c] shadow-2xl shadow-black/25">
@@ -152,11 +157,11 @@ export function ClientScanner() {
                 type="button"
                 onClick={stopCamera}
                 className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur"
-                aria-label="Đóng camera"
+                aria-label={t("consumerScan.closeCamera")}
               >
                 <X className="size-4" />
               </button>
-              <div className="absolute inset-x-0 bottom-4 text-center text-xs font-semibold text-white drop-shadow">Đưa mã QR vào khung</div>
+              <div className="absolute inset-x-0 bottom-4 text-center text-xs font-semibold text-white drop-shadow">{t("consumerScan.frameHint")}</div>
             </div>
           ) : (
             <div className="p-5 sm:p-7">
@@ -167,7 +172,7 @@ export function ClientScanner() {
                 className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-5 py-4 text-sm font-bold text-slate-950"
               >
                 <Camera className="size-4" />
-                Mở camera quét QR
+                {t("consumerScan.openCamera")}
               </button>
 
               {cameraError && (
@@ -179,7 +184,7 @@ export function ClientScanner() {
 
               <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-[0.18em] text-slate-600">
                 <span className="h-px flex-1 bg-white/8" />
-                hoặc nhập mã
+                {t("consumerScan.orEnterCode")}
                 <span className="h-px flex-1 bg-white/8" />
               </div>
 
@@ -196,12 +201,12 @@ export function ClientScanner() {
                   <input
                     value={code}
                     onChange={(event) => setCode(event.target.value)}
-                    placeholder="Ví dụ: DUR-260830-01 hoặc mã trên tem"
+                    placeholder={t("consumerScan.placeholder")}
                     className="w-full rounded-xl border border-white/10 bg-slate-950/70 py-3 pl-10 pr-4 font-mono text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-500/40"
                   />
                 </div>
                 <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/8 px-5 py-3 text-sm font-bold text-white">
-                  Tra cứu
+                  {t("consumerScan.lookup")}
                   <ArrowRight className="size-4" />
                 </button>
               </form>
@@ -212,7 +217,7 @@ export function ClientScanner() {
         <section className="mx-auto mt-10 max-w-5xl" data-tour="scan-sample-gallery">
           <div className="flex items-center gap-2 text-emerald-300">
             <ShieldCheck className="size-4" />
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em]">Sản phẩm có thể truy xuất</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em]">{t("consumerScan.traceableProducts")}</p>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {PRODUCT_VISUAL_EXAMPLES.map((product) => (
@@ -227,7 +232,7 @@ export function ClientScanner() {
                       onClick={() => openPublicId("DUR-260830-01")}
                       className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300"
                     >
-                      Mở lô thật đang có
+                      {t("consumerScan.openLiveBatch")}
                       <ArrowRight className="size-3.5" />
                     </button>
                   )}
@@ -237,7 +242,7 @@ export function ClientScanner() {
           </div>
 
           <div className="mt-6 rounded-2xl border border-white/8 bg-white/[0.02] p-4">
-            <p className="text-xs font-semibold text-slate-300">Danh mục mẫu · {PRODUCT_CATALOG.filter((item) => item.category === "fruit").length} loại trái cây</p>
+            <p className="text-xs font-semibold text-slate-300">{t("consumerScan.sampleCatalog")} · {t("consumerScan.fruitCount", { count: PRODUCT_CATALOG.filter((item) => item.category === "fruit").length })}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {PRODUCT_CATALOG.filter((item) => item.category === "fruit").map((item) => (
                 <span key={item.name} className="rounded-full border border-white/8 bg-slate-950/60 px-2.5 py-1 text-[10px] text-slate-400">
@@ -251,9 +256,9 @@ export function ClientScanner() {
 
       <TourGuide
         tourKey="consumer_scan"
-        flowTitle="Hướng dẫn quét QR"
+        flowTitle={t("consumerScan.tourFlowTitle")}
         role="consumer"
-        steps={SCAN_TOUR_STEPS}
+        steps={scanTourSteps}
       />
     </main>
   );

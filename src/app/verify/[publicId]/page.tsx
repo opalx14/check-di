@@ -18,8 +18,14 @@ import { notFound } from "next/navigation";
 import { ConsumerJourneyStepper } from "@/components/ConsumerJourneyStepper";
 import { ConsumerVerifyTourGuide } from "@/components/ConsumerVerifyTourGuide";
 import { IndependentDevnetVerifier } from "@/components/IndependentDevnetVerifier";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { batchRepository } from "@/lib/db";
 import { redactForPublicDisplay } from "@/lib/ai/pii-redaction";
+import { getServerDictionary } from "@/lib/i18n/server";
+import type {
+  ConsumerVerifyDictionary,
+  Locale,
+} from "@/lib/i18n/types";
 import { productVisualForName } from "@/lib/product-visuals";
 import {
   verifyTraceEventSolanaProof,
@@ -30,11 +36,11 @@ import type { TraceEvent } from "@/types/evidence";
 export const dynamic = "force-dynamic";
 
 const stageMeta = {
-  production: { label: "Thu hoạch", icon: Sprout },
-  packing: { label: "Đóng gói", icon: Warehouse },
-  inspection: { label: "Kiểm định", icon: PackageCheck },
-  logistics: { label: "Vận chuyển", icon: Truck },
-  retail: { label: "Điểm bán", icon: MapPin },
+  production: { icon: Sprout },
+  packing: { icon: Warehouse },
+  inspection: { icon: PackageCheck },
+  logistics: { icon: Truck },
+  retail: { icon: MapPin },
 } as const;
 
 function shorten(value?: string, left = 8, right = 6) {
@@ -43,8 +49,8 @@ function shorten(value?: string, left = 8, right = 6) {
   return `${value.slice(0, left)}…${value.slice(-right)}`;
 }
 
-function formatTime(value: string) {
-  return new Intl.DateTimeFormat("vi-VN", {
+function formatTime(value: string, locale: Locale) {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "vi-VN", {
     dateStyle: "short",
     timeStyle: "short",
     timeZone: "Asia/Ho_Chi_Minh",
@@ -53,6 +59,8 @@ function formatTime(value: string) {
 
 export default async function VerifyBatchPage({ params }: { params: Promise<{ publicId: string }> }) {
   const { publicId } = await params;
+  const { locale, dict } = await getServerDictionary();
+  const copy = dict.consumerVerify;
   const batch = await batchRepository.getPublicProof(publicId);
   if (!batch || batch.events.length === 0) notFound();
 
@@ -72,11 +80,14 @@ export default async function VerifyBatchPage({ params }: { params: Promise<{ pu
     <main className="min-h-screen bg-[#07090e] text-slate-100">
       <div className="pointer-events-none fixed inset-0 bg-grid-pattern opacity-20" />
       <div className="relative mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
-        <header className="flex items-center justify-between border-b border-white/8 pb-5">
+        <header className="flex items-center justify-between gap-3 border-b border-white/8 pb-5">
           <a href="/" className="font-display font-bold text-white">Check-Di</a>
-          <a href="/scan" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-300">
-            <QrCode className="size-3.5" /> Quét mã khác
-          </a>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <a href="/scan" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-300">
+              <QrCode className="size-3.5" /> {copy.scanAnother}
+            </a>
+          </div>
         </header>
 
         <section className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-[#0b111c] shadow-2xl shadow-black/25" data-tour="verify-product-card">
@@ -112,12 +123,26 @@ export default async function VerifyBatchPage({ params }: { params: Promise<{ pu
               <div className="mt-6 grid gap-2 sm:grid-cols-4" data-tour="verify-status-chips">
                 <StatusChip
                   icon={batch.chainVerification.valid ? ShieldCheck : ShieldAlert}
-                  label={batch.chainVerification.valid ? "Chuỗi hợp lệ" : "Cần kiểm tra"}
+                  label={batch.chainVerification.valid ? copy.chainValid : copy.needsCheck}
                   good={batch.chainVerification.valid}
                 />
-                <StatusChip icon={Bot} label={warnings === 0 ? "AI không cảnh báo" : `${warnings} cảnh báo`} good={warnings === 0} />
-                <StatusChip icon={Hash} label={`${anchoredCount}/${batch.events.length} Devnet proof`} good={anchoredCount > 0} />
-                <StatusChip icon={CheckCircle2} label={hasSignedProductPhoto ? "Ảnh nguồn đã ký" : "Chưa có ảnh ký"} good={hasSignedProductPhoto} />
+                <StatusChip
+                  icon={Bot}
+                  label={warnings === 0 ? copy.aiNoWarnings : copy.aiWarnings.replace("{{count}}", String(warnings))}
+                  good={warnings === 0}
+                />
+                <StatusChip
+                  icon={Hash}
+                  label={copy.devnetProof
+                    .replace("{{anchored}}", String(anchoredCount))
+                    .replace("{{total}}", String(batch.events.length))}
+                  good={anchoredCount > 0}
+                />
+                <StatusChip
+                  icon={CheckCircle2}
+                  label={hasSignedProductPhoto ? copy.sourcePhotoSigned : copy.sourcePhotoMissing}
+                  good={hasSignedProductPhoto}
+                />
               </div>
 
               <ConsumerJourneyStepper
@@ -147,15 +172,24 @@ export default async function VerifyBatchPage({ params }: { params: Promise<{ pu
         <section className="mt-6">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-300">Trace details</p>
-              <h2 className="font-display mt-1 text-2xl font-bold text-white">{batch.events.length} chặng đã xác nhận</h2>
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-300">{copy.traceDetails}</p>
+              <h2 className="font-display mt-1 text-2xl font-bold text-white">
+                {copy.confirmedStages.replace("{{count}}", String(batch.events.length))}
+              </h2>
             </div>
-            <span className="text-[10px] text-slate-500">Nhấn từng chặng để xem proof</span>
+            <span className="text-[10px] text-slate-500">{copy.tapStageProof}</span>
           </div>
 
           <div className="mt-4 space-y-2" data-tour="verify-event-cards">
             {batch.events.map((event, index) => (
-              <TraceEventCard key={event.id} event={event} index={index} solanaCheck={solanaChecks[index]} />
+              <TraceEventCard
+                key={event.id}
+                event={event}
+                index={index}
+                solanaCheck={solanaChecks[index]}
+                copy={copy}
+                locale={locale}
+              />
             ))}
           </div>
         </section>
@@ -175,7 +209,19 @@ function StatusChip({ icon: Icon, label, good }: { icon: typeof ShieldCheck; lab
   );
 }
 
-function TraceEventCard({ event, index, solanaCheck }: { event: TraceEvent; index: number; solanaCheck: SolanaProofVerification }) {
+function TraceEventCard({
+  event,
+  index,
+  solanaCheck,
+  copy,
+  locale,
+}: {
+  event: TraceEvent;
+  index: number;
+  solanaCheck: SolanaProofVerification;
+  copy: ConsumerVerifyDictionary;
+  locale: Locale;
+}) {
   const meta = stageMeta[event.stage];
   const Icon = meta.icon;
   const terminal = event.status === "revoked" || event.status === "superseded";
@@ -189,12 +235,12 @@ function TraceEventCard({ event, index, solanaCheck }: { event: TraceEvent; inde
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-bold text-white">{index + 1}. {meta.label}</p>
+            <p className="text-sm font-bold text-white">{index + 1}. {copy.stages[event.stage]}</p>
             {!terminal && <CheckCircle2 className="size-3.5 text-emerald-400" />}
           </div>
           <p className="mt-0.5 truncate text-[11px] text-slate-400">{redactForPublicDisplay(event.organizationName)} · {event.location}</p>
         </div>
-        <span className="hidden text-[10px] text-slate-500 sm:block">{formatTime(event.occurredAt)}</span>
+        <span className="hidden text-[10px] text-slate-500 sm:block">{formatTime(event.occurredAt, locale)}</span>
         <ChevronRight className="size-4 text-slate-500 transition group-open:rotate-90" />
       </summary>
 
@@ -220,12 +266,12 @@ function TraceEventCard({ event, index, solanaCheck }: { event: TraceEvent; inde
                 </div>
                 {validation.evidence && (
                   <div className="mt-2 grid gap-1 font-mono text-[9px] text-slate-500 sm:grid-cols-3">
-                    <span>Field: {validation.evidence.sourceField}</span>
+                    <span>{copy.field}: {validation.evidence.sourceField}</span>
                     <span>
-                      Extracted: {validation.evidence.extractedValue !== undefined ? redactForPublicDisplay(String(validation.evidence.extractedValue)) : "—"}
+                      {copy.extracted}: {validation.evidence.extractedValue !== undefined ? redactForPublicDisplay(String(validation.evidence.extractedValue)) : "—"}
                     </span>
                     <span>
-                      Expected: {validation.evidence.expectedValue !== undefined ? redactForPublicDisplay(String(validation.evidence.expectedValue)) : "—"}
+                      {copy.expected}: {validation.evidence.expectedValue !== undefined ? redactForPublicDisplay(String(validation.evidence.expectedValue)) : "—"}
                     </span>
                   </div>
                 )}
@@ -235,12 +281,12 @@ function TraceEventCard({ event, index, solanaCheck }: { event: TraceEvent; inde
         )}
 
         <div className="mt-3 grid gap-2 sm:grid-cols-4">
-          <MiniInfo label="Ảnh / chứng từ" value={`${documents.length} file`} />
-          <MiniInfo label="Event hash" value={shorten(event.eventHash)} mono />
-          <MiniInfo label="Signer" value={shorten(event.signerPublicKey)} mono />
+          <MiniInfo label={copy.documents} value={`${documents.length} file`} />
+          <MiniInfo label={copy.eventHash} value={shorten(event.eventHash)} mono />
+          <MiniInfo label={copy.signer} value={shorten(event.signerPublicKey)} mono />
           <MiniInfo
-            label="Devnet TXID"
-            value={event.solanaProof?.transactionSignature ? shorten(event.solanaProof.transactionSignature) : "Chưa ghi"}
+            label={copy.devnetTxid}
+            value={event.solanaProof?.transactionSignature ? shorten(event.solanaProof.transactionSignature) : copy.notAnchored}
             mono
           />
         </div>
@@ -249,7 +295,7 @@ function TraceEventCard({ event, index, solanaCheck }: { event: TraceEvent; inde
           <div className="mt-3 flex flex-wrap gap-2">
             {documents.map((document) => (
               <span key={document.id} className="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-1 text-[10px] text-slate-400">
-                {document.mimeType.startsWith("image/") ? "Ảnh đã ký" : redactForPublicDisplay(document.filename)} · SHA {shorten(document.sha256)}
+                {document.mimeType.startsWith("image/") ? copy.signedImage : redactForPublicDisplay(document.filename)} · SHA {shorten(document.sha256)}
               </span>
             ))}
           </div>
@@ -257,7 +303,7 @@ function TraceEventCard({ event, index, solanaCheck }: { event: TraceEvent; inde
 
         {solanaCheck.valid && event.solanaProof?.explorerUrl && (
           <a href={event.solanaProof.explorerUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300">
-            Xem Solana proof <ExternalLink className="size-3.5" />
+            {copy.viewSolanaProof} <ExternalLink className="size-3.5" />
           </a>
         )}
       </div>

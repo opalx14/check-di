@@ -81,6 +81,9 @@ Reliability helpers cho mutation quan trọng. `idempotency.ts` hỗ trợ `Idem
 ### `src/lib/consumer`
 Phase 13H thêm helper state cho consumer journey stepper. `journey-stepper.ts` clamp active index, tính progress 0–100% và phân loại `selected/completed/upcoming` độc lập UI để tránh lỗi edge case khi hành trình có 0/1/N chặng.
 
+### `src/lib/i18n`
+VI/EN dictionaries + client context cho UI public. Phase 13I bổ sung namespace `consumerScan` và `consumerVerify`, parity test giữa hai locale, cookie `check_di_locale` đồng bộ với localStorage và `getServerDictionary()` cho dynamic consumer verify page. LanguageSwitcher persist locale rồi `router.refresh()` để server-rendered verify copy và client scanner/stepper/verifier cùng chuyển ngôn ngữ; root layout không đọc cookie nên các route static khác không bị ép dynamic.
+
 ### `src/lib/creditcoin`
 BUIDL CTC adapter tách biệt khỏi Solana core: cấu hình public CC3/Attestcoin, source chainKey Sepolia, live readiness probe và proof-builder client. `readiness.ts` bắt buộc RPC trả đúng CC3 testnet chain ID `102031`, Proof API healthy và attested height > 0; contract deployment readiness chỉ xanh khi có cả source + registry public address thật. `proof-builder.ts` gọi current `/api/v1/proof-by-tx/{chainKey}/{txHash}`, validate proof/tx identity và map response sang `CheckDiAttestedRegistry.ProofInput` thay vì tin raw API payload trực tiếp.
 
