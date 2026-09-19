@@ -344,6 +344,19 @@
       "retail": "Điểm bán"
     }
   },
+  "rolePaths": {
+    "eyebrow": "2 luồng sử dụng",
+    "title": "Bạn đang ở phía nào?",
+    "description": "Nhà cung cấp tạo hành trình. Người mua chỉ cần quét để kiểm tra.",
+    "supplierEyebrow": "Nhà cung cấp",
+    "supplierTitle": "Tạo sản phẩm. Ghi từng chặng.",
+    "supplierText": "Kho riêng theo tổ chức, ký bằng ví liên kết và phát QR cho từng lô.",
+    "supplierCta": "Mở kho sản phẩm",
+    "consumerEyebrow": "Người mua",
+    "consumerTitle": "Quét QR. Xem nguồn gốc.",
+    "consumerText": "Không cần tài khoản. Xem timeline, đơn vị xác nhận và proof.",
+    "consumerCta": "Quét sản phẩm"
+  },
   "quickLookup": {
     "badge": "TRA CỨU",
     "title": "Có mã lô? Kiểm tra ngay.",

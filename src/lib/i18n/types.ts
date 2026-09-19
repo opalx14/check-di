@@ -330,6 +330,20 @@ export type ConsumerScanDictionary = {
   tourFlowTitle: string;
 };
 
+export type RolePathsDictionary = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  supplierEyebrow: string;
+  supplierTitle: string;
+  supplierText: string;
+  supplierCta: string;
+  consumerEyebrow: string;
+  consumerTitle: string;
+  consumerText: string;
+  consumerCta: string;
+};
+
 export type QuickLookupDictionary = {
   badge: string;
   title: string;
@@ -361,6 +375,7 @@ export type Dictionary = {
   footer: FooterDictionary;
   consumerVerify: ConsumerVerifyDictionary;
   consumerScan: ConsumerScanDictionary;
+  rolePaths: RolePathsDictionary;
   quickLookup: QuickLookupDictionary;
   common: CommonDictionary;
 };

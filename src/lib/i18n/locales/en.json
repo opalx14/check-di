@@ -344,6 +344,19 @@
       "retail": "Retail"
     }
   },
+  "rolePaths": {
+    "eyebrow": "2 USER FLOWS",
+    "title": "Which side are you on?",
+    "description": "Suppliers create the journey. Consumers only need to scan to verify it.",
+    "supplierEyebrow": "Supplier",
+    "supplierTitle": "Create products. Record every stage.",
+    "supplierText": "Organization inventory, linked-wallet signatures and a QR for every batch.",
+    "supplierCta": "Open product inventory",
+    "consumerEyebrow": "Consumer",
+    "consumerTitle": "Scan QR. See the origin.",
+    "consumerText": "No account required. Review the timeline, confirming parties and proof.",
+    "consumerCta": "Scan a product"
+  },
   "quickLookup": {
     "badge": "LOOKUP",
     "title": "Have a batch ID? Verify it now.",

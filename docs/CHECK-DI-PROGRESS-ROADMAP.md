@@ -726,7 +726,7 @@ Phase 13J thêm public audit dossier JSON: export lifecycle/hash/signature/docum
 
 Phase 14A đưa các proof production lên landing bằng một khối riêng ngay sau hero. Khối này tách rõ sample marketing trên hero với **live proof batch `DUR-260830-01`**, hiển thị chain 5/5, Solana Devnet 5/5, independent fresh-RPC verifier và redacted audit dossier; CTA mở thẳng consumer proof hoặc tải audit JSON. Commit 30 đã deploy production với backup `/root/backups/check-di_backup_20260919_141405.tar.gz`; homepage/verify/dossier đều 200.
 
-Phase 14B dọn nốt i18n landing: navbar “Kho sản phẩm / Quét QR”, hero proof summary và quick lookup chuyển sang dictionary VI/EN thay vì hard-code tiếng Việt. Thêm parity test cho nav/hero/quickLookup để tránh regression khi đổi locale.
+Phase 14B dọn nốt i18n landing: navbar “Kho sản phẩm / Quét QR”, hero proof summary, hai role paths và quick lookup chuyển sang dictionary VI/EN thay vì hard-code tiếng Việt. Thêm parity test cho nav/hero/rolePaths/quickLookup để tránh regression khi đổi locale.
 
 ---
 

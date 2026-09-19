@@ -2,41 +2,44 @@
 
 import { ArrowRight, Boxes, QrCode } from "lucide-react";
 
+import { useI18n } from "@/lib/i18n";
 import { productVisualForName } from "@/lib/product-visuals";
 
 const SUPPLIER_IMAGE = productVisualForName("Dưa hấu Hắc Mỹ Nhân").imageUrl;
 const CLIENT_IMAGE = productVisualForName("Thanh long ruột đỏ").imageUrl;
 
 export function RolePathsSection() {
+  const { dict } = useI18n();
+
   return (
     <section className="border-t border-white/5 py-12 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-5 flex items-end justify-between gap-4">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-300">2 luồng sử dụng</p>
-            <h2 className="font-display mt-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">Bạn đang ở phía nào?</h2>
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-300">{dict.rolePaths.eyebrow}</p>
+            <h2 className="font-display mt-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">{dict.rolePaths.title}</h2>
           </div>
-          <p className="hidden max-w-sm text-right text-xs leading-relaxed text-slate-500 sm:block">Nhà cung cấp tạo hành trình. Người mua chỉ cần quét để kiểm tra.</p>
+          <p className="hidden max-w-sm text-right text-xs leading-relaxed text-slate-500 sm:block">{dict.rolePaths.description}</p>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
           <RoleCard
             image={SUPPLIER_IMAGE}
             icon={Boxes}
-            eyebrow="Nhà cung cấp"
-            title="Tạo sản phẩm. Ghi từng chặng."
-            text="Kho riêng theo tổ chức, ký bằng Phantom và phát QR cho từng lô."
+            eyebrow={dict.rolePaths.supplierEyebrow}
+            title={dict.rolePaths.supplierTitle}
+            text={dict.rolePaths.supplierText}
             href="/supplier"
-            cta="Mở kho sản phẩm"
+            cta={dict.rolePaths.supplierCta}
           />
           <RoleCard
             image={CLIENT_IMAGE}
             icon={QrCode}
-            eyebrow="Người mua"
-            title="Quét QR. Xem nguồn gốc."
-            text="Không cần tài khoản. Xem timeline, đơn vị xác nhận và proof."
+            eyebrow={dict.rolePaths.consumerEyebrow}
+            title={dict.rolePaths.consumerTitle}
+            text={dict.rolePaths.consumerText}
             href="/scan"
-            cta="Quét sản phẩm"
+            cta={dict.rolePaths.consumerCta}
           />
         </div>
       </div>

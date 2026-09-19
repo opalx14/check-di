@@ -24,10 +24,15 @@ describe("landing i18n completeness", () => {
     expect(vi.nav.scanQr).toBe("Quét QR");
   });
 
-  test("keeps quick lookup copy in parity", () => {
+  test("keeps role paths and quick lookup copy in parity", () => {
+    expect(leafKeys(en.rolePaths).sort()).toEqual(
+      leafKeys(vi.rolePaths).sort(),
+    );
     expect(leafKeys(en.quickLookup).sort()).toEqual(
       leafKeys(vi.quickLookup).sort(),
     );
+    expect(en.rolePaths.supplierCta).toBe("Open product inventory");
+    expect(vi.rolePaths.supplierCta).toBe("Mở kho sản phẩm");
     expect(en.quickLookup.title).toBe("Have a batch ID? Verify it now.");
     expect(vi.quickLookup.title).toBe("Có mã lô? Kiểm tra ngay.");
   });
