@@ -376,7 +376,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**Phase 14A–14B đã chạy production. Phase 14C share-ready public launch đã hoàn tất local gate: root metadata có canonical + Open Graph/Twitter large-card metadata, route `/opengraph-image` render social card 1200×630, Production Proof có nút Web Share/clipboard “Chia sẻ demo”, và Phase 14D đã có `docs/CHECK-DI-COMMUNITY-LAUNCH-PACK.md` với bài đăng ngắn/kỹ thuật, screenshot checklist và safe-claim boundary. Bước kế tiếp là commit/deploy 14C–14D, curl-check OG tags/image và smoke nút share. Cleanup identity PROD-SMOKE cũ vẫn cần explicit confirmation vì là xóa dữ liệu production; Creditcoin end-to-end vẫn là lane mở riêng.**
+**Phase 14A–14D public launch readiness đã hoàn tất. Commit 34 đã deploy production với backup `/root/backups/check-di_backup_20260919_145857.tar.gz`; homepage/health/opengraph-image/verify/dossier đều HTTP 200. HTML live có canonical + `og:title/description/image` + `twitter:card=summary_large_image`; social image live là PNG **1200×630 / 69,611 bytes**. Homepage live có “Chia sẻ demo”, “Mở proof live”, “Tải audit JSON”; dossier vẫn chain **5/5**, Devnet **5/5**, `redacted=true`. `docs/CHECK-DI-COMMUNITY-LAUNCH-PACK.md` đã sẵn sàng để copy bài đăng vào hội nhóm. Cleanup identity PROD-SMOKE cũ vẫn cần explicit confirmation vì là xóa dữ liệu production; Creditcoin end-to-end vẫn là lane mở riêng.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 

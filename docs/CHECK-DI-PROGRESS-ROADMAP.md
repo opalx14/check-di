@@ -708,8 +708,8 @@ Các milestone nền tảng trong roadmap cũ (Supabase, organization auth, Phan
 13J. audit/export dossier                                       COMPLETE (production)
 14A. production proof storytelling trên landing               COMPLETE (production)
 14B. landing i18n completeness                                  COMPLETE (production)
-14C. social/share-ready metadata + Open Graph                   COMPLETE (local; deploy pending)
-14D. community launch pack                                      COMPLETE (local; deploy pending)
+14C. social/share-ready metadata + Open Graph                   COMPLETE (production)
+14D. community launch pack                                      COMPLETE
 ```
 
 Phase 13A–13C giữ security boundary: service-role chỉ ở server; embedded-wallet secret chỉ ở browser, mã hóa PBKDF2/AES-GCM trong IndexedDB; server chỉ nhận public key/challenge signature và tiếp tục validate đầy đủ fee payer/program/PDA/accounts/instruction/signatures trước khi relay Registry transaction.
@@ -730,9 +730,9 @@ Phase 14A đưa các proof production lên landing bằng một khối riêng ng
 
 Phase 14B dọn nốt i18n landing: navbar “Kho sản phẩm / Quét QR”, hero proof summary, hai role paths và quick lookup chuyển sang dictionary VI/EN thay vì hard-code tiếng Việt. Thêm parity test cho nav/hero/rolePaths/quickLookup để tránh regression khi đổi locale. Commit 31–32 đã deploy production; backup gần nhất `/root/backups/check-di_backup_20260919_142208.tar.gz`, homepage/health/scan/verify đều 200 và production bundle chứa cả VI/EN copy mới.
 
-Phase 14C làm link public đủ chuẩn để chia sẻ vào Facebook/LinkedIn/Discord/community: canonical + Open Graph/Twitter large-card metadata, social image 1200×630 tại `/opengraph-image`, và nút Web Share/clipboard trực tiếp trong Production Proof.
+Phase 14C làm link public đủ chuẩn để chia sẻ vào Facebook/LinkedIn/Discord/community: canonical + Open Graph/Twitter large-card metadata, social image 1200×630 tại `/opengraph-image`, và nút Web Share/clipboard trực tiếp trong Production Proof. Commit 34 đã deploy production với backup `/root/backups/check-di_backup_20260919_145857.tar.gz`; OG route trả PNG 1200×630 (69,611 bytes), homepage metadata có absolute `og:image` và Twitter large-card, các public routes đều 200.
 
-Phase 14D tạo `docs/CHECK-DI-COMMUNITY-LAUNCH-PACK.md`: bài đăng ngắn, bài technical, caption ngắn, link demo, screenshot checklist, CTA và safe-claim boundary để không overclaim AI/mainnet/real-world truth.
+Phase 14D tạo `docs/CHECK-DI-COMMUNITY-LAUNCH-PACK.md`: bài đăng ngắn, bài technical, caption ngắn, link demo, screenshot checklist, CTA và safe-claim boundary để không overclaim AI/mainnet/real-world truth. Product hiện đủ public-launch baseline để đăng vào hội nhóm và nhận feedback.
 
 ---
 
