@@ -2,7 +2,7 @@
 
 ## Current phase
 
-**Phase 13A–13F đã hoàn tất và commits 20–22 hiện đã deploy production. Supabase migration `202609180001_check_di_ai_explainability.sql` đã apply + repair history thành công; app production chạy tại `/opt/check-di` (port 7314, systemd `check-di.service`, Nginx + TLS), public URL `https://check-di.promptmarketcap.net`. Phase 13G independent Devnet verifier đã hoàn tất local code/live-RPC gate và đang chờ commit/deploy.**
+**Phase 13A–13G đã hoàn tất và deploy production. Supabase migration `202609180001_check_di_ai_explainability.sql` đã apply + repair history thành công; app production chạy tại `/opt/check-di` (port 7314, systemd `check-di.service`, Nginx + TLS), public URL `https://check-di.promptmarketcap.net`. Commit 23 independent Devnet verifier đã qua production API + browser UI smoke 5/5 Registry events.**
 
 ## Product core
 
@@ -317,6 +317,9 @@ canonical payload + previousEventHash
 - Consumer `/verify/[publicId]` có nút **Independent Devnet verifier / Kiểm tra độc lập** để người dùng chủ động chạy fresh RPC check; UI ghi rõ đây là integrity/hash-chain verification, không phải xác minh sự thật ngoài đời.
 - Live local endpoint trên sample `DUR-260830-01`: **5/5 Registry events verified**, mọi check authority/batchHash/registryLink/eventAuthority/organization/eventHash/previousEventHash/organizationHash/lifecycleStatus đều true.
 - Local gate sau 13G: `bun test` **76 passed / 0 failed / 259 assertions**, typecheck/build/diff-check pass; Next.js build nhận route mới `/api/verify/[publicId]/devnet`.
+- Commit 23 đã deploy production với backup `/root/backups/check-di_backup_20260919_093849.tar.gz`; remote build pass và `check-di.service` active.
+- Production API `/api/verify/DUR-260830-01/devnet` trả `mode=fresh-devnet-rpc`, `persistedMirrorTrusted=false`, `verifiedEvents=5`, `allRegistryEventsVerified=true`.
+- Fresh Remoat browser smoke đã click **Kiểm tra độc lập** trên consumer verify và render 5/5 event cards `VERIFIED` + Event PDA; console 0 lỗi, network request verifier HTTP 200.
 
 ## Not implemented yet
 
@@ -333,7 +336,7 @@ Theo phạm vi hackathon hiện tại, map/GPS provider thật không bắt bu�
 
 ## Next milestone
 
-**Phase 13G đã hoàn tất local/live-RPC gate. Bước kế tiếp: commit/deploy 13G, chạy production browser smoke cho nút independent verifier, sau đó xin explicit confirmation trước khi xóa identity PROD-SMOKE cũ; tiếp theo chuyển Phase 13H consumer journey stepper.**
+**Phase 13G đã hoàn tất production. Bước kế tiếp là Phase 13H consumer journey stepper. Identity PROD-SMOKE cũ vẫn còn; chỉ cleanup khi có explicit confirmation vì đây là thao tác xóa dữ liệu production.**
 
 Database architecture đã hoạt động trơn tru với Supabase Data API:
 
